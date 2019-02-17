@@ -70,7 +70,7 @@ class DatabaseConnection
     /**
      * Returns a prepared SQL statement for this connection handler
      * @param string $query SQL query string
-     * @return class
+     * @return PreparedStatement
      */
     public function prepare(string $query): PreparedStatement
     {

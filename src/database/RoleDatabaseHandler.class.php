@@ -7,7 +7,7 @@
  *
  * User: lromero
  * Date: 2/17/2019
- * Time: 10:58 AM
+ * Time: 4:13 PM
  */
 
 
@@ -17,20 +17,20 @@ namespace database;
 use exceptions\EntryNotFoundException;
 use messages\Messages;
 
-class RouteDatabaseHandler
+class RoleDatabaseHandler
 {
     /**
-     * @param string $route
+     * @param int $id
      * @return array
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function selectRouteByPath(string $route): array
+    public static function selectFromID(int $id): array
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, path, extension, controller FROM fa_Route WHERE path = ? LIMIT 1");
-        $select->bindParam(1, $route, DatabaseConnection::PARAM_STR);
+        $select = $handler->prepare("SELECT id, displayName FROM fa_Role WHERE id = ? LIMIT 1");
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
         $handler->close();
@@ -38,6 +38,6 @@ class RouteDatabaseHandler
         if($select->getRowCount() === 1)
             return $select->fetch();
 
-        throw new EntryNotFoundException(Messages::CONTROLLER_NOT_FOUND, EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+        throw new EntryNotFoundException(Messages::ROLE_NOT_FOUND, EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
     }
 }

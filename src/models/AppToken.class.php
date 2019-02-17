@@ -16,7 +16,7 @@ namespace models;
 
 use database\AppTokenDatabaseHandler;
 
-class AppToken
+class AppToken extends Model
 {
     private $id;
     private $token;

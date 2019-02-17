@@ -46,15 +46,12 @@ class FrontController
             $fa_requestedURI = "/" . explode(FA_APP_URL . FA_APP_URI, $fa_requestedURL)[1]; // Get portion of URL after application
             $fa_requestedURIParts = explode('/', explode('?', $fa_requestedURI)[0]); // Break URI into pieces (ignore GET variables)
 
-            // Retrieve token
-            $fa_requestHeaders = getallheaders();
-
             // Make sure header is set
-            if(!isset($fa_requestHeaders['Application-Token']))
+            if(!isset($_SERVER['HTTP_APPLICATION_TOKEN']))
                 throw new SecurityException(Messages::SECURITY_APPTOKEN_NOT_SUPPLIED, SecurityException::APPTOKEN_NOT_SUPPLIED);
 
             // Create application token object
-            $fa_suppliedAppToken = $fa_requestHeaders['Application-Token'];
+            $fa_suppliedAppToken = $_SERVER['HTTP_APPLICATION_TOKEN'];
             $fa_appToken = AppTokenFactory::getFromToken($fa_suppliedAppToken);
 
             // Create Route
@@ -64,8 +61,13 @@ class FrontController
             if(!$fa_appToken->hasAccessToRoute($fa_route))
                 throw new SecurityException(Messages::SECURITY_APPTOKEN_NO_PERMISSION_FOR_ROUTE, SecurityException::APPTOKEN_NO_PERMISSION_FOR_ROUTE);
 
-            // Check if controller class exists for route
-            $fa_routeControllerClassname = "/extensions/{$fa_route->getExtension()}/controllers/{$fa_route->getController()}Controller";
+            // Determine if controller is core or an extension
+            if($fa_route->getExtension() === NULL)
+                $fa_routeControllerClassname = "/controllers/{$fa_route->getController()}Controller";
+            else
+                $fa_routeControllerClassname = "/extensions/{$fa_route->getExtension()}/controllers/{$fa_route->getController()}Controller";
+
+            // Check if controller class exists
             $fa_routeControllerPath = dirname(__FILE__) . "/..$fa_routeControllerClassname.class.php";
 
             if(!is_file($fa_routeControllerPath))

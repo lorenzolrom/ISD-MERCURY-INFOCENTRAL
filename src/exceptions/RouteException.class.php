@@ -18,4 +18,6 @@ class RouteException extends \Exception
 {
     const ROUTE_NOT_SUPPLIED = 401;
     const ROUTE_URI_NOT_FOUND = 402;
+    const REQUIRED_PARAMETER_MISSING = 403;
+    const REQUIRED_PARAMETER_IS_INVALID = 404;
 }

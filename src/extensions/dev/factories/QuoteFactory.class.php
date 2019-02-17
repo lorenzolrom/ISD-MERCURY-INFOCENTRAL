@@ -35,4 +35,17 @@ class QuoteFactory
 
         return $quotes;
     }
+
+    /**
+     * @param int $id
+     * @return Quote
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function getQuote(int $id): Quote
+    {
+        $quoteData = QuoteDatabaseHandler::selectQuoteByID($id);
+
+        return new Quote($quoteData['id'], $quoteData['content']);
+    }
 }

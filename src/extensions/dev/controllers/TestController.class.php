@@ -27,13 +27,16 @@ class TestController extends Controller
      * @return array
      * @throws RouteException
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
      */
     public function processURI(string $uri): array
     {
-        switch($uri)
+        switch(explode("/", $uri)[0])
         {
             case "quotes":
                 return $this->getQuoteList();
+            case "quote":
+                return $this->getQuote($uri);
             default:
                 throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
         }
@@ -53,5 +56,23 @@ class TestController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * @param string $uri
+     * @return array
+     * @throws RouteException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function getQuote(string $uri): array
+    {
+        $requestParts = explode("/", $uri);
+
+        if(empty($requestParts) OR !isset($requestParts[1]))
+            throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_PARAMETER_MISSING);
+
+        $quote = QuoteFactory::getQuote((int)$requestParts[1]);
+        return ['content' => $quote->getContent()];
     }
 }

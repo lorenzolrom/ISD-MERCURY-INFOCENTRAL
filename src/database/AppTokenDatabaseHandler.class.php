@@ -29,7 +29,7 @@ class AppTokenDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, token, name FROM rest_AppToken WHERE token = ?");
+        $select = $handler->prepare("SELECT id, token, name FROM fa_AppToken WHERE token = ?");
         $select->bindParam(1, $token, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -51,7 +51,7 @@ class AppTokenDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT token FROM rest_AppToken_Route WHERE token = :token AND route = :route LIMIT 1");
+        $select = $handler->prepare("SELECT token FROM fa_AppToken_Route WHERE token = :token AND route = :route LIMIT 1");
         $select->bindParam(':token', $tokenID, DatabaseConnection::PARAM_INT);
         $select->bindParam(':route', $routeID, DatabaseConnection::PARAM_INT);
         $select->execute();

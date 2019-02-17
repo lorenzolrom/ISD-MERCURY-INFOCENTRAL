@@ -25,10 +25,10 @@ class Route extends Model
      * Route constructor.
      * @param int $id
      * @param string $path
-     * @param string $extension
+     * @param string|null $extension
      * @param string $controller
      */
-    public function __construct(int $id, string $path, string $extension, string $controller)
+    public function __construct(int $id, string $path, ?string $extension, string $controller)
     {
         $this->id = $id;
         $this->path = $path;
@@ -53,9 +53,9 @@ class Route extends Model
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getExtension(): string
+    public function getExtension(): ?string
     {
         return $this->extension;
     }

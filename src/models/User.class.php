@@ -155,8 +155,20 @@ class User
         return $roles;
     }
 
-    public function logout()
+    /**
+     * @param string $permissionCode
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public function hasPermission(string $permissionCode): bool
     {
-        // TODO
+        foreach($this->getRoles() as $role)
+        {
+            if(in_array($permissionCode, $role->getPermissionCodes()))
+                return TRUE;
+        }
+
+        return FALSE;
     }
 }

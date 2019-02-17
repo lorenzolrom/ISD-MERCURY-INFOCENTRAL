@@ -40,4 +40,22 @@ class RoleDatabaseHandler
 
         throw new EntryNotFoundException(Messages::ROLE_NOT_FOUND, EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
     }
+
+    /**
+     * @param int $id
+     * @return array Of raw permission codes
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getRolePermissionCodes(int $id): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT permission FROM fa_Role_Permission WHERE role = ?");
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
 }

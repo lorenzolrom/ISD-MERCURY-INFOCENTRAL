@@ -14,6 +14,8 @@
 namespace models;
 
 
+use database\RoleDatabaseHandler;
+
 class Role extends Model
 {
     private $id;
@@ -46,4 +48,12 @@ class Role extends Model
         return $this->displayName;
     }
 
+    /**
+     * @return string[]
+     * @throws \exceptions\DatabaseException
+     */
+    public function getPermissionCodes(): array
+    {
+        return RoleDatabaseHandler::getRolePermissionCodes($this->id);
+    }
 }

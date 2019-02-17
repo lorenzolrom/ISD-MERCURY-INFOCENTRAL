@@ -14,6 +14,8 @@
 namespace models;
 
 
+use database\UserTokenDatabaseHandler;
+
 class UserToken extends Model
 {
     private $token;
@@ -90,5 +92,12 @@ class UserToken extends Model
         return $this->ipAddress;
     }
 
-
+    /**
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\UserTokenException
+     */
+    public function expire()
+    {
+        UserTokenDatabaseHandler::expireToken($this->token);
+    }
 }

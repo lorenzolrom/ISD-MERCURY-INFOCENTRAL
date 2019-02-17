@@ -41,5 +41,10 @@ class Messages
     const SECURITY_USERTOKEN_NOT_SUPPLIED = "User Token Not Supplied";
     const SECURITY_USERTOKEN_NOT_FOUND = "User Token Not Found";
 
+    const USERTOKEN_ALREADY_EXPIRED = "Token Already Expired";
+    const USERTOKEN_TOKEN_HAS_EXPIRED = "Token Has Expired";
+
     const ROLE_NOT_FOUND = "Role Not Found";
+
+    const PERMISSION_NOT_FOUND = "Permission Not Found";
 }

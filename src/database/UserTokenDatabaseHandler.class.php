@@ -15,6 +15,7 @@ namespace database;
 
 
 use exceptions\EntryNotFoundException;
+use exceptions\UserTokenException;
 use messages\Messages;
 
 class UserTokenDatabaseHandler
@@ -60,5 +61,24 @@ class UserTokenDatabaseHandler
         $handler->close();
 
         return $columns['token'];
+    }
+
+    /**
+     * @param string $token
+     * @throws UserTokenException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function expireToken(string $token)
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare("UPDATE fa_UserToken SET expired = 1 WHERE token = ?");
+        $update->bindParam(1, $token,DatabaseConnection::PARAM_STR);
+        $update->execute();
+
+        $handler->close();
+
+        if($update->getRowCount() !== 1)
+            throw new UserTokenException(Messages::USERTOKEN_ALREADY_EXPIRED, UserTokenException::ALREADY_EXPIRED);
     }
 }

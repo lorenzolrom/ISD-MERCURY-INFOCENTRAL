@@ -58,6 +58,25 @@ class RoleDatabaseHandler
     }
 
     /**
+     * @param string $displayName
+     * @return int Numerical I.D. of the newly created role
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(string $displayName): int
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare("INSERT INTO fa_Role(displayName) VALUES (?)");
+        $insert->bindParam(1, $displayName, DatabaseConnection::PARAM_STR);
+        $insert->execute();
+        $newRoleID = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return $newRoleID;
+    }
+
+    /**
      * @param int $id
      * @return array Of raw permission codes
      * @throws \exceptions\DatabaseException
@@ -73,5 +92,23 @@ class RoleDatabaseHandler
         $handler->close();
 
         return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
+
+    /**
+     * @param string $displayName
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function isDisplayNameInUse(string $displayName): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT displayName FROM fa_Role WHERE displayName = ? LIMIT 1");
+        $select->bindParam(1, $displayName, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
     }
 }

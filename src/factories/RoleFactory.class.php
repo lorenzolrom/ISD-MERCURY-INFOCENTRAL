@@ -30,6 +30,17 @@ class RoleFactory
         $roleData = RoleDatabaseHandler::selectFromID($id);
 
         return new Role($roleData['id'],
-                        $roleData['displayName']);
+            $roleData['displayName']);
+    }
+
+    /**
+     * @param string $displayName
+     * @return Role
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function getNew(string $displayName): Role
+    {
+        return RoleFactory::getFromID(RoleDatabaseHandler::insert($displayName));
     }
 }

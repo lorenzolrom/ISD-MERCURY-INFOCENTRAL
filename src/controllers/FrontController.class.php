@@ -15,6 +15,7 @@ namespace controllers;
 
 
 use exceptions\ControllerException;
+use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
@@ -96,13 +97,47 @@ class FrontController
 
             $fa_routeURI = rtrim($fa_routeURI, "/");
 
-            $fa_finalOutput['responseType'] = "OK";
-            $fa_finalOutput = array_merge($fa_finalOutput, $fa_routeController->processURI($fa_routeURI));
+            $fa_finalOutput = $fa_routeController->processURI($fa_routeURI);
+        }
+        catch(SecurityException $e)
+        {
+            switch($e->getCode())
+            {
+                default:
+                    http_response_code(401);
+                    break;
+            }
+
+            $fa_finalOutput['responseMessage'] = $e->getMessage();
+        }
+        catch(EntryNotFoundException $e)
+        {
+            switch($e->getCode())
+            {
+                default:
+                    http_response_code(404);
+                    break;
+            }
+
+            $fa_finalOutput['responseMessage'] = $e->getMessage();
+        }
+        catch(RouteException $e)
+        {
+            switch($e->getCode())
+            {
+                case RouteException::ROUTE_URI_NOT_FOUND:
+                    http_response_code(404);
+                    break;
+                default:
+                    http_response_code(400);
+                    break;
+            }
+
+            $fa_finalOutput['responseMessage'] = $e->getMessage();
         }
         catch(\Exception $e)
         {
-            $fa_finalOutput['responseType'] = "ERROR";
-            $fa_finalOutput['responseCode'] = $e->getCode();
+            http_response_code(500);
             $fa_finalOutput['responseMessage'] = $e->getMessage();
         }
 

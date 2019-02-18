@@ -15,6 +15,7 @@ namespace models;
 
 
 use database\RoleDatabaseHandler;
+use messages\ValidationError;
 
 class Role extends Model
 {
@@ -55,5 +56,29 @@ class Role extends Model
     public function getPermissionCodes(): array
     {
         return RoleDatabaseHandler::getRolePermissionCodes($this->id);
+    }
+
+    /**
+     * @param string $displayName
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    public static function validateDisplayName(?string $displayName): int
+    {
+        // Is not null
+        if($displayName === NULL)
+            return ValidationError::VALUE_IS_NULL;
+
+        // Between 1 and 64 characters
+        if(strlen($displayName) < 1)
+            return ValidationError::VALUE_IS_TOO_SHORT;
+        if(strlen($displayName) > 64)
+            return ValidationError::VALUE_IS_TOO_LONG;
+
+        // Is not already in use
+        if(RoleDatabaseHandler::isDisplayNameInUse($displayName))
+            return ValidationError::VALUE_ALREADY_TAKEN;
+
+        return ValidationError::VALUE_IS_OK;
     }
 }

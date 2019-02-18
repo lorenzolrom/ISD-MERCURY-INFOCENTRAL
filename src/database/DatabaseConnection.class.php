@@ -46,7 +46,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_FAILED_TO_CONNECT, DatabaseException::FAILED_TO_CONNECT, $e->getCode());
+            throw new DatabaseException(Messages::DATABASE_FAILED_TO_CONNECT, DatabaseException::FAILED_TO_CONNECT, $e);
         }
     }
 
@@ -63,7 +63,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_DIRECT_QUERY_FAILED, DatabaseException::DIRECT_QUERY_FAILED, $e->getCode());
+            throw new DatabaseException(Messages::DATABASE_DIRECT_QUERY_FAILED, DatabaseException::DIRECT_QUERY_FAILED, $e);
         }
     }
 
@@ -99,7 +99,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_TRANSACTION_START_FAILED, DatabaseException::TRANSACTION_START_FAILED, $e->getCode());
+            throw new DatabaseException(Messages::DATABASE_TRANSACTION_START_FAILED, DatabaseException::TRANSACTION_START_FAILED, $e);
         }
     }
 
@@ -117,7 +117,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_TRANSACTION_ROLLBACK_FAILED, DatabaseException::TRANSACTION_ROLLBACK_FAILED, $e->getCode());
+            throw new DatabaseException(Messages::DATABASE_TRANSACTION_ROLLBACK_FAILED, DatabaseException::TRANSACTION_ROLLBACK_FAILED, $e);
         }
     }
 
@@ -135,7 +135,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_TRANSACTION_COMMIT_FAILED, DatabaseException::TRANSACTION_COMMIT_FAILED, $e->getCode());
+            throw new DatabaseException(Messages::DATABASE_TRANSACTION_COMMIT_FAILED, DatabaseException::TRANSACTION_COMMIT_FAILED, $e);
         }
     }
 

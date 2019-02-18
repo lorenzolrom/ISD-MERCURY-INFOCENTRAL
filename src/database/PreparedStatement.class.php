@@ -63,7 +63,7 @@ class PreparedStatement
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_PREPARED_QUERY_FAILED, DatabaseException::PREPARED_QUERY_FAILED, $e->getCode());
+            throw new DatabaseException(Messages::DATABASE_PREPARED_QUERY_FAILED, DatabaseException::PREPARED_QUERY_FAILED, $e);
         }
     }
 

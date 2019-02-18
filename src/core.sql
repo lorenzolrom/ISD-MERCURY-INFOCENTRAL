@@ -83,4 +83,5 @@ INSERT INTO isd_fastapps_rest.fa_Permission (code, displayName, description) VAL
                                                                                     ('fa-users-showuserroles', 'Display User Roles', 'Allow viewing roles a user belongs to'),
                                                                                     ('fa-roles-listroleids', 'List All Role IDs', 'Allow retrieval of the list of role IDs'),
                                                                                     ('fa-roles-showroledetails', 'Display Role Details', 'Allow viewing full details for a role'),
-                                                                                    ('fa-roles-showrolepermissions', 'Display Role Permissions', 'Allow viewing permissions assigned to a role');
+                                                                                    ('fa-roles-showrolepermissions', 'Display Role Permissions', 'Allow viewing permissions assigned to a role'),
+                                                                                    ('fa-roles-create', 'Create New Roles', 'Allow creation of new roles');

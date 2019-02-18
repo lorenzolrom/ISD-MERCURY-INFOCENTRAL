@@ -18,7 +18,7 @@ class Messages
 {
     const DATABASE_FAILED_TO_CONNECT = "Could Not Connect To Database";
     const DATABASE_DIRECT_QUERY_FAILED = "Direct Query Failure";
-    const DATABASE_PREPARED_QUERY_FAILED = "";
+    const DATABASE_PREPARED_QUERY_FAILED = "Prepared Query Failure";
     const DATABASE_TRANSACTION_START_FAILED = "Failed To Begin Transaction";
     const DATABASE_TRANSACTION_COMMIT_FAILED = "Failed To Commit Transaction";
     const DATABASE_TRANSACTION_ROLLBACK_FAILED = "Failed To Rollback Transaction";

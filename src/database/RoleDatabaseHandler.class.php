@@ -42,6 +42,22 @@ class RoleDatabaseHandler
     }
 
     /**
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectAllIDs(): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT id FROM fa_Role");
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
+
+    /**
      * @param int $id
      * @return array Of raw permission codes
      * @throws \exceptions\DatabaseException

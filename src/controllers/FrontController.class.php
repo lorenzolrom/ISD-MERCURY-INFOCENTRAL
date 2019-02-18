@@ -15,12 +15,17 @@ namespace controllers;
 
 
 use exceptions\ControllerException;
+use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
+use exceptions\UserTokenException;
 use factories\AppTokenFactory;
 use factories\ControllerFactory;
 use factories\RouteFactory;
+use factories\UserFactory;
+use factories\UserTokenFactory;
 use messages\Messages;
+use models\User;
 
 class FrontController
 {
@@ -102,5 +107,53 @@ class FrontController
         }
 
         return json_encode($fa_finalOutput);
+    }
+
+    /**
+     * @return User Currently logged in user, if one is present
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\UserTokenException
+     */
+    public static function getCurrentUser(): User
+    {
+        if(!isset($_SERVER['HTTP_USER_TOKEN']))
+            throw new SecurityException(Messages::SECURITY_NO_AUTHENTICATED_USER, SecurityException::USER_NOT_AUTHENTICATED);
+
+        try
+        {
+            $token = UserTokenFactory::getFromToken($_SERVER['HTTP_USER_TOKEN']);
+
+            // Has token been marked as expired?
+            if($token->getExpired())
+                throw new UserTokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, UserTokenException::HAS_EXPIRED);
+
+            // Has expire time passed?
+            if(strtotime($token->getExpireTime()) <= strtotime(date('Y-m-d H:i:s')))
+            {
+                $token->expire();
+                throw new UserTokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, UserTokenException::HAS_EXPIRED);
+            }
+        }
+        catch (EntryNotFoundException $e)
+        {
+            throw new SecurityException($e->getMessage(), SecurityException::USERTOKEN_NOT_FOUND);
+        }
+
+        return UserFactory::getFromID($token->getUser());
+    }
+
+    /**
+     * @param string $permission
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws UserTokenException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function validatePermission(string $permission)
+    {
+        if(!self::getCurrentUser()->hasPermission($permission))
+            throw new SecurityException(Messages::SECURITY_USER_DOES_NOT_HAVE_PERMISSION, SecurityException::USER_NO_PERMISSION);
     }
 }

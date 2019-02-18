@@ -95,4 +95,36 @@ class UserDatabaseHandler
 
         return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
     }
+
+    /**
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectAllLoginNames(): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT loginName FROM fa_User");
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
+
+    /**
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectAllIDs(): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT id FROM fa_User");
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
 }

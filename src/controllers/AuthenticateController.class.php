@@ -23,7 +23,7 @@ use factories\UserFactory;
 use factories\UserTokenFactory;
 use messages\Messages;
 
-class AuthenticationController extends Controller
+class AuthenticateController extends Controller
 {
 
     /**
@@ -94,25 +94,11 @@ class AuthenticationController extends Controller
      * @throws DatabaseException
      * @throws SecurityException
      * @throws \exceptions\UserTokenException
-     * @throws RouteException
+     * @throws EntryNotFoundException
      */
     private function logoutUser(): array
     {
-        // Check for user token
-        if(!isset($_SERVER['HTTP_USER_TOKEN']))
-            throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_PARAMETER_MISSING);
-
-        // Fetch token
-        try
-        {
-            $token = UserTokenFactory::getFromToken($_SERVER['HTTP_USER_TOKEN']);
-        }
-        catch (EntryNotFoundException $e)
-        {
-            throw new SecurityException($e->getMessage(), SecurityException::USERTOKEN_NOT_FOUND);
-        }
-
-        $token->expire();
+        FrontController::getCurrentUser()->logout();
 
         return ['responseMessage' => Messages::USER_LOGGED_OUT];
     }
@@ -120,35 +106,13 @@ class AuthenticationController extends Controller
     /**
      * @return array
      * @throws DatabaseException
-     * @throws RouteException
+     * @throws EntryNotFoundException
+     * @throws SecurityException
      * @throws UserTokenException
      */
     private function validateToken(): array
     {
-        // Check for user token
-        if(!isset($_SERVER['HTTP_USER_TOKEN']))
-            throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_PARAMETER_MISSING);
-
-        // Fetch token
-        try
-        {
-            $token = UserTokenFactory::getFromToken($_SERVER['HTTP_USER_TOKEN']);
-
-            // Has token been marked as expired?
-            if($token->getExpired())
-                throw new UserTokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, UserTokenException::HAS_EXPIRED);
-
-            // Has expire time passed?
-            if(strtotime($token->getExpireTime()) <= strtotime(date('Y-m-d H:i:s')))
-            {
-                $token->expire();
-                throw new UserTokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, UserTokenException::HAS_EXPIRED);
-            }
-        }
-        catch(EntryNotFoundException $e)
-        {
-            throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_IS_INVALID, RouteException::REQUIRED_PARAMETER_IS_INVALID);
-        }
+        FrontController::getCurrentUser();
 
         return ['responseMessage' => 'Token Is Valid'];
     }

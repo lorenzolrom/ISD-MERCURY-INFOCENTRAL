@@ -25,4 +25,7 @@ class SecurityException extends \Exception
 
     const USERTOKEN_NOT_SUPPLIED = 306;
     const USERTOKEN_NOT_FOUND = 307;
+
+    const USER_NOT_AUTHENTICATED = 308;
+    const USER_NO_PERMISSION = 309;
 }

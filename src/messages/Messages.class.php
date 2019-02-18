@@ -40,6 +40,8 @@ class Messages
 
     const SECURITY_USERTOKEN_NOT_SUPPLIED = "User Token Not Supplied";
     const SECURITY_USERTOKEN_NOT_FOUND = "User Token Not Found";
+    const SECURITY_NO_AUTHENTICATED_USER = "Please Sign In";
+    const SECURITY_USER_DOES_NOT_HAVE_PERMISSION = "You Do Not Have Permission";
 
     const USERTOKEN_ALREADY_EXPIRED = "Token Already Expired";
     const USERTOKEN_TOKEN_HAS_EXPIRED = "Token Has Expired";

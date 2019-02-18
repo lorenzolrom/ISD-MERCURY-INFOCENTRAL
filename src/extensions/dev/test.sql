@@ -1,5 +1,0 @@
-CREATE TABLE test_Quote (
-  id BIGINT(20) NOT NULL AUTO_INCREMENT,
-  content TEXT NOT NULL,
-  PRIMARY KEY (id)
-);

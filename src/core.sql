@@ -74,4 +74,13 @@ CREATE TABLE fa_Role_Permission (
   FOREIGN KEY (permission) REFERENCES fa_Permission(code) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-INSERT INTO fa_Route (path, controller) VALUES ('authenticate', 'Authentication');
+INSERT INTO fa_Route (path, controller) VALUES ('authenticate', 'Authenticate'),
+                                               ('users', 'User');
+
+INSERT INTO isd_fastapps_rest.fa_Permission (code, displayName, description) VALUES ('fa-users-listuserids', 'List All User IDs', 'Allow retrieval of the list of user IDs'),
+                                                                                    ('fa-users-listloginnames', 'List All Login Names', 'Allow retrieval of the list of login names.'),
+                                                                                    ('fa-users-showuserdetails', 'Display User Details', 'Allows viewing full details for a user'),
+                                                                                    ('fa-users-showuserroles', 'Display User Roles', 'Allow viewing roles a user belongs to'),
+                                                                                    ('fa-roles-listroleids', 'List All Role IDs', 'Allow retrieval of the list of role IDs'),
+                                                                                    ('fa-roles-showroledetails', 'Display Role Details', 'Allow viewing full details for a role'),
+                                                                                    ('fa-roles-showrolepermissions', 'Display Role Permissions', 'Allow viewing permissions assigned to a role');

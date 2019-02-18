@@ -171,4 +171,12 @@ class User
 
         return FALSE;
     }
+
+    /**
+     * @throws \exceptions\DatabaseException
+     */
+    public function logout()
+    {
+        UserDatabaseHandler::expireAllTokensForUser($this->id);
+    }
 }

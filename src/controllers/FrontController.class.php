@@ -15,17 +15,15 @@ namespace controllers;
 
 
 use exceptions\ControllerException;
-use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
-use exceptions\UserTokenException;
-use factories\AppTokenFactory;
+use exceptions\TokenException;
+use factories\SecretFactory;
 use factories\ControllerFactory;
 use factories\RouteFactory;
 use factories\UserFactory;
-use factories\UserTokenFactory;
-use const http\Client\Curl\Features\HTTP2;
+use factories\TokenFactory;
 use messages\Messages;
 use models\User;
 
@@ -54,12 +52,12 @@ class FrontController
             $fa_requestedURIParts = explode('/', explode('?', $fa_requestedURI)[0]); // Break URI into pieces (ignore GET variables)
 
             // Make sure header is set
-            if(!isset($_SERVER['HTTP_APPLICATION_TOKEN']))
+            if(!isset($_SERVER['HTTP_APPLICATION_SECRET']))
                 throw new SecurityException(Messages::SECURITY_APPTOKEN_NOT_SUPPLIED, SecurityException::APPTOKEN_NOT_SUPPLIED);
 
             // Create application token object
-            $fa_suppliedAppToken = $_SERVER['HTTP_APPLICATION_TOKEN'];
-            $fa_appToken = AppTokenFactory::getFromToken($fa_suppliedAppToken);
+            $fa_suppliedAppToken = $_SERVER['HTTP_APPLICATION_SECRET'];
+            $fa_appToken = SecretFactory::getFromSecret($fa_suppliedAppToken);
 
             // Create Route
             $fa_route = RouteFactory::getRouteByPath($fa_requestedURIParts[1]);
@@ -136,11 +134,6 @@ class FrontController
 
             $fa_finalOutput['errors'] = [$e->getMessage()];
         }
-        catch(UserTokenException $e)
-        {
-            http_response_code(401);
-            $fa_finalOutput['errors'] = [$e->getMessage()];
-        }
         catch(\Exception $e)
         {
             http_response_code(500);
@@ -155,7 +148,7 @@ class FrontController
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      */
     public static function getCurrentUser(): User
     {
@@ -164,17 +157,17 @@ class FrontController
 
         try
         {
-            $token = UserTokenFactory::getFromToken($_SERVER['HTTP_USER_TOKEN']);
+            $token = TokenFactory::getFromToken($_SERVER['HTTP_USER_TOKEN']);
 
             // Has token been marked as expired?
             if($token->getExpired())
-                throw new UserTokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, UserTokenException::HAS_EXPIRED);
+                throw new TokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, TokenException::HAS_EXPIRED);
 
             // Has expire time passed?
             if(strtotime($token->getExpireTime()) <= strtotime(date('Y-m-d H:i:s')))
             {
                 $token->expire();
-                throw new UserTokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, UserTokenException::HAS_EXPIRED);
+                throw new TokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, TokenException::HAS_EXPIRED);
             }
         }
         catch (EntryNotFoundException $e)
@@ -189,13 +182,18 @@ class FrontController
      * @param string $permission
      * @throws EntryNotFoundException
      * @throws SecurityException
-     * @throws UserTokenException
+     * @throws TokenException
      * @throws \exceptions\DatabaseException
      */
     public static function validatePermission(string $permission)
     {
-        // If application token is not exempt and the user does not have permission
-        if((!AppTokenFactory::getFromToken($_SERVER['HTTP_APPLICATION_TOKEN'])->getExempt() == 1) AND (!self::getCurrentUser()->hasPermission($permission)))
+        $secret = SecretFactory::getFromSecret($_SERVER['HTTP_APPLICATION_SECRET']);
+
+        // Check if secret is exempt, if so validate its permissions
+        if($secret->getExempt() == 1 AND !in_array($permission, $secret->getPermissionCodes()))
+            throw new SecurityException(Messages::SECURITY_SECRET_DOES_NOT_HAVE_PERMISSION, SecurityException::SECRET_NO_PERMISSION);
+
+        if(!self::getCurrentUser()->hasPermission($permission))
             throw new SecurityException(Messages::SECURITY_USER_DOES_NOT_HAVE_PERMISSION, SecurityException::USER_NO_PERMISSION);
     }
 }

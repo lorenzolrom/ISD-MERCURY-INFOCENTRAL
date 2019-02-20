@@ -14,23 +14,23 @@
 namespace factories;
 
 
-use database\UserTokenDatabaseHandler;
+use database\TokenDatabaseHandler;
 use models\User;
-use models\UserToken;
+use models\Token;
 
-class UserTokenFactory
+class TokenFactory
 {
     /**
      * @param string $token
-     * @return UserToken
+     * @return Token
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      */
-    public static function getFromToken(string $token): UserToken
+    public static function getFromToken(string $token): Token
     {
-        $tokenData = UserTokenDatabaseHandler::selectFromToken($token);
+        $tokenData = TokenDatabaseHandler::selectFromToken($token);
 
-        return new UserToken($tokenData['token'],
+        return new Token($tokenData['token'],
                              $tokenData['user'],
                              $tokenData['issueTime'],
                              $tokenData['expireTime'],
@@ -40,15 +40,15 @@ class UserTokenFactory
 
     /**
      * @param User $user
-     * @return UserToken
+     * @return Token
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      */
-    public static function getNewToken(User $user): UserToken
+    public static function getNewToken(User $user): Token
     {
         $newToken = hash('SHA512', openssl_random_pseudo_bytes(2048));
 
-        return self::getFromToken(UserTokenDatabaseHandler::insert(['token' => $newToken,
+        return self::getFromToken(TokenDatabaseHandler::insert(['token' => $newToken,
                                                                     'ipAddress' => $_SERVER['REMOTE_ADDR'],
                                                                     'user' => $user->getId()]));
 

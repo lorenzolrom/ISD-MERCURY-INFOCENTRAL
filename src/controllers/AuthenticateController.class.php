@@ -18,9 +18,9 @@ use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
-use \exceptions\UserTokenException;
+use \exceptions\TokenException;
 use factories\UserFactory;
-use factories\UserTokenFactory;
+use factories\TokenFactory;
 use messages\Messages;
 
 class AuthenticateController extends Controller
@@ -33,7 +33,7 @@ class AuthenticateController extends Controller
      * @throws EntryNotFoundException
      * @throws RouteException
      * @throws SecurityException
-     * @throws UserTokenException
+     * @throws TokenException
      */
     public function processURI(string $uri): array
     {
@@ -83,7 +83,7 @@ class AuthenticateController extends Controller
         $user->expireAllTokens();
 
         // Generate new login token
-        $token = UserTokenFactory::getNewToken($user);
+        $token = TokenFactory::getNewToken($user);
 
         // Return the newly created token
         http_response_code(201);
@@ -94,7 +94,7 @@ class AuthenticateController extends Controller
      * @return array
      * @throws DatabaseException
      * @throws SecurityException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      * @throws EntryNotFoundException
      */
     private function logoutUser(): array
@@ -110,7 +110,7 @@ class AuthenticateController extends Controller
      * @throws DatabaseException
      * @throws EntryNotFoundException
      * @throws SecurityException
-     * @throws UserTokenException
+     * @throws TokenException
      */
     private function validateToken(): array
     {

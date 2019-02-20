@@ -14,23 +14,24 @@
 namespace database;
 
 
+use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use messages\Messages;
 
-class AppTokenDatabaseHandler
+class SecretDatabaseHandler
 {
     /**
-     * @param string $token
+     * @param string $secret
      * @return array
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function selectFromToken(string $token): array
+    public static function selectFromSecret(string $secret): array
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, token, name, exempt FROM fa_AppToken WHERE token = ?");
-        $select->bindParam(1, $token, DatabaseConnection::PARAM_STR);
+        $select = $handler->prepare("SELECT id, secret, name, exempt FROM fa_Secret WHERE secret = ?");
+        $select->bindParam(1, $secret, DatabaseConnection::PARAM_STR);
         $select->execute();
 
         $handler->close();
@@ -47,11 +48,11 @@ class AppTokenDatabaseHandler
      * @return bool
      * @throws \exceptions\DatabaseException
      */
-    public static function doesTokenHaveAccessToRoute(int $tokenID, int $routeID): bool
+    public static function doesSecretHaveAccessToRoute(int $tokenID, int $routeID): bool
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT token FROM fa_AppToken_Route WHERE token = :token AND route = :route LIMIT 1");
+        $select = $handler->prepare("SELECT secret FROM fa_Secret_Route WHERE secret = :token AND route = :route LIMIT 1");
         $select->bindParam(':token', $tokenID, DatabaseConnection::PARAM_INT);
         $select->bindParam(':route', $routeID, DatabaseConnection::PARAM_INT);
         $select->execute();
@@ -59,5 +60,23 @@ class AppTokenDatabaseHandler
         $handler->close();
 
         return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @return array
+     * @throws DatabaseException
+     */
+    public static function getSecretPermissionCodes(int $id): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT permission FROM fa_Secret_Permission WHERE secret = ?");
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
     }
 }

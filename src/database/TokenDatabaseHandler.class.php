@@ -15,10 +15,10 @@ namespace database;
 
 
 use exceptions\EntryNotFoundException;
-use exceptions\UserTokenException;
+use exceptions\TokenException;
 use messages\Messages;
 
-class UserTokenDatabaseHandler
+class TokenDatabaseHandler
 {
     /**
      * @param string $token
@@ -30,7 +30,7 @@ class UserTokenDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT token, user, issueTime, expireTime, expired, ipAddress FROM fa_UserToken WHERE token = ? LIMIT 1");
+        $select = $handler->prepare("SELECT token, user, issueTime, expireTime, expired, ipAddress FROM fa_Token WHERE token = ? LIMIT 1");
         $select->bindParam(1, $token, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -51,7 +51,7 @@ class UserTokenDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO fa_UserToken (token, user, issueTime, expireTime, ipAddress) 
+        $insert = $handler->prepare("INSERT INTO fa_Token (token, user, issueTime, expireTime, ipAddress) 
                                             VALUES (:token, :user, NOW(), NOW() + INTERVAL 1 HOUR, :ipAddress)");
         $insert->bindParam('token', $columns['token'], DatabaseConnection::PARAM_STR);
         $insert->bindParam('user', $columns['user'], DatabaseConnection::PARAM_INT);
@@ -65,20 +65,20 @@ class UserTokenDatabaseHandler
 
     /**
      * @param string $token
-     * @throws UserTokenException
+     * @throws TokenException
      * @throws \exceptions\DatabaseException
      */
     public static function expireToken(string $token)
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE fa_UserToken SET expired = 1 WHERE token = ?");
+        $update = $handler->prepare("UPDATE fa_Token SET expired = 1 WHERE token = ?");
         $update->bindParam(1, $token,DatabaseConnection::PARAM_STR);
         $update->execute();
 
         $handler->close();
 
         if($update->getRowCount() !== 1)
-            throw new UserTokenException(Messages::USERTOKEN_ALREADY_EXPIRED, UserTokenException::ALREADY_EXPIRED);
+            throw new TokenException(Messages::USERTOKEN_ALREADY_EXPIRED, TokenException::ALREADY_EXPIRED);
     }
 }

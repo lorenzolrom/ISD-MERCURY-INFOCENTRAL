@@ -14,9 +14,9 @@
 namespace models;
 
 
-use database\UserTokenDatabaseHandler;
+use database\TokenDatabaseHandler;
 
-class UserToken extends Model
+class Token extends Model
 {
     private $token;
     private $user;
@@ -94,10 +94,10 @@ class UserToken extends Model
 
     /**
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      */
     public function expire()
     {
-        UserTokenDatabaseHandler::expireToken($this->token);
+        TokenDatabaseHandler::expireToken($this->token);
     }
 }

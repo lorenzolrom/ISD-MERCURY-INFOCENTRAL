@@ -14,26 +14,26 @@
 namespace models;
 
 
-use database\AppTokenDatabaseHandler;
+use database\SecretDatabaseHandler;
 
-class AppToken extends Model
+class Secret extends Model
 {
     private $id;
-    private $token;
+    private $secret;
     private $name;
     private $exempt;
 
     /**
      * AppToken constructor.
      * @param int $id
-     * @param string $token
+     * @param string $secret
      * @param string $name
      * @param int $exempt
      */
-    public function __construct(int $id, string $token, string $name, int $exempt)
+    public function __construct(int $id, string $secret, string $name, int $exempt)
     {
         $this->id = $id;
-        $this->token = $token;
+        $this->secret = $secret;
         $this->name = $name;
         $this->exempt = $exempt;
     }
@@ -49,9 +49,9 @@ class AppToken extends Model
     /**
      * @return string
      */
-    public function getToken(): string
+    public function getSecret(): string
     {
-        return $this->token;
+        return $this->secret;
     }
 
     /**
@@ -79,6 +79,15 @@ class AppToken extends Model
      */
     public function hasAccessToRoute(Route $route): bool
     {
-        return AppTokenDatabaseHandler::doesTokenHaveAccessToRoute($this->id, $route->getId());
+        return SecretDatabaseHandler::doesSecretHaveAccessToRoute($this->id, $route->getId());
+    }
+
+    /**
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public function getPermissionCodes(): array
+    {
+        return SecretDatabaseHandler::getSecretPermissionCodes($this->id);
     }
 }

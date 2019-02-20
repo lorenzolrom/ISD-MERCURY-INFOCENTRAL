@@ -31,7 +31,7 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      */
     public function processURI(string $uri): array
     {
@@ -65,7 +65,7 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      */
     private function getRoles(): array
     {
@@ -88,7 +88,7 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      */
     private function getRole(int $roleId): array
     {
@@ -106,7 +106,7 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      */
     private function getRelationships(int $roleId, string $type): array
     {
@@ -133,7 +133,7 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      */
     private function createRole(): array
     {
@@ -177,7 +177,7 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\UserTokenException
+     * @throws \exceptions\TokenException
      */
     private function updateRole(int $roleID): array
     {

@@ -28,4 +28,6 @@ class SecurityException extends \Exception
 
     const USER_NOT_AUTHENTICATED = 308;
     const USER_NO_PERMISSION = 309;
+
+    const SECRET_NO_PERMISSION = 310;
 }

@@ -71,7 +71,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE fa_UserToken SET expired = 1 WHERE user = ?");
+        $update = $handler->prepare("UPDATE fa_Token SET expired = 1 WHERE user = ?");
         $update->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
         $update->execute();
 

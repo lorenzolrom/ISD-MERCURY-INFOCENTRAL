@@ -33,6 +33,7 @@ class Messages
     const SECURITY_APPTOKEN_NOT_SUPPLIED = "Application Token Not Supplied";
     const SECURITY_APPTOKEN_NOT_FOUND = "Application Token Not Found";
     const SECURITY_APPTOKEN_NO_PERMISSION_FOR_ROUTE = "Application Token Does Not Have Permission For Requested Route";
+    const SECURITY_SECRET_DOES_NOT_HAVE_PERMISSION = "Application Does Not Have Permission";
 
     const USER_NOT_FOUND = "User Not Found";
     const USER_PASSWORD_IS_WRONG = "Password Is Incorrect";

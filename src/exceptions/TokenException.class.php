@@ -14,7 +14,7 @@
 namespace exceptions;
 
 
-class UserTokenException extends \Exception
+class TokenException extends \Exception
 {
     const ALREADY_EXPIRED = 501;
     const HAS_EXPIRED = 502;

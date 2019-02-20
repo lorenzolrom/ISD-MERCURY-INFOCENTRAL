@@ -25,6 +25,7 @@ use factories\ControllerFactory;
 use factories\RouteFactory;
 use factories\UserFactory;
 use factories\UserTokenFactory;
+use const http\Client\Curl\Features\HTTP2;
 use messages\Messages;
 use models\User;
 
@@ -108,7 +109,7 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['responseMessage'] = $e->getMessage();
+            $fa_finalOutput['errors'] = [$e->getMessage()];
         }
         catch(EntryNotFoundException $e)
         {
@@ -119,7 +120,7 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['responseMessage'] = $e->getMessage();
+            $fa_finalOutput['errors'] = [$e->getMessage()];
         }
         catch(RouteException $e)
         {
@@ -133,12 +134,17 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['responseMessage'] = $e->getMessage();
+            $fa_finalOutput['errors'] = [$e->getMessage()];
+        }
+        catch(UserTokenException $e)
+        {
+            http_response_code(401);
+            $fa_finalOutput['errors'] = [$e->getMessage()];
         }
         catch(\Exception $e)
         {
             http_response_code(500);
-            $fa_finalOutput['responseMessage'] = $e->getMessage();
+            $fa_finalOutput['errors'] = [$e->getMessage()];
         }
 
         return json_encode($fa_finalOutput);
@@ -188,7 +194,8 @@ class FrontController
      */
     public static function validatePermission(string $permission)
     {
-        if(!self::getCurrentUser()->hasPermission($permission))
+        // If application token is not exempt and the user does not have permission
+        if((!AppTokenFactory::getFromToken($_SERVER['HTTP_APPLICATION_TOKEN'])->getExempt() == 1) AND (!self::getCurrentUser()->hasPermission($permission)))
             throw new SecurityException(Messages::SECURITY_USER_DOES_NOT_HAVE_PERMISSION, SecurityException::USER_NO_PERMISSION);
     }
 }

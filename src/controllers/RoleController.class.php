@@ -43,13 +43,18 @@ class RoleController extends Controller
                 return $this->getRoles();
             else if(sizeof($uriParts) == 1) // Get role details
                 return $this->getRole(intval($uriParts[0]));
-            else if(sizeof($uriParts) == 2 AND $uriParts[1] == "permissions") // Get role permissions
-                return $this->getRolePermissions(intval($uriParts[0]));
+            else if(sizeof($uriParts) == 3 AND $uriParts[1] == "relationships") // Get role permissions
+                return $this->getRelationships(intval($uriParts[0]), $uriParts[2]);
         }
         else if($_SERVER['REQUEST_METHOD'] == "POST")
         {
             if(sizeof($uriParts) == 1 AND $uriParts[0] == "") // Create new role
                 return $this->createRole();
+        }
+        else if($_SERVER['REQUEST_METHOD'] == "PUT")
+        {
+            if(sizeof($uriParts) == 1) // Update role
+                return $this->updateRole(intval($uriParts[0]));
         }
 
         throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
@@ -65,7 +70,16 @@ class RoleController extends Controller
     private function getRoles(): array
     {
         FrontController::validatePermission('fa-roles-listroleids');
-        return ['roles' => RoleDatabaseHandler::selectAllIDs()];
+
+        $roleIDs = array();
+
+        foreach(RoleDatabaseHandler::selectAllIDs() as $roleID)
+        {
+            $role = RoleFactory::getFromID($roleID);
+            $roleIDs[] = ['type' => 'Role', 'id' => $role->getId(), 'displayName' => $role->getDisplayName()];
+        }
+
+        return ['data' => $roleIDs];
     }
 
     /**
@@ -81,23 +95,37 @@ class RoleController extends Controller
         FrontController::validatePermission('fa-roles-showroledetails');
         $role = RoleFactory::getFromID($roleId);
 
-        return ['role' => ['id' => $role->getId(), 'displayName' => $role->getDisplayName()]];
+        return ['data' => ['type' => 'Role', 'id' => $role->getId(), 'displayName' => $role->getDisplayName()]];
     }
 
     /**
      * @param int $roleId
+     * @param string $type
      * @return array
+     * @throws RouteException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      * @throws \exceptions\UserTokenException
      */
-    private function getRolePermissions(int $roleId): array
+    private function getRelationships(int $roleId, string $type): array
     {
-        FrontController::validatePermission('fa-roles-showrolepermissions');
-        $role = RoleFactory::getFromID($roleId);
+        if($type == "permissions")
+        {
+            FrontController::validatePermission('fa-roles-showrolepermissions');
+            $role = RoleFactory::getFromID($roleId);
 
-        return ['rolePermissions' => $role->getPermissionCodes()];
+            $permissions = array();
+
+            foreach($role->getPermissionCodes() as $permissionCode)
+            {
+                $permissions[] = ['type' => 'Permission', 'code' => $permissionCode];
+            }
+
+            return ['data' => $permissions];
+        }
+
+        throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_IS_INVALID, RouteException::REQUIRED_PARAMETER_IS_INVALID);
     }
 
     /**
@@ -111,34 +139,58 @@ class RoleController extends Controller
     {
         FrontController::validatePermission('fa-roles-create');
 
-        $errs = array();
+        $errors = array();
 
         // Validate Submission
         if(!isset($_POST['displayName']))
-            $errs['displayName'] = "Display Name " . ValidationError::MESSAGE_VALUE_REQUIRED;
-
-        switch(Role::validateDisplayName($_POST['displayName']))
+            $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
+        else
         {
-            case ValidationError::VALUE_IS_NULL:
-                $errs['displayName'] = "Display Name " . ValidationError::MESSAGE_VALUE_REQUIRED;
-                break;
-            case ValidationError::VALUE_ALREADY_TAKEN:
-                $errs['displayName'] = "Display Name " . ValidationError::MESSAGE_VALUE_ALREADY_TAKEN;
-                break;
-            case ValidationError::VALUE_IS_TOO_SHORT:
-                $errs['displayName'] = ValidationError::getLengthMessage("Display Name", 1, 64);
-                break;
-            case ValidationError::VALUE_IS_TOO_LONG:
-                $errs['displayName'] = ValidationError::getLengthMessage("Display Name", 1, 64);
-                break;
+            switch (Role::validateDisplayName($_POST['displayName'])) {
+                case ValidationError::VALUE_IS_NULL:
+                    $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
+                    break;
+                case ValidationError::VALUE_ALREADY_TAKEN:
+                    $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_ALREADY_TAKEN];
+                    break;
+                case ValidationError::VALUE_IS_TOO_SHORT:
+                    $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::getLengthMessage(1, 64)];
+                    break;
+                case ValidationError::VALUE_IS_TOO_LONG:
+                    $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::getLengthMessage(1, 64)];
+                    break;
+            }
         }
 
         // Return errors, if present
-        if(!empty($errs))
-            return ['validationErrors' => $errs];
+        if(!empty($errors))
+            return ['errors' => $errors];
 
         // Create new role
         http_response_code(201);
-        return ['newRoleID' => RoleFactory::getNew($_POST['displayName'])->getId()];
+        return ['id' => RoleFactory::getNew($_POST['displayName'])->getId()];
+    }
+
+    /**
+     * @param int $roleID
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     * @throws \exceptions\UserTokenException
+     */
+    private function updateRole(int $roleID): array
+    {
+        FrontController::validatePermission('fa-roles-modify');
+
+        $errors = array();
+
+        $role = RoleFactory::getFromID($roleID);
+
+        // Validate Submission
+
+        // Respond 'OK'
+        http_response_code(204);
+        return [];
     }
 }

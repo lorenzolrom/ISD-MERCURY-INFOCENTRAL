@@ -21,18 +21,21 @@ class AppToken extends Model
     private $id;
     private $token;
     private $name;
+    private $exempt;
 
     /**
      * AppToken constructor.
      * @param int $id
      * @param string $token
      * @param string $name
+     * @param int $exempt
      */
-    public function __construct(int $id, string $token, string $name)
+    public function __construct(int $id, string $token, string $name, int $exempt)
     {
         $this->id = $id;
         $this->token = $token;
         $this->name = $name;
+        $this->exempt = $exempt;
     }
 
     /**
@@ -58,6 +61,16 @@ class AppToken extends Model
     {
         return $this->name;
     }
+
+    /**
+     * @return int
+     */
+    public function getExempt(): int
+    {
+        return $this->exempt;
+    }
+
+
 
     /**
      * @param Route $route

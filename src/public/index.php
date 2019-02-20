@@ -22,5 +22,5 @@ spl_autoload_register(
     }
 );
 
-header('Content-type: application/json');
+header('Content-type: application/vnd.api+json');
 echo \controllers\FrontController::processRequest();

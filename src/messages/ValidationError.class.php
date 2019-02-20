@@ -29,17 +29,16 @@ class ValidationError
     const MESSAGE_VALUE_LENGTH_INVALID = "Must Be Between {{@bound1}} And {{@bound2}} Characters";
 
     /**
-     * @param string $subject Name of field
      * @param int $lowerBound Least number of acceptable characters
      * @param int $upperBound Greatest number of acceptable characters
      * @return string
      */
-    public static function getLengthMessage(string $subject, int $lowerBound, int $upperBound): string
+    public static function getLengthMessage(int $lowerBound, int $upperBound): string
     {
         $baseMessage = self::MESSAGE_VALUE_LENGTH_INVALID;
         $baseMessage = str_replace("{{@bound1}}", $lowerBound, $baseMessage);
         $baseMessage = str_replace("{{@bound2}}", $upperBound, $baseMessage);
 
-        return "$subject $baseMessage";
+        return $baseMessage;
     }
 }

@@ -29,7 +29,7 @@ class AppTokenDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, token, name FROM fa_AppToken WHERE token = ?");
+        $select = $handler->prepare("SELECT id, token, name, exempt FROM fa_AppToken WHERE token = ?");
         $select->bindParam(1, $token, DatabaseConnection::PARAM_STR);
         $select->execute();
 

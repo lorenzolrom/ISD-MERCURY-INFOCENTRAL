@@ -86,7 +86,8 @@ class AuthenticateController extends Controller
         $token = UserTokenFactory::getNewToken($user);
 
         // Return the newly created token
-        return ['userToken' => $token->getToken()];
+        http_response_code(201);
+        return ['data' => [ 'type' => 'UserToken', 'token' => $token->getToken()]];
     }
 
     /**
@@ -100,7 +101,8 @@ class AuthenticateController extends Controller
     {
         FrontController::getCurrentUser()->logout();
 
-        return ['responseMessage' => Messages::USER_LOGGED_OUT];
+        http_response_code(204);
+        return[];
     }
 
     /**
@@ -114,6 +116,7 @@ class AuthenticateController extends Controller
     {
         FrontController::getCurrentUser();
 
-        return ['responseMessage' => 'Token Is Valid'];
+        http_response_code(204);
+        return[];
     }
 }

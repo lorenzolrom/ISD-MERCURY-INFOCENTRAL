@@ -29,6 +29,6 @@ class AppTokenFactory
     {
         $appTokenData = AppTokenDatabaseHandler::selectFromToken($token);
 
-        return new AppToken($appTokenData['id'], $appTokenData['token'], $appTokenData['name']);
+        return new AppToken($appTokenData['id'], $appTokenData['token'], $appTokenData['name'], $appTokenData['exempt']);
     }
 }

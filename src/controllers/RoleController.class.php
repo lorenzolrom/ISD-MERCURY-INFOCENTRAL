@@ -43,8 +43,8 @@ class RoleController extends Controller
                 return $this->getRoles();
             else if(sizeof($uriParts) == 1) // Get role details
                 return $this->getRole(intval($uriParts[0]));
-            else if(sizeof($uriParts) == 3 AND $uriParts[1] == "relationships") // Get role permissions
-                return $this->getRelationships(intval($uriParts[0]), $uriParts[2]);
+            else if(sizeof($uriParts) == 2 AND $uriParts[1] == "permissions") // Get role permissions
+                return $this->getPermissions(intval($uriParts[0]));
         }
         else if($_SERVER['REQUEST_METHOD'] == "POST")
         {
@@ -100,32 +100,25 @@ class RoleController extends Controller
 
     /**
      * @param int $roleId
-     * @param string $type
      * @return array
-     * @throws RouteException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      * @throws \exceptions\TokenException
      */
-    private function getRelationships(int $roleId, string $type): array
+    private function getPermissions(int $roleId): array
     {
-        if($type == "permissions")
+        FrontController::validatePermission('fa-roles-showrolepermissions');
+        $role = RoleFactory::getFromID($roleId);
+
+        $permissions = array();
+
+        foreach($role->getPermissionCodes() as $permissionCode)
         {
-            FrontController::validatePermission('fa-roles-showrolepermissions');
-            $role = RoleFactory::getFromID($roleId);
-
-            $permissions = array();
-
-            foreach($role->getPermissionCodes() as $permissionCode)
-            {
-                $permissions[] = ['type' => 'Permission', 'code' => $permissionCode];
-            }
-
-            return ['data' => $permissions];
+            $permissions[] = ['type' => 'Permission', 'code' => $permissionCode];
         }
 
-        throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_IS_INVALID, RouteException::REQUIRED_PARAMETER_IS_INVALID);
+        return ['data' => $permissions];
     }
 
     /**

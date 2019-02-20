@@ -193,7 +193,7 @@ class FrontController
         if($secret->getExempt() == 1 AND !in_array($permission, $secret->getPermissionCodes()))
             throw new SecurityException(Messages::SECURITY_SECRET_DOES_NOT_HAVE_PERMISSION, SecurityException::SECRET_NO_PERMISSION);
 
-        if(!self::getCurrentUser()->hasPermission($permission))
+        if($secret->getExempt() == 0 AND !self::getCurrentUser()->hasPermission($permission))
             throw new SecurityException(Messages::SECURITY_USER_DOES_NOT_HAVE_PERMISSION, SecurityException::USER_NO_PERMISSION);
     }
 }

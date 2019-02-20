@@ -74,25 +74,18 @@ class UserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\TokenException
      */
-    private function getLoginNames(): array
-    {
-        FrontController::validatePermission('fa-users-listloginnames');
-
-        return ['loginNames' => UserDatabaseHandler::selectAllLoginNames()];
-    }
-
-    /**
-     * @return array
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
-     */
     private function getUsers(): array
     {
         FrontController::validatePermission('fa-users-listuserids');
 
-        return ['users' => UserDatabaseHandler::selectAllIDs()];
+        $users = array();
+
+        foreach(UserDatabaseHandler::selectAllIDs() as $userID)
+        {
+            $users[] = ['type' => 'User', 'id' => $userID];
+        }
+
+        return ['data' => $users];
     }
 
     /**
@@ -109,7 +102,8 @@ class UserController extends Controller
 
         $user = UserFactory::getFromID($userID);
 
-        return ['userDetails' => ['id' => $user->getId(),
+        return ['data' => ['type' => 'User',
+                                 'id' => $user->getId(),
                                  'loginName' => $user->getLoginName(),
                                  'authType' => $user->getAuthType(),
                                  'firstName' => $user->getFirstName(),
@@ -131,17 +125,16 @@ class UserController extends Controller
     {
         FrontController::validatePermission('fa-users-showuserroles');
 
-        $output = array();
-        $output['userRoles'] = array();
+        $roles = array();
 
         $user = UserFactory::getFromID($userID);
 
         foreach($user->getRoles() as $role)
         {
-            $output['userRoles'][] = $role->getId();
+            $roles[] = ['type' => 'Role', 'id' => $role->getId(), 'displayName' => $role->getDisplayName()];
         }
 
-        return $output;
+        return ['data' => $roles];
     }
 
     /**
@@ -153,7 +146,8 @@ class UserController extends Controller
     private function createUser()
     {
         FrontController::validatePermission('fa-users-create');
-        return ['request' => 'createUser'];
+        http_response_code(501);
+        return[];
     }
 
     /**
@@ -167,7 +161,8 @@ class UserController extends Controller
     private function updateUser(int $userID): array
     {
         FrontController::validatePermission('fa-users-update');
-        return ['request' => 'updateUser: ' . $userID];
+        http_response_code(501);
+        return[];
     }
 
     /**
@@ -181,7 +176,8 @@ class UserController extends Controller
     private function deleteUser(int $userID): array
     {
         FrontController::validatePermission('fa-users-delete');
-        return ['request' => 'deleteUser' . $userID];
+        http_response_code(501);
+        return[];
     }
 
     /**
@@ -195,7 +191,8 @@ class UserController extends Controller
     private function addRole(int $userID): array
     {
         FrontController::validatePermission('fa-users-modifyroles');
-        return ['request' => 'addRole'];
+        http_response_code(501);
+        return[];
     }
 
     /**
@@ -210,6 +207,7 @@ class UserController extends Controller
     private function removeRole(int $userID, int $roleId): array
     {
         FrontController::validatePermission('fa-users-modifyroles');
-        return ['request' => 'removeRole'];
+        http_response_code(501);
+        return[];
     }
 }

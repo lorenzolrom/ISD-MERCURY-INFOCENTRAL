@@ -20,4 +20,5 @@ class RouteException extends \Exception
     const ROUTE_URI_NOT_FOUND = 402;
     const REQUIRED_PARAMETER_MISSING = 403;
     const REQUIRED_PARAMETER_IS_INVALID = 404;
+    const REQUIRED_DOCUMENT_PARAMETER_MISSING = 405;
 }

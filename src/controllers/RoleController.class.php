@@ -138,11 +138,11 @@ class RoleController extends Controller
         $errors = array();
 
         // Validate Submission
-        if(!isset($vars['displayName']))
+        if(!isset($vars['data']['displayName']))
             $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
         else
         {
-            switch (Role::validateDisplayName($vars['displayName'])) {
+            switch (Role::validateDisplayName($vars['data']['displayName'])) {
                 case ValidationError::VALUE_IS_NULL:
                     $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
                     break;
@@ -178,13 +178,13 @@ class RoleController extends Controller
     {
         FrontController::validatePermission('fa-roles-create');
 
-        $validation = $this->validateRole($_POST);
+        $validation = $this->validateRole(FrontController::getDocumentAsArray());
         if(!empty($validation))
             return $validation;
 
         // Create new role
         http_response_code(201);
-        return ['data' => ['type' => 'Role', 'id' => RoleFactory::getNew($_POST['displayName'])->getId()]];
+        return ['data' => ['type' => 'Role', 'id' => RoleFactory::getNew(FrontController::getDocumentAsArray()['data']['displayName'])->getId()]];
     }
 
     /**
@@ -201,12 +201,12 @@ class RoleController extends Controller
         $role = RoleFactory::getFromID($roleID);
 
         // Validate Submission
-        $validation = $this->validateRole(FrontController::getPUTArray());
+        $validation = $this->validateRole(FrontController::getDocumentAsArray());
         if(!empty($validation))
             return $validation;
 
         // Update role
-        $role->setDisplayName(FrontController::getPUTArray()['displayName']);
+        $role->setDisplayName(FrontController::getDocumentAsArray()['data']['displayName']);
 
         // Respond 'OK'
         http_response_code(204);
@@ -250,11 +250,13 @@ class RoleController extends Controller
         $errors = array();
 
         // Validate Submission
-        if(!isset($_POST['permissionCode']))
+        $submission = FrontController::getDocumentAsArray();
+
+        if(!isset($submission['data']['permissionCode']))
             $errors[] = ['type' => 'validation', 'field' => 'permissionCode', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
         else
         {
-            $permissionCode = $_POST['permissionCode'];
+            $permissionCode = $submission['data']['permissionCode'];
             // Check if role already has permission
             if(in_array($permissionCode, $role->getPermissionCodes()))
                 $errors[] = ['type' => 'validation', 'field' => 'permissionCode', 'message' => ValidationError::MESSAGE_VALUE_ALREADY_ASSIGNED];
@@ -280,7 +282,7 @@ class RoleController extends Controller
         }
 
         // Assign permission
-        $role->addPermission($_POST['permissionCode']);
+        $role->addPermission($submission['data']['permissionCode']);
 
         http_response_code(204);
         return [];

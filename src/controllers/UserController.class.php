@@ -74,7 +74,7 @@ class UserController extends Controller
      */
     private function getUsers(): array
     {
-        FrontController::validatePermission('fa-users-listuserids');
+        FrontController::validatePermission('fa-users-listusers');
 
         $users = array();
 

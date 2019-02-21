@@ -18,7 +18,6 @@ use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
-use \exceptions\TokenException;
 use factories\UserFactory;
 use factories\TokenFactory;
 use messages\Messages;
@@ -33,21 +32,25 @@ class AuthenticateController extends Controller
      * @throws EntryNotFoundException
      * @throws RouteException
      * @throws SecurityException
-     * @throws TokenException
      */
     public function processURI(string $uri): array
     {
-        switch(explode("/", $uri)[0])
+        $uriParts = explode("/", $uri);
+
+        if($_SERVER['REQUEST_METHOD'] == "POST")
         {
-            case "login":
+            if($uriParts[0] == "login")
                 return $this->loginUser();
-            case "logout":
-                return $this->logoutUser();
-            case "validate":
-                return $this->validateToken();
-            default:
-                throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
         }
+        else if($_SERVER['REQUEST_METHOD'] == "GET")
+        {
+            if($uriParts[0] == "logout")
+                return $this->logoutUser();
+            else if($uriParts[0] == "validate")
+                return $this->validateToken();
+        }
+
+        throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
     }
 
     /**
@@ -59,14 +62,15 @@ class AuthenticateController extends Controller
      */
     private function loginUser(): array
     {
+        $submission = FrontController::getDocumentAsArray();
         // Check for loginName and password
-        if(!isset($_POST['loginName']) OR !isset($_POST['password']))
+        if(!isset($submission['data']['loginName']) OR !isset($submission['data']['password']))
             throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_PARAMETER_MISSING);
 
         // Check username
         try
         {
-            $user = UserFactory::getFromLoginName($_POST['loginName']);
+            $user = UserFactory::getFromLoginName($submission['data']['loginName']);
         }
         catch (EntryNotFoundException $e)
         {
@@ -74,7 +78,7 @@ class AuthenticateController extends Controller
         }
 
         // Check password
-        $hashedPassword = hash('SHA512', hash('SHA512',$_POST['password']));
+        $hashedPassword = hash('SHA512', hash('SHA512',$submission['data']['password']));
 
         if($user->getPassword() != $hashedPassword)
             throw new SecurityException(Messages::USER_PASSWORD_IS_WRONG, SecurityException::USER_PASSWORD_IS_WRONG);

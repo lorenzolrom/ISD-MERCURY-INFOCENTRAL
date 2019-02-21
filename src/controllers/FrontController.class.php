@@ -200,23 +200,11 @@ class FrontController
     }
 
     /**
-     * Converts data sent in a PUT request to a POST-like array
+     * Converts data sent in a request document to an array
      * @return array
      */
-    public static function getPUTArray(): array
+    public static function getDocumentAsArray(): array
     {
-        $putData = fopen('php://input', 'r');
-
-        $putArray = array();
-
-        while($data = fread($putData, 1024))
-        {
-            $values = explode("=", $data);
-            $putArray[$values[0]] = urldecode($values[1]);
-        }
-
-        fclose($putData);
-
-        return $putArray;
+        return json_decode(file_get_contents('php://input'), TRUE);
     }
 }

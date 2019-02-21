@@ -107,7 +107,7 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['errors'] = [$e->getMessage()];
+            $fa_finalOutput['errors'] = ['type' => 'security', 'message' => $e->getMessage()];
         }
         catch(EntryNotFoundException $e)
         {
@@ -118,7 +118,7 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['errors'] = [$e->getMessage()];
+            $fa_finalOutput['errors'] = ['type' => 'entryMissing', 'message' => $e->getMessage()];
         }
         catch(RouteException $e)
         {
@@ -132,12 +132,12 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['errors'] = [$e->getMessage()];
+            $fa_finalOutput['errors'] = ['type' => 'route', 'message' => $e->getMessage()];
         }
         catch(\Exception $e)
         {
             http_response_code(500);
-            $fa_finalOutput['errors'] = [$e->getMessage()];
+            $fa_finalOutput['errors'] = ['type' => 'fatal', $e->getMessage()];
         }
 
         return json_encode($fa_finalOutput);
@@ -148,7 +148,6 @@ class FrontController
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     public static function getCurrentUser(): User
     {
@@ -174,6 +173,10 @@ class FrontController
         {
             throw new SecurityException($e->getMessage(), SecurityException::USERTOKEN_NOT_FOUND);
         }
+        catch (TokenException $e)
+        {
+            throw new SecurityException($e->getMessage(), SecurityException::USERTOKEN_IS_EXPIRED);
+        }
 
         return UserFactory::getFromID($token->getUser());
     }
@@ -182,7 +185,6 @@ class FrontController
      * @param string $permission
      * @throws EntryNotFoundException
      * @throws SecurityException
-     * @throws TokenException
      * @throws \exceptions\DatabaseException
      */
     public static function validatePermission(string $permission)
@@ -195,5 +197,26 @@ class FrontController
 
         if($secret->getExempt() == 0 AND !self::getCurrentUser()->hasPermission($permission))
             throw new SecurityException(Messages::SECURITY_USER_DOES_NOT_HAVE_PERMISSION, SecurityException::USER_NO_PERMISSION);
+    }
+
+    /**
+     * Converts data sent in a PUT request to a POST-like array
+     * @return array
+     */
+    public static function getPUTArray(): array
+    {
+        $putData = fopen('php://input', 'r');
+
+        $putArray = array();
+
+        while($data = fread($putData, 1024))
+        {
+            $values = explode("=", $data);
+            $putArray[$values[0]] = urldecode($values[1]);
+        }
+
+        fclose($putData);
+
+        return $putArray;
     }
 }

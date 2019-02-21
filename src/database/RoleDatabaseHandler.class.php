@@ -103,12 +103,50 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT displayName FROM fa_Role WHERE displayName = ? LIMIT 1");
+        $select = $handler->prepare("SELECT displayName FROM fa_Role WHERE BINARY displayName = ? LIMIT 1");
         $select->bindParam(1, $displayName, DatabaseConnection::PARAM_STR);
         $select->execute();
 
         $handler->close();
 
         return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @param string $displayName
+     * @return bool Was a record updated?
+     * @throws \exceptions\DatabaseException
+     */
+    public static function updateDisplayName(int $id, string $displayName): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare("UPDATE fa_Role set displayName = ? WHERE id = ?");
+        $update->bindParam(1, $displayName, DatabaseConnection::PARAM_STR);
+        $update->bindParam(2, $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return $update->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function delete(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare("DELETE FROM fa_Role WHERE id = ?");
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
     }
 }

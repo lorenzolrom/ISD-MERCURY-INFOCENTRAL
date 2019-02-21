@@ -29,7 +29,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     public function processURI(string $uri): array
     {
@@ -72,7 +71,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     private function getUsers(): array
     {
@@ -94,7 +92,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     private function getUser(int $userID): array
     {
@@ -119,7 +116,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     private function getUserRoles(int $userID): array
     {
@@ -141,7 +137,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     private function createUser()
     {
@@ -156,7 +151,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     private function updateUser(int $userID): array
     {
@@ -171,7 +165,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     private function deleteUser(int $userID): array
     {
@@ -186,7 +179,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     private function addRole(int $userID): array
     {
@@ -202,7 +194,6 @@ class UserController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\TokenException
      */
     private function removeRole(int $userID, int $roleId): array
     {

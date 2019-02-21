@@ -31,7 +31,6 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\TokenException
      */
     public function processURI(string $uri): array
     {
@@ -56,6 +55,11 @@ class RoleController extends Controller
             if(sizeof($uriParts) == 1) // Update role
                 return $this->updateRole(intval($uriParts[0]));
         }
+        else if($_SERVER['REQUEST_METHOD'] == "DELETE")
+        {
+            if(sizeof($uriParts) == 1) // Delete role
+                return $this->deleteRole(intval($uriParts[0]));
+        }
 
         throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
     }
@@ -65,11 +69,10 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\TokenException
      */
     private function getRoles(): array
     {
-        FrontController::validatePermission('fa-roles-listroleids');
+        FrontController::validatePermission('fa-roles-listroles');
 
         $roleIDs = array();
 
@@ -88,7 +91,6 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\TokenException
      */
     private function getRole(int $roleId): array
     {
@@ -104,7 +106,6 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\TokenException
      */
     private function getPermissions(int $roleId): array
     {
@@ -122,24 +123,20 @@ class RoleController extends Controller
     }
 
     /**
+     * @param array $vars
      * @return array
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     * @throws \exceptions\TokenException
      */
-    private function createRole(): array
+    private function validateRole(array $vars): array
     {
-        FrontController::validatePermission('fa-roles-create');
-
         $errors = array();
 
         // Validate Submission
-        if(!isset($_POST['displayName']))
+        if(!isset($vars['displayName']))
             $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
         else
         {
-            switch (Role::validateDisplayName($_POST['displayName'])) {
+            switch (Role::validateDisplayName($vars['displayName'])) {
                 case ValidationError::VALUE_IS_NULL:
                     $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
                     break;
@@ -157,11 +154,31 @@ class RoleController extends Controller
 
         // Return errors, if present
         if(!empty($errors))
+        {
+            http_response_code(409);
             return ['errors' => $errors];
+        }
+
+        return [];
+    }
+
+    /**
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    private function createRole(): array
+    {
+        FrontController::validatePermission('fa-roles-create');
+
+        $validation = $this->validateRole($_POST);
+        if(!empty($validation))
+            return $validation;
 
         // Create new role
         http_response_code(201);
-        return ['id' => RoleFactory::getNew($_POST['displayName'])->getId()];
+        return ['data' => ['type' => 'Role', 'id' => RoleFactory::getNew($_POST['displayName'])->getId()]];
     }
 
     /**
@@ -170,19 +187,43 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\TokenException
      */
     private function updateRole(int $roleID): array
     {
         FrontController::validatePermission('fa-roles-modify');
 
-        $errors = array();
-
         $role = RoleFactory::getFromID($roleID);
 
         // Validate Submission
+        $validation = $this->validateRole(FrontController::getPUTArray());
+        if(!empty($validation))
+            return $validation;
+
+        // Update role
+        $role->setDisplayName(FrontController::getPUTArray()['displayName']);
 
         // Respond 'OK'
+        http_response_code(204);
+        return [];
+    }
+
+    /**
+     * @param int $roleID
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    private function deleteRole(int $roleID): array
+    {
+        FrontController::validatePermission('fa-roles-delete');
+
+        $role = RoleFactory::getFromID($roleID);
+
+        // Delete role
+        $role->delete();
+
+        // Respond OK
         http_response_code(204);
         return [];
     }

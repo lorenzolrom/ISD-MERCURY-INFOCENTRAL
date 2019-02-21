@@ -60,6 +60,25 @@ class Role extends Model
 
     /**
      * @param string $displayName
+     * @return bool Was the display name updated?
+     * @throws \exceptions\DatabaseException
+     */
+    public function setDisplayName(string $displayName): bool
+    {
+        return RoleDatabaseHandler::updateDisplayName($this->id, $displayName);
+    }
+
+    /**
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public function delete(): bool
+    {
+        return RoleDatabaseHandler::delete($this->id);
+    }
+
+    /**
+     * @param string $displayName
      * @return int
      * @throws \exceptions\DatabaseException
      */

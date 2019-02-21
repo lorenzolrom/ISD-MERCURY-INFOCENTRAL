@@ -94,7 +94,6 @@ class AuthenticateController extends Controller
      * @return array
      * @throws DatabaseException
      * @throws SecurityException
-     * @throws \exceptions\TokenException
      * @throws EntryNotFoundException
      */
     private function logoutUser(): array
@@ -110,7 +109,6 @@ class AuthenticateController extends Controller
      * @throws DatabaseException
      * @throws EntryNotFoundException
      * @throws SecurityException
-     * @throws TokenException
      */
     private function validateToken(): array
     {

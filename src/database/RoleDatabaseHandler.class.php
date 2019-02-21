@@ -149,4 +149,44 @@ class RoleDatabaseHandler
 
         return $delete->getRowCount() === 1;
     }
+
+    /**
+     * @param int $roleID
+     * @param string $permissionCode
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function addPermissionToRole(int $roleID, string $permissionCode): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare("INSERT INTO fa_Role_Permission(role, permission) VALUE (?, ?)");
+        $insert->bindParam(1, $roleID, DatabaseConnection::PARAM_INT);
+        $insert->bindParam(2, $permissionCode, DatabaseConnection::PARAM_STR);
+        $insert->execute();
+
+        $handler->close();
+
+        return $insert->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $roleID
+     * @param string $permissionCode
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function removePermissionFromRole(int $roleID, string $permissionCode): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare("DELETE FROM fa_Role_Permission WHERE role = ? AND permission = ?");
+        $delete->bindParam(1, $roleID, DatabaseConnection::PARAM_INT);
+        $delete->bindParam(2, $permissionCode, DatabaseConnection::PARAM_STR);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() ===1 ;
+    }
 }

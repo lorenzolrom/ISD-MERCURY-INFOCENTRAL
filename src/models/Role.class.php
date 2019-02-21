@@ -59,6 +59,26 @@ class Role extends Model
     }
 
     /**
+     * @param string $permissionCode
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public function addPermission(string $permissionCode): bool
+    {
+        return RoleDatabaseHandler::addPermissionToRole($this->id, $permissionCode);
+    }
+
+    /**
+     * @param string $permissionCode
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public function removePermission(string $permissionCode): bool
+    {
+        return RoleDatabaseHandler::removePermissionFromRole($this->id, $permissionCode);
+    }
+
+    /**
      * @param string $displayName
      * @return bool Was the display name updated?
      * @throws \exceptions\DatabaseException

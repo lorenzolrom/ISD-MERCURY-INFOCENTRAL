@@ -27,6 +27,9 @@ class ValidationError
     const MESSAGE_VALUE_ALREADY_TAKEN = "Already In Use";
     const MESSAGE_VALUE_REQUIRED = "Is Required";
     const MESSAGE_VALUE_LENGTH_INVALID = "Must Be Between {{@bound1}} And {{@bound2}} Characters";
+    const MESSAGE_VALUE_ALREADY_ASSIGNED = "Object Already Assigned";
+    const MESSAGE_VALUE_NOT_FOUND = "Not Found";
+    const MESSAGE_VALUE_NOT_ASSIGNED = "Object Not Assigned";
 
     /**
      * @param int $lowerBound Least number of acceptable characters

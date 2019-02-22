@@ -183,8 +183,10 @@ class RoleController extends Controller
             return $validation;
 
         // Create new role
+        $role = RoleFactory::getNew(FrontController::getDocumentAsArray()['data']['displayName']);
+
         http_response_code(201);
-        return ['data' => ['type' => 'Role', 'id' => RoleFactory::getNew(FrontController::getDocumentAsArray()['data']['displayName'])->getId()]];
+        return ['data' => ['type' => 'Role', 'id' => $role->getId()]];
     }
 
     /**

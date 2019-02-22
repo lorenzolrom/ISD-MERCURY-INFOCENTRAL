@@ -22,6 +22,7 @@ class ValidationError
     const VALUE_IS_TOO_SHORT = 2;
     const VALUE_IS_TOO_LONG = 3;
     const VALUE_IS_NULL = 4;
+    const VALUE_IS_INVALID = 5;
 
     // Messages
     const MESSAGE_VALUE_ALREADY_TAKEN = "Already In Use";
@@ -30,6 +31,7 @@ class ValidationError
     const MESSAGE_VALUE_ALREADY_ASSIGNED = "Object Already Assigned";
     const MESSAGE_VALUE_NOT_FOUND = "Not Found";
     const MESSAGE_VALUE_NOT_ASSIGNED = "Object Not Assigned";
+    const MESSAGE_VALUE_NOT_VALID = "Not Valid";
 
     /**
      * @param int $lowerBound Least number of acceptable characters
@@ -43,5 +45,16 @@ class ValidationError
         $baseMessage = str_replace("{{@bound2}}", $upperBound, $baseMessage);
 
         return $baseMessage;
+    }
+
+    /**
+     * Generates an array that can be added to the "errors" returned by a POST/PUT operation
+     * @param string $field Name of form/table field
+     * @param string $message Error message
+     * @return array
+     */
+    public static function getErrorArrayEntry(string $field, string $message): array
+    {
+        return ['type' => 'validation', 'field' => $field, 'message' => $message];
     }
 }

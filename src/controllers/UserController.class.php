@@ -19,6 +19,8 @@ use exceptions\RouteException;
 use exceptions\SecurityException;
 use factories\UserFactory;
 use messages\Messages;
+use messages\ValidationError;
+use models\User;
 
 class UserController extends Controller
 {
@@ -134,15 +136,121 @@ class UserController extends Controller
     }
 
     /**
+     * @param array $vars
+     * @param bool $strict If TRUE, null entries will fail validation
+     * @return array
+     * @throws RouteException
+     * @throws \exceptions\DatabaseException
+     */
+    private function validateUser(array $vars, bool $strict = FALSE): array
+    {
+        $errors = array();
+
+        if (!isset($vars['data']))
+            throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_DOCUMENT_PARAMETER_MISSING);
+
+        $vars = $vars['data'];
+
+        // loginName
+        switch (User::validateLoginName(isset($vars['loginName']) ? $vars['loginName'] : NULL)) {
+            case ValidationError::VALUE_IS_NULL:
+                if ($strict)
+                    $errors[] = ValidationError::getErrorArrayEntry('loginName', ValidationError::MESSAGE_VALUE_REQUIRED);
+                break;
+            case ValidationError::VALUE_IS_TOO_SHORT:
+            case ValidationError::VALUE_IS_TOO_LONG:
+                $errors[] = ValidationError::getErrorArrayEntry('loginName', ValidationError::getLengthMessage(1, 64));
+                break;
+            case ValidationError::VALUE_ALREADY_TAKEN:
+                $errors[] = ValidationError::getErrorArrayEntry('loginName', ValidationError::MESSAGE_VALUE_ALREADY_TAKEN);
+        }
+
+        // authType
+        switch (User::validateAuthType(isset($vars['authType']) ? $vars['authType'] : NULL)) {
+            case ValidationError::VALUE_IS_NULL:
+                if ($strict)
+                    $errors[] = ValidationError::getErrorArrayEntry('authType', ValidationError::MESSAGE_VALUE_REQUIRED);
+                break;
+            case ValidationError::VALUE_IS_INVALID:
+                $errors[] = ValidationError::getErrorArrayEntry('authType', ValidationError::MESSAGE_VALUE_NOT_VALID);
+        }
+
+        // firstName & lastName
+        foreach (['firstName', 'lastName'] as $name) {
+            switch (User::validateXName(isset($vars[$name]) ? $vars[$name] : NULL)) {
+                case ValidationError::VALUE_IS_NULL:
+                    if ($strict)
+                        $errors[] = ValidationError::getErrorArrayEntry($name, ValidationError::MESSAGE_VALUE_REQUIRED);
+                    break;
+                case ValidationError::VALUE_IS_TOO_SHORT:
+                case ValidationError::VALUE_IS_TOO_LONG:
+                    $errors[] = ValidationError::getErrorArrayEntry($name, ValidationError::getLengthMessage(1, 32));
+            }
+        }
+
+        // email
+        switch (User::validateEmail(isset($vars['email']) ? $vars['email'] : NULL)) {
+            case ValidationError::VALUE_IS_INVALID:
+                $errors[] = ValidationError::getErrorArrayEntry('email', ValidationError::MESSAGE_VALUE_NOT_VALID);
+        }
+
+        // disabled
+        switch (User::validateDisabled(isset($vars['disabled']) ? $vars['disabled'] : NULL)) {
+            case ValidationError::VALUE_IS_NULL:
+                if ($strict)
+                    $errors[] = ValidationError::getErrorArrayEntry('disabled', ValidationError::MESSAGE_VALUE_REQUIRED);
+                break;
+            case ValidationError::VALUE_IS_INVALID:
+                $errors[] = ValidationError::getErrorArrayEntry('disabled', ValidationError::MESSAGE_VALUE_NOT_VALID);
+        }
+
+        if (!empty($errors))
+        {
+            http_response_code(409);
+            return ['errors' => $errors];
+        }
+
+        return [];
+    }
+
+    /**
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
+     * @throws RouteException
      */
-    private function createUser()
+    private function createUser(): array
     {
         FrontController::validatePermission('fa-users-create');
-        http_response_code(501);
-        return[];
+
+        $vars = FrontController::getDocumentAsArray();
+
+        $validation = $this->validateUser($vars, TRUE);
+
+        $vars = $vars['data'];
+
+        // Set values that can be null to null to avoid undefined index warnings
+        if(!isset($vars['password']))
+            $vars['password'] = NULL;
+        if(!isset($vars['displayName']))
+            $vars['displayName'] = NULL;
+        if(!isset($vars['email']))
+            $vars['email'] = NULL;
+
+        if(!empty($validation))
+            return $validation;
+
+        $user = UserFactory::getNew($vars['loginName'],
+                                    $vars['authType'],
+                                    $vars['password'], // NULL
+                                    $vars['firstName'],
+                                    $vars['lastName'],
+                                    $vars['displayName'], // NULL
+                                    $vars['email'], // NULL
+                                    intval($vars['disabled']));
+
+        http_response_code(201);
+        return ['data' => ['type' => 'User', 'id' => $user->getID()]];
     }
 
     /**

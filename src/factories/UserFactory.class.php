@@ -60,4 +60,24 @@ class UserFactory
             $userData['email'],
             $userData['disabled']);
     }
+
+    /**
+     * @param string $loginName
+     * @param string $authType
+     * @param string $password
+     * @param string $firstName
+     * @param string $lastName
+     * @param string|null $displayName
+     * @param string|null $email
+     * @param int $disabled
+     * @return User
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function getNew(string $loginName, string $authType, ?string $password, string $firstName,
+                                  string $lastName, ?string $displayName, ?string $email, int $disabled)
+    {
+        return self::getFromID(UserDatabaseHandler::insert($loginName, $authType, $password, $firstName, $lastName,
+            $displayName, $email, $disabled));
+    }
 }

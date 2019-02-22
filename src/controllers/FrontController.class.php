@@ -205,6 +205,11 @@ class FrontController
      */
     public static function getDocumentAsArray(): array
     {
-        return json_decode(file_get_contents('php://input'), TRUE);
+        $array = json_decode(file_get_contents('php://input'), TRUE);
+
+        if(is_array($array))
+            return $array;
+
+        return [];
     }
 }

@@ -18,6 +18,9 @@ use exceptions\EntryNotFoundException;
 
 class UserDatabaseHandler
 {
+    // Valid column names in the User table
+    const COLUMNS = ['loginName', 'authType', 'password', 'firstName', 'lastName', 'displayName', 'email', 'disabled'];
+
     /**
      * @param int $id
      * @return array
@@ -126,5 +129,118 @@ class UserDatabaseHandler
         $handler->close();
 
         return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
+
+    /**
+     * @param string $loginName
+     * @param string $authType
+     * @param string $password
+     * @param string $firstName
+     * @param string $lastName
+     * @param string|null $displayName
+     * @param string|null $email
+     * @param int $disabled
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(string $loginName, string $authType, ?string $password, string $firstName,
+                                  string $lastName, ?string $displayName, ?string $email, int $disabled): int
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare("INSERT INTO fa_User (loginName, authType, password, firstName, lastName, 
+                     displayName, email, disabled) VALUES (:loginName, :authType, :password, :firstName, :lastName, 
+                     :displayName, :email, :disabled)");
+        $insert->bindParam('loginName', $loginName, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('authType', $authType, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('password', $password, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('firstName', $firstName, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('lastName', $lastName, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('displayName', $displayName, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('email', $email, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('disabled', $disabled, DatabaseConnection::PARAM_INT);
+        $insert->execute();
+
+        $newUserID = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return $newUserID;
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function delete(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare("DELETE FROM fa_User WHERE id = ?");
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id ID record to update
+     * @param string $column A valid column name
+     * @param string|null $value New value
+     * @param string $type Type of value (e.g., string, int)
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function updateStringValue(int $id, string $column, ?string $value, string $type): bool
+    {
+        if(!in_array($column, self::COLUMNS))
+            return FALSE;
+
+        switch($type)
+        {
+            case "string":
+                $typeCode = DatabaseConnection::PARAM_STR;
+                break;
+            case "int":
+                $typeCode = DatabaseConnection::PARAM_INT;
+                break;
+            case "null":
+                $typeCode = DatabaseConnection::PARAM_NULL;
+                break;
+            default:
+                return FALSE;
+        }
+
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare("UPDATE fa_User SET $column = ? WHERE id = ?");
+        $update->bindParam(1, $value, $typeCode);
+        $update->bindParam(2, $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return $update->getRowCount() === 1;
+    }
+
+    /**
+     * @param string $loginName
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function isLoginNameTaken(string $loginName): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT loginName FROM fa_User WHERE loginName = ? LIMIT 1");
+        $select->bindParam(1, $loginName, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
     }
 }

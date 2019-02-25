@@ -89,7 +89,7 @@ class FrontController
             // Request results of route URI
             $fa_routeURI = "";
 
-            for($i = 3; $i < sizeof($fa_requestedURIParts); $i++)
+            for($i = 2; $i < sizeof($fa_requestedURIParts); $i++)
             {
                 $fa_routeURI .= $fa_requestedURIParts[$i] . "/";
             }

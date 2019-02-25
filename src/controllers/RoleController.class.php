@@ -38,33 +38,36 @@ class RoleController extends Controller
     {
         $uriParts = explode("/", $uri);
 
-        if($_SERVER['REQUEST_METHOD'] == "GET")
+        if($uriParts[0] == "roles")
         {
-            if(sizeof($uriParts) == 1 AND $uriParts[0] == "") // Get list of roles
-                return $this->getRoles();
-            else if(sizeof($uriParts) == 1) // Get role details
-                return $this->getRole(intval($uriParts[0]));
-            else if(sizeof($uriParts) == 2 AND $uriParts[1] == "permissions") // Get role permissions
-                return $this->getPermissions(intval($uriParts[0]));
-        }
-        else if($_SERVER['REQUEST_METHOD'] == "POST")
-        {
-            if(sizeof($uriParts) == 1 AND $uriParts[0] == "") // Create new role
-                return $this->createRole();
-            else if(sizeof($uriParts) == 2 AND $uriParts[1] == "permissions") // Add permission to role
-                return $this->addPermission(intval($uriParts[0]));
-        }
-        else if($_SERVER['REQUEST_METHOD'] == "PUT")
-        {
-            if(sizeof($uriParts) == 1) // Update role
-                return $this->updateRole(intval($uriParts[0]));
-        }
-        else if($_SERVER['REQUEST_METHOD'] == "DELETE")
-        {
-            if(sizeof($uriParts) == 1) // Delete role
-                return $this->deleteRole(intval($uriParts[0]));
-            else if(sizeof($uriParts) == 3 AND $uriParts[1] == "permissions") // Remove permission from role
-                return $this->removePermission(intval($uriParts[0]), $uriParts[2]);
+            if ($_SERVER['REQUEST_METHOD'] == "GET")
+            {
+                if (sizeof($uriParts) == 1 AND $uriParts[0] == "roles") // Get list of roles
+                    return $this->getRoles();
+                else if (sizeof($uriParts) == 2) // Get role details
+                    return $this->getRole(intval($uriParts[1]));
+                else if (sizeof($uriParts) == 3 AND $uriParts[2] == "permissions") // Get role permissions
+                    return $this->getPermissions(intval($uriParts[1]));
+            }
+            else if ($_SERVER['REQUEST_METHOD'] == "POST")
+            {
+                if (sizeof($uriParts) == 1 AND $uriParts[0] == "roles") // Create new role
+                    return $this->createRole();
+                else if (sizeof($uriParts) == 3 AND $uriParts[2] == "permissions") // Add permission to role
+                    return $this->addPermission(intval($uriParts[1]));
+            }
+            else if ($_SERVER['REQUEST_METHOD'] == "PUT")
+            {
+                if (sizeof($uriParts) == 2) // Update role
+                    return $this->updateRole(intval($uriParts[1]));
+            }
+            else if ($_SERVER['REQUEST_METHOD'] == "DELETE")
+            {
+                if (sizeof($uriParts) == 2) // Delete role
+                    return $this->deleteRole(intval($uriParts[1]));
+                else if (sizeof($uriParts) == 4 AND $uriParts[2] == "permissions") // Remove permission from role
+                    return $this->removePermission(intval($uriParts[1]), $uriParts[3]);
+            }
         }
 
         throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);

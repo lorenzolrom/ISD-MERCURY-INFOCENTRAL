@@ -84,7 +84,8 @@ CREATE TABLE fa_Secret_Permission (
 );
 
 INSERT INTO fa_Route (path, controller, extension) VALUES ('authenticate', 'Authenticate', 'core'),
-                                                          ('users', 'User', 'core');
+                                                          ('users', 'User', 'core'),
+                                                          ('currentUser', 'User', 'core');
 
 INSERT INTO isd_fastapps_rest.fa_Permission (code, displayName, description) VALUES ('fa-users-listusers', 'List All Users', 'Allow retrieval of the list of users'),
                                                                                     ('fa-users-listloginnames', 'List All Login Names', 'Allow retrieval of the list of login names.'),

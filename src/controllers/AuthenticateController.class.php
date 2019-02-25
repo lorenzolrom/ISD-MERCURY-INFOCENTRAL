@@ -37,17 +37,21 @@ class AuthenticateController extends Controller
     {
         $uriParts = explode("/", $uri);
 
-        if($_SERVER['REQUEST_METHOD'] == "POST")
+        if($uriParts[0] == "authenticate" AND isset($uriParts[1]))
         {
-            if($uriParts[0] == "login")
-                return $this->loginUser();
-        }
-        else if($_SERVER['REQUEST_METHOD'] == "GET")
-        {
-            if($uriParts[0] == "logout")
-                return $this->logoutUser();
-            else if($uriParts[0] == "validate")
-                return $this->validateToken();
+
+            if ($_SERVER['REQUEST_METHOD'] == "POST")
+            {
+                if ($uriParts[1] == "login")
+                    return $this->loginUser();
+            }
+            else if ($_SERVER['REQUEST_METHOD'] == "GET")
+            {
+                if ($uriParts[1] == "logout")
+                    return $this->logoutUser();
+                else if ($uriParts[1] == "validate")
+                    return $this->validateToken();
+            }
         }
 
         throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);

@@ -36,33 +36,43 @@ class UserController extends Controller
     {
         $uriParts = explode("/", $uri);
 
-        if($_SERVER['REQUEST_METHOD'] == "GET")
+        if($uriParts[0] == "users")
         {
-            if (sizeof($uriParts) == 1 AND $uriParts[0] == "") // Get list of users
-                return $this->getUsers();
-            else if (sizeof($uriParts) == 1) // Get user details
-                return $this->getUser(intval($uriParts[0]));
-            else if (sizeof($uriParts) == 2 AND $uriParts[1] == "roles") // Get user roles
-                return $this->getUserRoles(intval($uriParts[0]));
+            if ($_SERVER['REQUEST_METHOD'] == "GET")
+            {
+                if (sizeof($uriParts) == 1 AND $uriParts[0] == "users") // Get list of users
+                    return $this->getUsers();
+                else if (sizeof($uriParts) == 2) // Get user details
+                    return $this->getUser(intval($uriParts[1]));
+                else if (sizeof($uriParts) == 3 AND $uriParts[2] == "roles") // Get user roles
+                    return $this->getUserRoles(intval($uriParts[1]));
+            }
+            else if ($_SERVER['REQUEST_METHOD'] == "POST")
+            {
+                if (sizeof($uriParts) == 1 AND $uriParts[0] == "users") // Insert new user
+                    return $this->createUser();
+                else if (sizeof($uriParts) == 3 AND $uriParts[2] == "roles") // Add role to user
+                    return $this->addRole(intval($uriParts[1]));
+            }
+            else if ($_SERVER['REQUEST_METHOD'] == "PUT")
+            {
+                if (sizeof($uriParts) == 2) // Get user details
+                    return $this->updateUser(intval($uriParts[1]));
+            }
+            else if ($_SERVER['REQUEST_METHOD'] == "DELETE")
+            {
+                if (sizeof($uriParts) == 2) // Delete user
+                    return $this->deleteUser(intval($uriParts[1]));
+                else if (sizeof($uriParts) == 4 AND $uriParts[2] == "roles") // Remove role from user
+                    return $this->removeRole(intval($uriParts[2]), intval($uriParts[3]));
+            }
         }
-        else if($_SERVER['REQUEST_METHOD'] == "POST")
+        else if($uriParts[0] == "currentUser" AND $_SERVER['REQUEST_METHOD'] == "GET") // Retrieve details for current user
         {
-            if (sizeof($uriParts) == 1 AND $uriParts[0] == "") // Insert new user
-                return $this->createUser();
-            else if (sizeof($uriParts) == 2 AND $uriParts[1] == "roles") // Add role to user
-                return $this->addRole(intval($uriParts[0]));
-        }
-        else if($_SERVER['REQUEST_METHOD'] == "PUT")
-        {
-            if (sizeof($uriParts) == 1) // Get user details
-                return $this->updateUser(intval($uriParts[0]));
-        }
-        else if($_SERVER['REQUEST_METHOD'] == "DELETE")
-        {
-            if (sizeof($uriParts) == 1) // Delete user
-                return $this->deleteUser(intval($uriParts[0]));
-            else if (sizeof($uriParts) == 3 AND $uriParts[1] == "roles") // Remove role from user
-                return $this->removeRole(intval($uriParts[1]), intval($uriParts[2]));
+            if(sizeof($uriParts) == 1)// Get current user
+                return $this->getCurrentUser();
+            else if(sizeof($uriParts) == 2 AND $uriParts[1] == "roles") // Get current user roles
+                return $this->getCurrentUserRoles();
         }
 
         throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
@@ -113,6 +123,17 @@ class UserController extends Controller
     }
 
     /**
+     * @return array
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function getCurrentUser(): array
+    {
+        return $this->getUser(FrontController::getCurrentUser()->getId());
+    }
+
+    /**
      * @param int $userID
      * @return array
      * @throws SecurityException
@@ -133,6 +154,17 @@ class UserController extends Controller
         }
 
         return ['data' => $roles];
+    }
+
+    /**
+     * @return array
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public function getCurrentUserRoles(): array
+    {
+        return $this->getUserRoles(FrontController::getCurrentUser()->getId());
     }
 
     /**

@@ -20,14 +20,15 @@ use models\Route;
 class RouteFactory
 {
     /**
+     * @param string $extension
      * @param string $path
      * @return Route
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      */
-    public static function getRouteByPath(string $path): Route
+    public static function getRouteByPath(string $extension, string $path): Route
     {
-        $routeData = RouteDatabaseHandler::selectRouteByPath($path);
+        $routeData = RouteDatabaseHandler::selectRouteByPath($extension, $path);
 
         return new Route($routeData['id'], $routeData['path'], $routeData['extension'], $routeData['controller']);
     }

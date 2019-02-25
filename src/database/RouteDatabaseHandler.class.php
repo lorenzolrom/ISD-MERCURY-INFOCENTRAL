@@ -20,17 +20,19 @@ use messages\Messages;
 class RouteDatabaseHandler
 {
     /**
+     * @param string $extension
      * @param string $route
      * @return array
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function selectRouteByPath(string $route): array
+    public static function selectRouteByPath(string $extension, string $route): array
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, path, extension, controller FROM fa_Route WHERE path = ? LIMIT 1");
-        $select->bindParam(1, $route, DatabaseConnection::PARAM_STR);
+        $select = $handler->prepare("SELECT id, path, extension, controller FROM fa_Route WHERE extension = ? AND path = ? LIMIT 1");
+        $select->bindParam(1, $extension, DatabaseConnection::PARAM_STR);
+        $select->bindParam(2, $route, DatabaseConnection::PARAM_STR);
         $select->execute();
 
         $handler->close();

@@ -44,7 +44,7 @@ class FrontController
 
             $fa_requestedURL .= "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-            // Check if a route was supplied
+            // Check if a route was supplied (extension + path)
             if(!isset(explode(FA_APP_URL . FA_APP_URI, $fa_requestedURL)[1]))
                 throw new RouteException(Messages::ROUTE_NOT_SUPPLIED, RouteException::ROUTE_NOT_SUPPLIED);
 
@@ -60,14 +60,14 @@ class FrontController
             $fa_appToken = SecretFactory::getFromSecret($fa_suppliedAppToken);
 
             // Create Route
-            $fa_route = RouteFactory::getRouteByPath($fa_requestedURIParts[1]);
+            $fa_route = RouteFactory::getRouteByPath($fa_requestedURIParts[1], $fa_requestedURIParts[2]);
 
             // Determine if application has permission for route
             if(!$fa_appToken->hasAccessToRoute($fa_route))
                 throw new SecurityException(Messages::SECURITY_APPTOKEN_NO_PERMISSION_FOR_ROUTE, SecurityException::APPTOKEN_NO_PERMISSION_FOR_ROUTE);
 
             // Determine if controller is core or an extension
-            if($fa_route->getExtension() === NULL)
+            if($fa_route->getExtension() === "core")
                 $fa_routeControllerClassname = "/controllers/{$fa_route->getController()}Controller";
             else
                 $fa_routeControllerClassname = "/extensions/{$fa_route->getExtension()}/controllers/{$fa_route->getController()}Controller";
@@ -89,7 +89,7 @@ class FrontController
             // Request results of route URI
             $fa_routeURI = "";
 
-            for($i = 2; $i < sizeof($fa_requestedURIParts); $i++)
+            for($i = 3; $i < sizeof($fa_requestedURIParts); $i++)
             {
                 $fa_routeURI .= $fa_requestedURIParts[$i] . "/";
             }

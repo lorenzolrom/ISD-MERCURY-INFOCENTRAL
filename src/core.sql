@@ -8,10 +8,11 @@ CREATE TABLE fa_Secret (
 
 CREATE TABLE fa_Route (
   id BIGINT(20) NOT NULL AUTO_INCREMENT,
-  path VARCHAR(64) NOT NULL UNIQUE,
-  extension VARCHAR(64) DEFAULT NULL,
+  path VARCHAR(64) NOT NULL,
+  extension VARCHAR(64) NOT NULL,
   controller VARCHAR(64) NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE (extension, path)
 );
 
 CREATE TABLE fa_Secret_Route (
@@ -82,8 +83,8 @@ CREATE TABLE fa_Secret_Permission (
   FOREIGN KEY (permission) REFERENCES fa_Permission(code) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-INSERT INTO fa_Route (path, controller) VALUES ('authenticate', 'Authenticate'),
-                                               ('users', 'User');
+INSERT INTO fa_Route (path, controller, extension) VALUES ('authenticate', 'Authenticate', 'core'),
+                                                          ('users', 'User', 'core');
 
 INSERT INTO isd_fastapps_rest.fa_Permission (code, displayName, description) VALUES ('fa-users-listusers', 'List All Users', 'Allow retrieval of the list of users'),
                                                                                     ('fa-users-listloginnames', 'List All Login Names', 'Allow retrieval of the list of login names.'),

@@ -204,6 +204,19 @@ class UserController extends Controller
                 $errors[] = ValidationError::getErrorArrayEntry('disabled', ValidationError::MESSAGE_VALUE_NOT_VALID);
         }
 
+        // Verify password is set for local authentication
+        if(isset($vars['authType']) AND $vars['authType'] == "local")
+        {
+            switch(User::validatePassword(isset($vars['password']) ? $vars['password'] : NULL))
+            {
+                case ValidationError::VALUE_IS_NULL:
+                    $errors [] = ValidationError::getErrorArrayEntry('password', ValidationError::MESSAGE_VALUE_REQUIRED);
+                    break;
+                case ValidationError::VALUE_IS_TOO_SHORT:
+                    $errors[] = ValidationError::getErrorArrayEntry('password', ValidationError::MESSAGE_PASSWORD_TOO_SHORT);
+            }
+        }
+
         if (!empty($errors))
         {
             http_response_code(409);
@@ -277,7 +290,11 @@ class UserController extends Controller
     private function deleteUser(int $userID): array
     {
         FrontController::validatePermission('fa-users-delete');
-        http_response_code(501);
+
+        $user = UserFactory::getFromID($userID);
+        $user->delete();
+
+        http_response_code(204);
         return[];
     }
 

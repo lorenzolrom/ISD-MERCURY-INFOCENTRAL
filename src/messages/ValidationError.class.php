@@ -32,6 +32,7 @@ class ValidationError
     const MESSAGE_VALUE_NOT_FOUND = "Not Found";
     const MESSAGE_VALUE_NOT_ASSIGNED = "Object Not Assigned";
     const MESSAGE_VALUE_NOT_VALID = "Not Valid";
+    const MESSAGE_PASSWORD_TOO_SHORT = "Must Be Greater Than 8 Characters";
 
     /**
      * @param int $lowerBound Least number of acceptable characters

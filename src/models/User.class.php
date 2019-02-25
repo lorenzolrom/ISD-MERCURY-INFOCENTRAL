@@ -129,6 +129,15 @@ class User
     }
 
     /**
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public function delete()
+    {
+        return UserDatabaseHandler::delete($this->id);
+    }
+
+    /**
      * Marks all tokens for this user as expired
      * @throws \exceptions\DatabaseException
      */
@@ -266,6 +275,21 @@ class User
 
         if($disabled != 1 AND $disabled != 0)
             return ValidationError::VALUE_IS_INVALID;
+
+        return ValidationError::VALUE_IS_OK;
+    }
+
+    /**
+     * @param string|null $password
+     * @return int
+     */
+    public static function validatePassword(?string $password): int
+    {
+        if($password === NULL)
+            return ValidationError::VALUE_IS_NULL;
+
+        if(strlen($password) < 8)
+            return ValidationError::VALUE_IS_TOO_SHORT;
 
         return ValidationError::VALUE_IS_OK;
     }

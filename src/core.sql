@@ -87,15 +87,15 @@ INSERT INTO fa_Route (path, controller, extension) VALUES ('authenticate', 'Auth
                                                           ('users', 'User', 'core'),
                                                           ('currentUser', 'User', 'core');
 
-INSERT INTO isd_fastapps_rest.fa_Permission (code, displayName, description) VALUES ('fa-users-listusers', 'List All Users', 'Allow retrieval of the list of users'),
-                                                                                    ('fa-users-listloginnames', 'List All Login Names', 'Allow retrieval of the list of login names.'),
-                                                                                    ('fa-users-showuserdetails', 'Display User Details', 'Allows viewing full details for a user'),
-                                                                                    ('fa-users-showuserroles', 'Display User Roles', 'Allow viewing roles a user belongs to'),
+INSERT INTO isd_fastapps_rest.fa_Permission (code, displayName, description) VALUES ('fa-users-list', 'List All Users', 'Allow retrieval of the list of users'),
+                                                                                    ('fa-users-display', 'Display User Details', 'Allows viewing full details for a user'),
+                                                                                    ('fa-users-display-roles', 'Display User Roles', 'Allow viewing roles a user belongs to'),
                                                                                     ('fa-users-create', 'Create New Users', 'Allow creation of new users'),
+                                                                                    ('fa-users-modify', 'Update Existing Users', 'Allows update of existing users'),
                                                                                     ('fa-users-delete', 'Delete Users', 'Allows deletion of users'),
-                                                                                    ('fa-roles-listroles', 'List All Roles', 'Allow retrieval of the list of roles'),
-                                                                                    ('fa-roles-showroledetails', 'Display Role Details', 'Allow viewing full details for a role'),
-                                                                                    ('fa-roles-showrolepermissions', 'Display Role Permissions', 'Allow viewing permissions assigned to a role'),
+                                                                                    ('fa-roles-list', 'List All Roles', 'Allow retrieval of the list of roles'),
+                                                                                    ('fa-roles-display', 'Display Role Details', 'Allow viewing full details for a role'),
+                                                                                    ('fa-roles-display-permissions', 'Display Role Permissions', 'Allow viewing permissions assigned to a role'),
                                                                                     ('fa-roles-create', 'Create New Roles', 'Allow creation of new roles'),
                                                                                     ('fa-roles-modify', 'Update Existing Roles', 'Allows update of existing roles'),
                                                                                     ('fa-roles-delete', 'Delete Existing Role', 'Allows deletion of existing roles');

@@ -107,7 +107,7 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['errors'] = ['type' => 'security', 'message' => $e->getMessage()];
+            $fa_finalOutput['errors'] = [['type' => 'security', 'message' => $e->getMessage()]];
         }
         catch(EntryNotFoundException $e)
         {
@@ -118,7 +118,7 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['errors'] = ['type' => 'entryMissing', 'message' => $e->getMessage()];
+            $fa_finalOutput['errors'] = [['type' => 'entryMissing', 'message' => $e->getMessage()]];
         }
         catch(RouteException $e)
         {
@@ -132,12 +132,12 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['errors'] = ['type' => 'route', 'message' => $e->getMessage()];
+            $fa_finalOutput['errors'] = [['type' => 'route', 'message' => $e->getMessage()]];
         }
         catch(\Exception $e)
         {
             http_response_code(500);
-            $fa_finalOutput['errors'] = ['type' => 'fatal', $e->getMessage()];
+            $fa_finalOutput['errors'] = [['type' => 'fatal', $e->getMessage()]];
         }
 
         return json_encode($fa_finalOutput);

@@ -42,7 +42,7 @@ class RoleController extends Controller
         {
             if ($_SERVER['REQUEST_METHOD'] == "GET")
             {
-                if (sizeof($uriParts) == 1 AND $uriParts[0] == "roles") // Get list of roles
+                if (sizeof($uriParts) == 1) // Get list of roles
                     return $this->getRoles();
                 else if (sizeof($uriParts) == 2) // Get role details
                     return $this->getRole(intval($uriParts[1]));
@@ -51,7 +51,7 @@ class RoleController extends Controller
             }
             else if ($_SERVER['REQUEST_METHOD'] == "POST")
             {
-                if (sizeof($uriParts) == 1 AND $uriParts[0] == "roles") // Create new role
+                if (sizeof($uriParts) == 1) // Create new role
                     return $this->createRole();
                 else if (sizeof($uriParts) == 3 AND $uriParts[2] == "permissions") // Add permission to role
                     return $this->addPermission(intval($uriParts[1]));
@@ -81,7 +81,7 @@ class RoleController extends Controller
      */
     private function getRoles(): array
     {
-        FrontController::validatePermission('fa-roles-listroles');
+        FrontController::validatePermission('fa-roles-list');
 
         $roleIDs = array();
 
@@ -103,7 +103,7 @@ class RoleController extends Controller
      */
     private function getRole(int $roleId): array
     {
-        FrontController::validatePermission('fa-roles-showroledetails');
+        FrontController::validatePermission('fa-roles-display');
         $role = RoleFactory::getFromID($roleId);
 
         return ['data' => ['type' => 'Role', 'id' => $role->getId(), 'displayName' => $role->getDisplayName()]];
@@ -118,7 +118,7 @@ class RoleController extends Controller
      */
     private function getPermissions(int $roleId): array
     {
-        FrontController::validatePermission('fa-roles-showrolepermissions');
+        FrontController::validatePermission('fa-roles-display-permissions');
         $role = RoleFactory::getFromID($roleId);
 
         $permissions = array();
@@ -257,14 +257,14 @@ class RoleController extends Controller
         // Validate Submission
         $submission = FrontController::getDocumentAsArray();
 
-        if(!isset($submission['data']['permissionCode']))
-            $errors[] = ['type' => 'validation', 'field' => 'permissionCode', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
+        if(!isset($submission['data']['code']))
+            $errors[] = ['type' => 'validation', 'field' => 'code', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
         else
         {
-            $permissionCode = $submission['data']['permissionCode'];
+            $permissionCode = $submission['data']['code'];
             // Check if role already has permission
             if(in_array($permissionCode, $role->getPermissionCodes()))
-                $errors[] = ['type' => 'validation', 'field' => 'permissionCode', 'message' => ValidationError::MESSAGE_VALUE_ALREADY_ASSIGNED];
+                $errors[] = ['type' => 'validation', 'field' => 'code', 'message' => ValidationError::MESSAGE_VALUE_ALREADY_ASSIGNED];
             else
             {
                 // Check if permission code exists

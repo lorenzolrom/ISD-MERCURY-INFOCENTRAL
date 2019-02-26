@@ -191,6 +191,26 @@ class User
     }
 
     /**
+     * @param int $roleID
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public function addRole(int $roleID): bool
+    {
+        return UserDatabaseHandler::addRoleToUser($this->id, $roleID);
+    }
+
+    /**
+     * @param int $roleID
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public function removeRole(int $roleID): bool
+    {
+        return UserDatabaseHandler::removeRoleFromUser($this->id, $roleID);
+    }
+
+    /**
      * @param string|null $loginName
      * @return int
      * @throws \exceptions\DatabaseException

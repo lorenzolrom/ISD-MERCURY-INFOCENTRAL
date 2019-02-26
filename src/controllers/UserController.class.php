@@ -15,8 +15,10 @@ namespace controllers;
 
 
 use database\UserDatabaseHandler;
+use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
+use factories\RoleFactory;
 use factories\UserFactory;
 use messages\Messages;
 use messages\ValidationError;
@@ -40,7 +42,7 @@ class UserController extends Controller
         {
             if ($_SERVER['REQUEST_METHOD'] == "GET")
             {
-                if (sizeof($uriParts) == 1 AND $uriParts[0] == "users") // Get list of users
+                if (sizeof($uriParts) == 1) // Get list of users
                     return $this->getUsers();
                 else if (sizeof($uriParts) == 2) // Get user details
                     return $this->getUser(intval($uriParts[1]));
@@ -49,7 +51,7 @@ class UserController extends Controller
             }
             else if ($_SERVER['REQUEST_METHOD'] == "POST")
             {
-                if (sizeof($uriParts) == 1 AND $uriParts[0] == "users") // Insert new user
+                if (sizeof($uriParts) == 1) // Insert new user
                     return $this->createUser();
                 else if (sizeof($uriParts) == 3 AND $uriParts[2] == "roles") // Add role to user
                     return $this->addRole(intval($uriParts[1]));
@@ -64,7 +66,7 @@ class UserController extends Controller
                 if (sizeof($uriParts) == 2) // Delete user
                     return $this->deleteUser(intval($uriParts[1]));
                 else if (sizeof($uriParts) == 4 AND $uriParts[2] == "roles") // Remove role from user
-                    return $this->removeRole(intval($uriParts[2]), intval($uriParts[3]));
+                    return $this->removeRole(intval($uriParts[1]), intval($uriParts[3]));
             }
         }
         else if($uriParts[0] == "currentUser" AND $_SERVER['REQUEST_METHOD'] == "GET") // Retrieve details for current user
@@ -86,7 +88,7 @@ class UserController extends Controller
      */
     private function getUsers(): array
     {
-        FrontController::validatePermission('fa-users-listusers');
+        FrontController::validatePermission('fa-users-list');
 
         $users = array();
 
@@ -107,7 +109,7 @@ class UserController extends Controller
      */
     private function getUser(int $userID): array
     {
-        FrontController::validatePermission('fa-users-showuserdetails');
+        FrontController::validatePermission('fa-users-display');
 
         $user = UserFactory::getFromID($userID);
 
@@ -142,7 +144,7 @@ class UserController extends Controller
      */
     private function getUserRoles(int $userID): array
     {
-        FrontController::validatePermission('fa-users-showuserroles');
+        FrontController::validatePermission('fa-users-display-roles');
 
         $roles = array();
 
@@ -339,8 +341,51 @@ class UserController extends Controller
      */
     private function addRole(int $userID): array
     {
-        FrontController::validatePermission('fa-users-modifyroles');
-        http_response_code(501);
+        FrontController::validatePermission('fa-users-modify');
+
+        $user = UserFactory::getFromID($userID);
+
+        $errors = array();
+
+        // Validate submission
+        $submission = FrontController::getDocumentAsArray();
+
+        if(!isset($submission['data']['id']))
+            $errors[] = ValidationError::getErrorArrayEntry('id', ValidationError::MESSAGE_VALUE_REQUIRED);
+        else
+        {
+            // Check if user is already assigned to role
+            foreach($user->getRoles() as $role)
+            {
+                if($role->getId() == $submission['data']['id'])
+                {
+                    $errors[] = ValidationError::getErrorArrayEntry('id', ValidationError::MESSAGE_VALUE_ALREADY_ASSIGNED);
+                    break;
+                }
+            }
+
+            // Check if role exists
+            try
+            {
+                RoleFactory::getFromID(intval($submission['data']['id']));
+            }
+            catch(EntryNotFoundException $e)
+            {
+                $errors[] = ValidationError::getErrorArrayEntry('id', ValidationError::MESSAGE_VALUE_NOT_FOUND);
+            }
+
+        }
+
+        if(!empty($errors))
+        {
+            http_response_code(409);
+            return ['errors' => $errors];
+        }
+
+        // Add role
+        $user->addRole(intval($submission['data']['id']));
+
+        http_response_code(204);
         return[];
     }
 
@@ -354,8 +399,28 @@ class UserController extends Controller
      */
     private function removeRole(int $userID, int $roleId): array
     {
-        FrontController::validatePermission('fa-users-modifyroles');
-        http_response_code(501);
+        FrontController::validatePermission('fa-users-modify');
+
+        $user = UserFactory::getFromID($userID);
+
+        $userHasRole = FALSE;
+
+        // Verify user has role
+        foreach($user->getRoles() as $role)
+        {
+            if($role->getId() == $roleId)
+            {
+                $userHasRole = TRUE;
+                break;
+            }
+        }
+
+        if(!$userHasRole)
+            throw new EntryNotFoundException(ValidationError::MESSAGE_VALUE_NOT_ASSIGNED, EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
+
+        $user->removeRole($roleId);
+
+        http_response_code(204);
         return[];
     }
 }

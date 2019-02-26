@@ -243,4 +243,44 @@ class UserDatabaseHandler
 
         return $select->getRowCount() === 1;
     }
+
+    /**
+     * @param int $userID
+     * @param int $roleID
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function addRoleToUser(int $userID, int $roleID): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare("INSERT INTO fa_User_Role(user, role) VALUES (?, ?)");
+        $insert->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
+        $insert->bindParam(2, $roleID, DatabaseConnection::PARAM_INT);
+        $insert->execute();
+
+        $handler->close();
+
+        return $insert->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $userID
+     * @param int $roleID
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function removeRoleFromUser(int $userID, int $roleID): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare("DELETE FROM fa_User_Role WHERE user = ? AND role = ?");
+        $delete->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
+        $delete->bindParam(2, $roleID, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
 }

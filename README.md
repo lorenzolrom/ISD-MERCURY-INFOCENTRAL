@@ -1,2 +1,2 @@
-# ISD-FASTAPPS-REST
-RESTful service for FASTAPPS
+#MERCURY InfoCentral
+Data manager for web applications that provides a REST API for front-ends.

@@ -3,7 +3,7 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * FASTAPPS RESTful Service
+ * MERCURY InfoCentral
  *
  * Configuration File
  *

@@ -3,7 +3,7 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * FASTAPPS RESTful Service
+ * MERCURY InfoCentral
  *
  * User: lromero
  * Date: 2/18/2019

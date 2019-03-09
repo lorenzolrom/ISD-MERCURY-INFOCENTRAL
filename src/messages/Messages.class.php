@@ -36,7 +36,7 @@ class Messages
     const SECURITY_SECRET_DOES_NOT_HAVE_PERMISSION = "Application Does Not Have Permission";
 
     const USER_NOT_FOUND = "User Not Found";
-    const USER_PASSWORD_IS_WRONG = "Password Is Incorrect";
+    const USER_PASSWORD_IS_WRONG = "Username or Password Is Incorrect";
     const USER_LOGGED_OUT = "User Logged Out";
 
     const SECURITY_USERTOKEN_NOT_SUPPLIED = "User Token Not Supplied";

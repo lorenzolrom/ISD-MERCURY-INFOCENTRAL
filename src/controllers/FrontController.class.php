@@ -45,10 +45,10 @@ class FrontController
             $fa_requestedURL .= "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
             // Check if a route was supplied (extension + path)
-            if(!isset(explode(FA_APP_URL . FA_APP_URI, $fa_requestedURL)[1]))
+            if(!isset(explode(IC_CONFIG['baseURL'] . IC_CONFIG['baseURI'], $fa_requestedURL)[1]))
                 throw new RouteException(Messages::ROUTE_NOT_SUPPLIED, RouteException::ROUTE_NOT_SUPPLIED);
 
-            $fa_requestedURI = "/" . explode(FA_APP_URL . FA_APP_URI, $fa_requestedURL)[1]; // Get portion of URL after application
+            $fa_requestedURI = "/" . explode(IC_CONFIG['baseURL'] . IC_CONFIG['baseURI'], $fa_requestedURL)[1]; // Get portion of URL after application
             $fa_requestedURIParts = explode('/', explode('?', $fa_requestedURI)[0]); // Break URI into pieces (ignore GET variables)
 
             // Make sure header is set

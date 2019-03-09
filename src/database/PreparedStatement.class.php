@@ -76,6 +76,16 @@ class PreparedStatement
     }
 
     /**
+     * Directly fetches an object of the class name specified
+     * @param string $className
+     * @return mixed
+     */
+    public function fetchObject(string $className)
+    {
+        return $this->statement->fetchObject($className);
+    }
+
+    /**
      * @param mixed $fetchType Option for how data should be returned
      * @param int $fetchArgument Arguments for fetchType
      * @return array Array of row results

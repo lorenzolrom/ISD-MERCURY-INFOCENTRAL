@@ -39,9 +39,9 @@ class DatabaseConnection
     {
         try
         {
-            $this->handler = new \PDO("mysql:host=" . \FA_DATA_HOSTNAME . ";dbname=" . \FA_DATA_DATABASE,
-                \FA_DATA_USER,
-                \FA_DATA_PASSWORD,
+            $this->handler = new \PDO("mysql:host=" . IC_CONFIG['databaseHost'] . ";dbname=" . IC_CONFIG['databaseName'],
+                IC_CONFIG['databaseUser'],
+                IC_CONFIG['databasePassword'],
                 array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC));
         }
         catch(\PDOException $e)

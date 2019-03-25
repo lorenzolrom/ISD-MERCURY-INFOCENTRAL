@@ -35,7 +35,7 @@ class Messages
     const SECURITY_APPTOKEN_NO_PERMISSION_FOR_ROUTE = "Application Token Does Not Have Permission For Requested Route";
     const SECURITY_SECRET_DOES_NOT_HAVE_PERMISSION = "Application Does Not Have Permission";
 
-    const USER_NOT_FOUND = "User Not Found";
+    const USER_NOT_FOUND = "Username or Password Is Incorrect";
     const USER_PASSWORD_IS_WRONG = "Username or Password Is Incorrect";
     const USER_LOGGED_OUT = "User Logged Out";
 

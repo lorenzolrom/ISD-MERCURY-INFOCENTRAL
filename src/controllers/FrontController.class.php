@@ -74,7 +74,6 @@ class FrontController
 
             // Check if controller class exists
             $fa_routeControllerPath = dirname(__FILE__) . "/..$fa_routeControllerClassname.class.php";
-
             if(!is_file($fa_routeControllerPath))
                 throw new ControllerException(Messages::CONTROLLER_NOT_FOUND, ControllerException::CONTROLLER_NOT_FOUND);
             else
@@ -107,7 +106,7 @@ class FrontController
                     break;
             }
 
-            $fa_finalOutput['errors'] = [['type' => 'security', 'message' => $e->getMessage()]];
+            $fa_finalOutput['errors'] = [['type' => 'entryMissing', 'message' => $e->getMessage()]];
         }
         catch(EntryNotFoundException $e)
         {

@@ -67,6 +67,7 @@ class AuthenticateController extends Controller
     private function loginUser(): array
     {
         $submission = FrontController::getDocumentAsArray();
+
         // Check for loginName and password
         if(!isset($submission['data']['loginName']) OR !isset($submission['data']['password']))
             throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_PARAMETER_MISSING);

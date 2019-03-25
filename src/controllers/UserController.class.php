@@ -311,6 +311,7 @@ class UserController extends Controller
     {
         FrontController::validatePermission('fa-users-update');
         http_response_code(501);
+        // TODO update user
         return[$userID];
     }
 

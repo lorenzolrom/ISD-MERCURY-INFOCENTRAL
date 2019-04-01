@@ -30,7 +30,7 @@ class SecretDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, secret, name, exempt FROM fa_Secret WHERE secret = ?");
+        $select = $handler->prepare("SELECT id, secret, name, exempt FROM \"fa_Secret\" WHERE secret = ?");
         $select->bindParam(1, $secret, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -52,7 +52,7 @@ class SecretDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT secret FROM fa_Secret_Route WHERE secret = :token AND route = :route LIMIT 1");
+        $select = $handler->prepare("SELECT secret FROM \"fa_Secret_Route\" WHERE secret = :token AND route = :route LIMIT 1");
         $select->bindParam(':token', $tokenID, DatabaseConnection::PARAM_INT);
         $select->bindParam(':route', $routeID, DatabaseConnection::PARAM_INT);
         $select->execute();
@@ -71,7 +71,7 @@ class SecretDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT permission FROM fa_Secret_Permission WHERE secret = ?");
+        $select = $handler->prepare("SELECT permission FROM \"fa_Secret_Permission\" WHERE secret = ?");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 

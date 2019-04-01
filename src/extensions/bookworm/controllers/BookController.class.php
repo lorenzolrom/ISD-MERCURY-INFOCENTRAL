@@ -22,6 +22,7 @@ use controllers\Controller;
 use exceptions\RouteException;
 use extensions\bookworm\data\GoogleAPIConnection;
 use messages\Messages;
+use models\Route;
 
 class BookController extends Controller
 {
@@ -81,9 +82,13 @@ class BookController extends Controller
     /**
      * @param array $uriParts
      * @return array
+     * @throws RouteException
      */
     private function searchByTitle(array $uriParts): array
     {
+        if(empty($uriParts))
+            throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_PARAMETER_MISSING);
+
         $results = GoogleAPIConnection::searchTitle(array_shift($uriParts));
 
         return $results['items'];

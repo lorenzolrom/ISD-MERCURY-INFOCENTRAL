@@ -109,7 +109,9 @@ class UserController extends Controller
      */
     private function getUser(int $userID): array
     {
-        FrontController::validatePermission('fa-users-display');
+        // If user is not checking themselves
+        if($userID != FrontController::getCurrentUser()->getId())
+            FrontController::validatePermission('fa-users-display');
 
         $user = UserFactory::getFromID($userID);
 

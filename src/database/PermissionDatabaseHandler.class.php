@@ -29,7 +29,7 @@ class PermissionDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT code, displayName, description FROM fa_Permission WHERE code = ? LIMIT 1");
+        $select = $handler->prepare("SELECT \"code\", \"displayName\", \"description\" FROM \"fa_Permission\" WHERE \"code\" = ? LIMIT 1");
         $select->bindParam(1, $code, DatabaseConnection::PARAM_STR);
         $select->execute();
 

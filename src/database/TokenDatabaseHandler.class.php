@@ -30,7 +30,7 @@ class TokenDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT token, user, issueTime, expireTime, expired, ipAddress FROM fa_Token WHERE token = ? LIMIT 1");
+        $select = $handler->prepare("SELECT token, \"user\", \"issueTime\", \"expireTime\", expired, \"ipAddress\" FROM \"fa_Token\" WHERE token = ? LIMIT 1");
         $select->bindParam(1, $token, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -51,8 +51,8 @@ class TokenDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO fa_Token (token, user, issueTime, expireTime, ipAddress) 
-                                            VALUES (:token, :user, NOW(), NOW() + INTERVAL 1 HOUR, :ipAddress)");
+        $insert = $handler->prepare("INSERT INTO \"fa_Token\" (token, \"user\", \"issueTime\", \"expireTime\", \"ipAddress\") 
+                                            VALUES (:token, :user, NOW(), NOW() + INTERVAL '1 hours', :ipAddress)");
         $insert->bindParam('token', $columns['token'], DatabaseConnection::PARAM_STR);
         $insert->bindParam('user', $columns['user'], DatabaseConnection::PARAM_INT);
         $insert->bindParam('ipAddress', $columns['ipAddress'], DatabaseConnection::PARAM_STR);
@@ -72,7 +72,7 @@ class TokenDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE fa_Token SET expired = 1 WHERE token = ?");
+        $update = $handler->prepare("UPDATE \"fa_Token\" SET expired = 1 WHERE token = ?");
         $update->bindParam(1, $token,DatabaseConnection::PARAM_STR);
         $update->execute();
 

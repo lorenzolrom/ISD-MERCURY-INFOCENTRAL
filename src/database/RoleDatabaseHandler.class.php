@@ -29,7 +29,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, displayName FROM fa_Role WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT id, \"displayName\" FROM \"fa_Role\" WHERE id = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -49,7 +49,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM fa_Role");
+        $select = $handler->prepare("SELECT id FROM \"fa_Role\"");
         $select->execute();
 
         $handler->close();
@@ -66,7 +66,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO fa_Role(displayName) VALUES (?)");
+        $insert = $handler->prepare("INSERT INTO \"fa_Role\"(\"displayName\") VALUES (?)");
         $insert->bindParam(1, $displayName, DatabaseConnection::PARAM_STR);
         $insert->execute();
         $newRoleID = $handler->getLastInsertId();
@@ -85,7 +85,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT permission FROM fa_Role_Permission WHERE role = ?");
+        $select = $handler->prepare("SELECT permission FROM \"fa_Role_Permission\" WHERE role = ?");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -103,7 +103,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT displayName FROM fa_Role WHERE BINARY displayName = ? LIMIT 1");
+        $select = $handler->prepare("SELECT \"displayName\" FROM \"fa_Role\" WHERE BINARY \"displayName\" = ? LIMIT 1");
         $select->bindParam(1, $displayName, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -122,7 +122,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE fa_Role set displayName = ? WHERE id = ?");
+        $update = $handler->prepare("UPDATE \"fa_Role\" set \"displayName\" = ? WHERE id = ?");
         $update->bindParam(1, $displayName, DatabaseConnection::PARAM_STR);
         $update->bindParam(2, $id, DatabaseConnection::PARAM_INT);
         $update->execute();
@@ -141,7 +141,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $delete = $handler->prepare("DELETE FROM fa_Role WHERE id = ?");
+        $delete = $handler->prepare("DELETE FROM \"fa_Role\" WHERE id = ?");
         $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $delete->execute();
 
@@ -160,7 +160,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO fa_Role_Permission(role, permission) VALUE (?, ?)");
+        $insert = $handler->prepare("INSERT INTO \"fa_Role_Permission\"(role, permission) VALUE (?, ?)");
         $insert->bindParam(1, $roleID, DatabaseConnection::PARAM_INT);
         $insert->bindParam(2, $permissionCode, DatabaseConnection::PARAM_STR);
         $insert->execute();
@@ -180,7 +180,7 @@ class RoleDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $delete = $handler->prepare("DELETE FROM fa_Role_Permission WHERE role = ? AND permission = ?");
+        $delete = $handler->prepare("DELETE FROM \"fa_Role_Permission\" WHERE role = ? AND permission = ?");
         $delete->bindParam(1, $roleID, DatabaseConnection::PARAM_INT);
         $delete->bindParam(2, $permissionCode, DatabaseConnection::PARAM_STR);
         $delete->execute();

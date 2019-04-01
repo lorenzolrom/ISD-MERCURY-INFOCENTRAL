@@ -162,6 +162,7 @@ class FrontController
                 throw new TokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, TokenException::HAS_EXPIRED);
 
             // Has expire time passed?
+
             if(strtotime($token->getExpireTime()) <= strtotime(date('Y-m-d H:i:s')))
             {
                 $token->expire();

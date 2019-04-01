@@ -33,16 +33,27 @@ class DatabaseConnection
 
     /**
      * DatabaseConnection constructor.  Automatically connects to database using configured options.
+     * @param string $dbms
      * @throws DatabaseException In event of database connection failure
      */
-    public function __construct()
+    public function __construct(string $dbms = "mysql")
     {
         try
         {
-            $this->handler = new \PDO("mysql:host=" . IC_CONFIG['databaseHost'] . ";dbname=" . IC_CONFIG['databaseName'],
-                IC_CONFIG['databaseUser'],
-                IC_CONFIG['databasePassword'],
-                array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC));
+            if($dbms = "psql")
+            {
+                $this->handler = new \PDO("pgsql:dbname=" . IC_CONFIG['databaseName'] . ";host=" . IC_CONFIG['databaseHost'],
+                    IC_CONFIG['databaseUser'],
+                    IC_CONFIG['databasePassword'],
+                    array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC));
+            }
+            else
+            {
+                $this->handler = new \PDO("mysql:host=" . IC_CONFIG['databaseHost'] . ";dbname=" . IC_CONFIG['databaseName'],
+                    IC_CONFIG['databaseUser'],
+                    IC_CONFIG['databasePassword'],
+                    array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC));
+            }
         }
         catch(\PDOException $e)
         {

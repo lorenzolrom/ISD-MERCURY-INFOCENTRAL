@@ -27,7 +27,7 @@ class GoogleAPIConnection
     public static function searchTitle(string $title): array
     {
         $response = self::curlRequest("?q=" . urlencode($title) .
-            "&fields=items(id,volumeInfo/title,volumeInfo/authors,volumeInfo/publisher,volumeInfo/publishedDate)");
+            "&fields=items(id,volumeInfo/title,volumeInfo/authors,volumeInfo/publisher,volumeInfo/publishedDate,volumeInfo/imageLinks/thumbnail)");
 
         return json_decode($response, TRUE);
     }

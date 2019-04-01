@@ -30,7 +30,7 @@ class RouteDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, path, extension, controller FROM fa_Route WHERE extension = ? AND path = ? LIMIT 1");
+        $select = $handler->prepare("SELECT \"id\", \"path\", \"extension\", \"controller\" FROM \"fa_Route\" WHERE \"extension\" = ? AND \"path\" = ? LIMIT 1");
         $select->bindParam(1, $extension, DatabaseConnection::PARAM_STR);
         $select->bindParam(2, $route, DatabaseConnection::PARAM_STR);
         $select->execute();

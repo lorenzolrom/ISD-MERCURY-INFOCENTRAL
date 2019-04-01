@@ -31,8 +31,8 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, loginName, authType, password, firstName, lastName, 
-                                            displayName, email, disabled FROM fa_User WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT id, \"loginName\", \"authType\", password, \"firstName\", \"lastName\", 
+                                            \"displayName\", email, disabled FROM \"fa_User\" WHERE id = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -54,7 +54,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM fa_User WHERE loginName = ? LIMIT 1");
+        $select = $handler->prepare("SELECT id FROM \"fa_User\" WHERE \"loginName\" = ? LIMIT 1");
         $select->bindParam(1, $loginName, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -74,7 +74,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE fa_Token SET expired = 1 WHERE user = ?");
+        $update = $handler->prepare("UPDATE \"fa_Token\" SET expired = 1 WHERE user = ?");
         $update->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
         $update->execute();
 
@@ -90,7 +90,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT role FROM fa_User_Role WHERE user = ?");
+        $select = $handler->prepare("SELECT role FROM \"fa_User_Role\" WHERE user = ?");
         $select->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -107,7 +107,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT loginName FROM fa_User");
+        $select = $handler->prepare("SELECT \"loginName\" FROM \"fa_User\"");
         $select->execute();
 
         $handler->close();
@@ -123,7 +123,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM fa_User");
+        $select = $handler->prepare("SELECT id FROM \"fa_User\"");
         $select->execute();
 
         $handler->close();
@@ -148,8 +148,8 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO fa_User (loginName, authType, password, firstName, lastName, 
-                     displayName, email, disabled) VALUES (:loginName, :authType, :password, :firstName, :lastName, 
+        $insert = $handler->prepare("INSERT INTO fa_User (\"loginName\", \"authType\", password, \"firstName\", \"lastName\", 
+                     \"displayName\", email, disabled) VALUES (:loginName, :authType, :password, :firstName, :lastName, 
                      :displayName, :email, :disabled)");
         $insert->bindParam('loginName', $loginName, DatabaseConnection::PARAM_STR);
         $insert->bindParam('authType', $authType, DatabaseConnection::PARAM_STR);
@@ -177,7 +177,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $delete = $handler->prepare("DELETE FROM fa_User WHERE id = ?");
+        $delete = $handler->prepare("DELETE FROM \"fa_User\" WHERE id = ?");
         $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $delete->execute();
 
@@ -216,7 +216,7 @@ class UserDatabaseHandler
 
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE fa_User SET $column = ? WHERE id = ?");
+        $update = $handler->prepare("UPDATE \"fa_User\" SET $column = ? WHERE id = ?");
         $update->bindParam(1, $value, $typeCode);
         $update->bindParam(2, $id, DatabaseConnection::PARAM_INT);
         $update->execute();
@@ -235,7 +235,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT loginName FROM fa_User WHERE loginName = ? LIMIT 1");
+        $select = $handler->prepare("SELECT \"loginName\" FROM \"fa_User\" WHERE \"loginName\" = ? LIMIT 1");
         $select->bindParam(1, $loginName, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -254,7 +254,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO fa_User_Role(user, role) VALUES (?, ?)");
+        $insert = $handler->prepare("INSERT INTO \"fa_User_Role\"(user, role) VALUES (?, ?)");
         $insert->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
         $insert->bindParam(2, $roleID, DatabaseConnection::PARAM_INT);
         $insert->execute();
@@ -274,7 +274,7 @@ class UserDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $delete = $handler->prepare("DELETE FROM fa_User_Role WHERE user = ? AND role = ?");
+        $delete = $handler->prepare("DELETE FROM \"fa_User_Role\" WHERE user = ? AND role = ?");
         $delete->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
         $delete->bindParam(2, $roleID, DatabaseConnection::PARAM_INT);
         $delete->execute();

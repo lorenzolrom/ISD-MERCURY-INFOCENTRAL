@@ -110,6 +110,7 @@ class AuthenticateController extends Controller
         FrontController::getCurrentUser()->logout();
 
         http_response_code(204);
+        return array();
     }
 
     /**

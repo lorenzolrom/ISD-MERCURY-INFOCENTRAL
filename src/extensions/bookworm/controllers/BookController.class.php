@@ -91,6 +91,9 @@ class BookController extends Controller
 
         $results = GoogleAPIConnection::searchTitle(array_shift($uriParts));
 
-        return $results['items'];
+        if(isset($results['items']))
+            return $results['items'];
+
+        return array();
     }
 }

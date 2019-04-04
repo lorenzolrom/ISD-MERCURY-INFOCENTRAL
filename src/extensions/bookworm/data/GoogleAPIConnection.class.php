@@ -29,7 +29,12 @@ class GoogleAPIConnection
         $response = self::curlRequest("?q=" . urlencode($title) .
             "&fields=items(id,volumeInfo/title,volumeInfo/authors,volumeInfo/publisher,volumeInfo/publishedDate,volumeInfo/imageLinks/thumbnail)");
 
-        return json_decode($response, TRUE);
+        $response = json_decode($response, TRUE);
+
+        if(!is_array($response))
+            return array();
+        else
+            return $response;
     }
 
     /**

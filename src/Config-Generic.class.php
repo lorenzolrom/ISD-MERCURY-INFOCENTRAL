@@ -14,7 +14,7 @@
  * Class Config
  * Configuration options
  */
-abstract class Config // THIS FILE MUST BE RENAMED Config.class.php
+abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
 {
     const OPTIONS = array(
         'baseURL' => 'https://api.example.com',

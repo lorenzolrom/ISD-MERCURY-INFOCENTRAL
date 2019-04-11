@@ -19,4 +19,38 @@ class Warehouse extends ITSMModel
     private $code;
     private $name;
     private $closed;
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCode(): string
+    {
+        return $this->code;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return int
+     */
+    public function getClosed(): int
+    {
+        return $this->closed;
+    }
+
+
 }

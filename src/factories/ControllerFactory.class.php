@@ -21,6 +21,7 @@ use controllers\CurrentUserController;
 use controllers\facilities\BuildingController;
 use controllers\facilities\LocationController;
 use controllers\itsm\ApplicationController;
+use controllers\itsm\AssetController;
 use controllers\itsm\RegistrarController;
 use controllers\itsm\VHostController;
 use controllers\PermissionController;
@@ -50,6 +51,8 @@ class ControllerFactory
         {
             case "volumes": // TODO: remove when project is completed
                 return new VolumeController($request);
+            case "assets":
+                return new AssetController($request);
             case "vhosts":
                 return new VHostController($request);
             case "registrars":

@@ -1,0 +1,12 @@
+CREATE TABLE Secret (
+  secret CHAR(128) NOT NULL,
+  name VARCHAR(64) NOT NULL UNIQUE,
+  PRIMARY KEY (secret)
+);
+
+CREATE TABLE Secret_Permission (
+  secret CHAR(128) NOT NULL,
+  permission VARCHAR(30) NOT NULL,
+  FOREIGN KEY (secret) REFERENCES Secret(secret) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (permission) REFERENCES Permission(code) ON UPDATE CASCADE ON DELETE CASCADE
+);

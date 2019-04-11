@@ -3,11 +3,11 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 10:48 AM
+ * Date: 4/05/2019
+ * Time: 4:03 PM
  */
 
 
@@ -15,7 +15,6 @@ namespace database;
 
 
 use exceptions\DatabaseException;
-use messages\Messages;
 
 class PreparedStatement
 {
@@ -36,7 +35,7 @@ class PreparedStatement
      * @param mixed $parameter Parameter to bind
      * @param int $parameterType Type of parameter to bind
      */
-    public function bindParam($index, &$parameter, int $parameterType)
+    public function bindParam($index, $parameter, int $parameterType)
     {
         $this->statement->bindParam($index, $parameter, $parameterType);
     }
@@ -63,7 +62,7 @@ class PreparedStatement
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_PREPARED_QUERY_FAILED . $e->getMessage(), DatabaseException::PREPARED_QUERY_FAILED, $e);
+            throw new DatabaseException(DatabaseException::MESSAGES[DatabaseException::PREPARED_QUERY_FAILED], DatabaseException::PREPARED_QUERY_FAILED, $e);
         }
     }
 
@@ -76,21 +75,11 @@ class PreparedStatement
     }
 
     /**
-     * Directly fetches an object of the class name specified
-     * @param string $className
-     * @return mixed
-     */
-    public function fetchObject(string $className)
-    {
-        return $this->statement->fetchObject($className);
-    }
-
-    /**
      * @param mixed $fetchType Option for how data should be returned
-     * @param int $fetchArgument Arguments for fetchType
+     * @param mixed $fetchArgument Arguments for fetchType
      * @return array Array of row results
      */
-    public function fetchAll($fetchType = FALSE, int $fetchArgument = 0): array
+    public function fetchAll($fetchType = FALSE, $fetchArgument = 0): array
     {
         if($fetchType !== FALSE)
             return $this->statement->fetchAll($fetchType, $fetchArgument);
@@ -99,7 +88,7 @@ class PreparedStatement
     }
 
     /**
-     * @return mixed Next column in results
+     * @return mixed
      */
     public function fetchColumn()
     {
@@ -112,5 +101,14 @@ class PreparedStatement
     public function getRowCount(): int
     {
         return $this->statement->rowCount();
+    }
+
+    /**
+     * @param string $className
+     * @return mixed
+     */
+    public function fetchObject(string $className)
+    {
+        return $this->statement->fetchObject($className);
     }
 }

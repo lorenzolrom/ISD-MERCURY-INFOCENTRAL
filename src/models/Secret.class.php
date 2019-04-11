@@ -3,48 +3,29 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 11:14 AM
+ * Date: 4/05/2019
+ * Time: 4:20 PM
  */
 
 
 namespace models;
 
+use business\PermissionOperator;
 
-use database\SecretDatabaseHandler;
-
-class Secret extends Model
+/**
+ * Class Secret
+ *
+ * A secret key given to services using this API
+ *
+ * @package models
+ */
+class Secret
 {
-    private $id;
     private $secret;
     private $name;
-    private $exempt;
-
-    /**
-     * AppToken constructor.
-     * @param int $id
-     * @param string $secret
-     * @param string $name
-     * @param int $exempt
-     */
-    public function __construct(int $id, string $secret, string $name, int $exempt)
-    {
-        $this->id = $id;
-        $this->secret = $secret;
-        $this->name = $name;
-        $this->exempt = $exempt;
-    }
-
-    /**
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
 
     /**
      * @return string
@@ -63,31 +44,19 @@ class Secret extends Model
     }
 
     /**
-     * @return int
-     */
-    public function getExempt(): int
-    {
-        return $this->exempt;
-    }
-
-
-
-    /**
-     * @param Route $route
-     * @return bool
+     * @return string[]
      * @throws \exceptions\DatabaseException
      */
-    public function hasAccessToRoute(Route $route): bool
+    public function getPermissions(): array
     {
-        return SecretDatabaseHandler::doesSecretHaveAccessToRoute($this->id, $route->getId());
-    }
+        $permissions = array();
 
-    /**
-     * @return array
-     * @throws \exceptions\DatabaseException
-     */
-    public function getPermissionCodes(): array
-    {
-        return SecretDatabaseHandler::getSecretPermissionCodes($this->id);
+        foreach(PermissionOperator::getSecretPermissions($this) as $permission)
+        {
+            if(!in_array($permission->getCode(), $permissions))
+                $permissions[] = $permission->getCode();
+        }
+
+        return $permissions;
     }
 }

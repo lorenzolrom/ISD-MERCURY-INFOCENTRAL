@@ -3,427 +3,165 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 6:35 PM
+ * Date: 4/06/2019
+ * Time: 3:54 PM
  */
 
 
 namespace controllers;
 
 
-use database\UserDatabaseHandler;
-use exceptions\EntryNotFoundException;
-use exceptions\RouteException;
-use exceptions\SecurityException;
-use factories\RoleFactory;
-use factories\UserFactory;
-use messages\Messages;
-use messages\ValidationError;
-use models\User;
+use business\UserOperator;
+use models\HTTPRequest;
+use models\HTTPResponse;
 
 class UserController extends Controller
 {
+    const SEARCH_FIELDS = array('username', 'firstName', 'lastName', 'disabled');
+
     /**
-     * @param string $uri
-     * @return array
-     * @throws RouteException
-     * @throws SecurityException
+     * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
-    public function processURI(string $uri): array
+    public function getResponse(): ?HTTPResponse
     {
-        $uriParts = explode("/", $uri);
+        CurrentUserController::validatePermission('settings');
 
-        if($uriParts[0] == "users")
+        $param = $this->request->next();
+
+        if($this->request->method() == HTTPRequest::GET)
         {
-            if ($_SERVER['REQUEST_METHOD'] == "GET")
+            switch($param)
             {
-                if (sizeof($uriParts) == 1) // Get list of users
-                    return $this->getUsers();
-                else if (sizeof($uriParts) == 2) // Get user details
-                    return $this->getUser(intval($uriParts[1]));
-                else if (sizeof($uriParts) == 3 AND $uriParts[2] == "roles") // Get user roles
-                    return $this->getUserRoles(intval($uriParts[1]));
-            }
-            else if ($_SERVER['REQUEST_METHOD'] == "POST")
-            {
-                if (sizeof($uriParts) == 1) // Insert new user
-                    return $this->createUser();
-                else if (sizeof($uriParts) == 3 AND $uriParts[2] == "roles") // Add role to user
-                    return $this->addRole(intval($uriParts[1]));
-            }
-            else if ($_SERVER['REQUEST_METHOD'] == "PUT")
-            {
-                if (sizeof($uriParts) == 2) // Get user details
-                    return $this->updateUser(intval($uriParts[1]));
-            }
-            else if ($_SERVER['REQUEST_METHOD'] == "DELETE")
-            {
-                if (sizeof($uriParts) == 2) // Delete user
-                    return $this->deleteUser(intval($uriParts[1]));
-                else if (sizeof($uriParts) == 4 AND $uriParts[2] == "roles") // Remove role from user
-                    return $this->removeRole(intval($uriParts[1]), intval($uriParts[3]));
+                case null:
+                    return $this->getSearchResult();
+                default:
+                    switch($this->request->next())
+                    {
+                        case "roles":
+                            return $this->getRolesById($param);
+                        case "permissions":
+                            return $this->getPermissionsById($param);
+                    }
+
+                    return $this->getById($param);
             }
         }
-        else if($uriParts[0] == "currentUser" AND $_SERVER['REQUEST_METHOD'] == "GET") // Retrieve details for current user
+        else if($this->request->method() == HTTPRequest::POST)
         {
-            if(sizeof($uriParts) == 1)// Get current user
-                return $this->getCurrentUser();
-            else if(sizeof($uriParts) == 2 AND $uriParts[1] == "roles") // Get current user roles
-                return $this->getCurrentUserRoles();
+            switch($param)
+            {
+                case 'search':
+                    return $this->getSearchResult(TRUE);
+            }
         }
 
-        throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
+        return NULL;
     }
 
     /**
-     * @return array
-     * @throws SecurityException
+     * @param string|null $param
+     * @return HTTPResponse
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      */
-    private function getUsers(): array
+    private function getById(?string $param): HTTPResponse
     {
-        FrontController::validatePermission('fa-users-list');
+        $user = UserOperator::getUser((int)$param);
 
-        $users = array();
+        $data = array(
+            'id' => $user->getId(),
+            'username' => $user->getUsername(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'email' => $user->getEmail(),
+            'disabled' => $user->getDisabled(),
+            'authType' => $user->getAuthType()
+        );
 
-        foreach(UserDatabaseHandler::selectAllIDs() as $userID)
-        {
-            $users[] = ['type' => 'User', 'id' => $userID];
-        }
-
-        return ['data' => $users];
+        return new HTTPResponse(HTTPResponse::OK, $data);
     }
 
     /**
-     * @param int $userID
-     * @return array
-     * @throws SecurityException
+     * @param string|null $param
+     * @return HTTPResponse
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      */
-    private function getUser(int $userID): array
+    private function getRolesById(?string $param): HTTPResponse
     {
-        // If user is not checking themselves
-        if($userID != FrontController::getCurrentUser()->getId())
-            FrontController::validatePermission('fa-users-display');
+        $user = UserOperator::getUser((int) $param);
 
-        $user = UserFactory::getFromID($userID);
-
-        return ['data' => ['type' => 'User',
-                                 'id' => $user->getId(),
-                                 'loginName' => $user->getLoginName(),
-                                 'authType' => $user->getAuthType(),
-                                 'firstName' => $user->getFirstName(),
-                                 'lastName' => $user->getLastName(),
-                                 'displayName' => $user->getDisplayName(),
-                                 'email' => $user->getEmail(),
-                                 'disabled' => $user->getDisabled()]];
-    }
-
-    /**
-     * @return array
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     */
-    private function getCurrentUser(): array
-    {
-        return $this->getUser(FrontController::getCurrentUser()->getId());
-    }
-
-    /**
-     * @param int $userID
-     * @return array
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     */
-    private function getUserRoles(int $userID): array
-    {
-        FrontController::validatePermission('fa-users-display-roles');
-
-        $roles = array();
-
-        $user = UserFactory::getFromID($userID);
+        $data = array();
 
         foreach($user->getRoles() as $role)
         {
-            $roles[] = ['type' => 'Role', 'id' => $role->getId(), 'displayName' => $role->getDisplayName()];
+            $data[] = array(
+                'id' => $role->getId(),
+                'name' => $role->getName()
+            );
         }
 
-        return ['data' => $roles];
+        return new HTTPResponse(HTTPResponse::OK, $data);
     }
 
     /**
-     * @return array
-     * @throws SecurityException
+     * @param string|null $param
+     * @return HTTPResponse
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      */
-    public function getCurrentUserRoles(): array
+    private function getPermissionsById(?string $param): HTTPResponse
     {
-        return $this->getUserRoles(FrontController::getCurrentUser()->getId());
-    }
+        $user = UserOperator::getUser((int) $param);
 
-    /**
-     * @param array $vars
-     * @param bool $strict If TRUE, null entries will fail validation
-     * @return array
-     * @throws RouteException
-     * @throws \exceptions\DatabaseException
-     */
-    private function validateUser(array $vars, bool $strict = FALSE): array
-    {
-        $errors = array();
+        $data = array();
 
-        if (!isset($vars['data']))
-            throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_DOCUMENT_PARAMETER_MISSING);
-
-        $vars = $vars['data'];
-
-        // loginName
-        switch (User::validateLoginName(isset($vars['loginName']) ? $vars['loginName'] : NULL)) {
-            case ValidationError::VALUE_IS_NULL:
-                if ($strict)
-                    $errors[] = ValidationError::getErrorArrayEntry('loginName', ValidationError::MESSAGE_VALUE_REQUIRED);
-                break;
-            case ValidationError::VALUE_IS_TOO_SHORT:
-            case ValidationError::VALUE_IS_TOO_LONG:
-                $errors[] = ValidationError::getErrorArrayEntry('loginName', ValidationError::getLengthMessage(1, 64));
-                break;
-            case ValidationError::VALUE_ALREADY_TAKEN:
-                $errors[] = ValidationError::getErrorArrayEntry('loginName', ValidationError::MESSAGE_VALUE_ALREADY_TAKEN);
-        }
-
-        // authType
-        switch (User::validateAuthType(isset($vars['authType']) ? $vars['authType'] : NULL)) {
-            case ValidationError::VALUE_IS_NULL:
-                if ($strict)
-                    $errors[] = ValidationError::getErrorArrayEntry('authType', ValidationError::MESSAGE_VALUE_REQUIRED);
-                break;
-            case ValidationError::VALUE_IS_INVALID:
-                $errors[] = ValidationError::getErrorArrayEntry('authType', ValidationError::MESSAGE_VALUE_NOT_VALID);
-        }
-
-        // firstName & lastName
-        foreach (['firstName', 'lastName'] as $name) {
-            switch (User::validateXName(isset($vars[$name]) ? $vars[$name] : NULL)) {
-                case ValidationError::VALUE_IS_NULL:
-                    if ($strict)
-                        $errors[] = ValidationError::getErrorArrayEntry($name, ValidationError::MESSAGE_VALUE_REQUIRED);
-                    break;
-                case ValidationError::VALUE_IS_TOO_SHORT:
-                case ValidationError::VALUE_IS_TOO_LONG:
-                    $errors[] = ValidationError::getErrorArrayEntry($name, ValidationError::getLengthMessage(1, 32));
-            }
-        }
-
-        // email
-        switch (User::validateEmail(isset($vars['email']) ? $vars['email'] : NULL)) {
-            case ValidationError::VALUE_IS_INVALID:
-                $errors[] = ValidationError::getErrorArrayEntry('email', ValidationError::MESSAGE_VALUE_NOT_VALID);
-        }
-
-        // disabled
-        switch (User::validateDisabled(isset($vars['disabled']) ? $vars['disabled'] : NULL)) {
-            case ValidationError::VALUE_IS_NULL:
-                if ($strict)
-                    $errors[] = ValidationError::getErrorArrayEntry('disabled', ValidationError::MESSAGE_VALUE_REQUIRED);
-                break;
-            case ValidationError::VALUE_IS_INVALID:
-                $errors[] = ValidationError::getErrorArrayEntry('disabled', ValidationError::MESSAGE_VALUE_NOT_VALID);
-        }
-
-        // Verify password is set for local authentication
-        if(isset($vars['authType']) AND $vars['authType'] == "local")
+        foreach($user->getPermissions() as $permission)
         {
-            switch(User::validatePassword(isset($vars['password']) ? $vars['password'] : NULL))
-            {
-                case ValidationError::VALUE_IS_NULL:
-                    $errors [] = ValidationError::getErrorArrayEntry('password', ValidationError::MESSAGE_VALUE_REQUIRED);
-                    break;
-                case ValidationError::VALUE_IS_TOO_SHORT:
-                    $errors[] = ValidationError::getErrorArrayEntry('password', ValidationError::MESSAGE_PASSWORD_TOO_SHORT);
-            }
+            $data[] = $permission;
         }
 
-        if (!empty($errors))
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param bool $search
+     * @param bool $strict
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     */
+    private function getSearchResult(bool $search = FALSE, bool $strict = FALSE): HTTPResponse
+    {
+        if($search)
         {
-            http_response_code(409);
-            return ['errors' => $errors];
+            $args = $this->getFormattedBody(self::SEARCH_FIELDS, $strict);
+
+            $users = UserOperator::search($args['username'], $args['firstName'], $args['lastName'], $args['disabled']);
         }
-
-        return [];
-    }
-
-    /**
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws RouteException
-     */
-    private function createUser(): array
-    {
-        FrontController::validatePermission('fa-users-create');
-
-        $vars = FrontController::getDocumentAsArray();
-
-        $validation = $this->validateUser($vars, TRUE);
-
-        $vars = $vars['data'];
-
-        // Set values that can be null to null to avoid undefined index warnings
-        if(!isset($vars['password']))
-            $vars['password'] = NULL;
-        if(!isset($vars['displayName']))
-            $vars['displayName'] = NULL;
-        if(!isset($vars['email']))
-            $vars['email'] = NULL;
-
-        if(!empty($validation))
-            return $validation;
-
-        $user = UserFactory::getNew($vars['loginName'],
-                                    $vars['authType'],
-                                    $vars['password'], // NULL
-                                    $vars['firstName'],
-                                    $vars['lastName'],
-                                    $vars['displayName'], // NULL
-                                    $vars['email'], // NULL
-                                    intval($vars['disabled']));
-
-        http_response_code(201);
-        return ['data' => ['type' => 'User', 'id' => $user->getID()]];
-    }
-
-    /**
-     * @param int $userID
-     * @return array
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     */
-    private function updateUser(int $userID): array
-    {
-        FrontController::validatePermission('fa-users-update');
-        http_response_code(501);
-        // TODO update user
-        return[$userID];
-    }
-
-    /**
-     * @param int $userID
-     * @return array
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     */
-    private function deleteUser(int $userID): array
-    {
-        FrontController::validatePermission('fa-users-delete');
-
-        $user = UserFactory::getFromID($userID);
-        $user->delete();
-
-        http_response_code(204);
-        return[];
-    }
-
-    /**
-     * @param int $userID
-     * @return array
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     */
-    private function addRole(int $userID): array
-    {
-        FrontController::validatePermission('fa-users-modify');
-
-        $user = UserFactory::getFromID($userID);
-
-        $errors = array();
-
-        // Validate submission
-        $submission = FrontController::getDocumentAsArray();
-
-        if(!isset($submission['data']['id']))
-            $errors[] = ValidationError::getErrorArrayEntry('id', ValidationError::MESSAGE_VALUE_REQUIRED);
         else
+            $users = UserOperator::search();
+
+        $results = array();
+
+        foreach($users as $user)
         {
-            // Check if user is already assigned to role
-            foreach($user->getRoles() as $role)
-            {
-                if($role->getId() == $submission['data']['id'])
-                {
-                    $errors[] = ValidationError::getErrorArrayEntry('id', ValidationError::MESSAGE_VALUE_ALREADY_ASSIGNED);
-                    break;
-                }
-            }
-
-            // Check if role exists
-            try
-            {
-                RoleFactory::getFromID(intval($submission['data']['id']));
-            }
-            catch(EntryNotFoundException $e)
-            {
-                $errors[] = ValidationError::getErrorArrayEntry('id', ValidationError::MESSAGE_VALUE_NOT_FOUND);
-            }
-
+            $results[] = array(
+                'id' => $user->getId(),
+                'username' => $user->getUsername(),
+                'firstName' => $user->getFirstName(),
+                'lastName' => $user->getLastName(),
+                'email' => $user->getEmail(),
+                'disabled' => $user->getDisabled(),
+                'authType' => $user->getAuthType()
+            );
         }
 
-        if(!empty($errors))
-        {
-            http_response_code(409);
-            return ['errors' => $errors];
-        }
-
-        // Add role
-        $user->addRole(intval($submission['data']['id']));
-
-        http_response_code(204);
-        return[];
-    }
-
-    /**
-     * @param int $userID
-     * @param int $roleId
-     * @return array
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     */
-    private function removeRole(int $userID, int $roleId): array
-    {
-        FrontController::validatePermission('fa-users-modify');
-
-        $user = UserFactory::getFromID($userID);
-
-        $userHasRole = FALSE;
-
-        // Verify user has role
-        foreach($user->getRoles() as $role)
-        {
-            if($role->getId() == $roleId)
-            {
-                $userHasRole = TRUE;
-                break;
-            }
-        }
-
-        if(!$userHasRole)
-            throw new EntryNotFoundException(ValidationError::MESSAGE_VALUE_NOT_ASSIGNED, EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
-
-        $user->removeRole($roleId);
-
-        http_response_code(204);
-        return[];
+        return new HTTPResponse(HTTPResponse::OK, $results);
     }
 }

@@ -3,24 +3,19 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 10:32 AM
+ * Date: 4/05/2019
+ * Time: 4:06 PM
  */
 
-// Include configuration file
-require_once (dirname(__FILE__) . "/../config.php");
-
-// Register Class Inclusion Script
 spl_autoload_register(
     function($className)
     {
         /** @noinspection PhpIncludeInspection */
-        require_once("../" . str_replace("\\", "/", $className) . ".class.php");
+        require_once('../' . str_replace("\\", "/", $className) . ".class.php");
     }
 );
 
-header('Content-type: application/vnd.api+json');
-echo \controllers\FrontController::processRequest();
+\controllers\FrontController::processRequest();

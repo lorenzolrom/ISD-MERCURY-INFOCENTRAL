@@ -1,2 +1,3 @@
 /.idea
-/src/config.php
+/src/Config.class.php
+/utilities/GoogleAPIConnection.class.php

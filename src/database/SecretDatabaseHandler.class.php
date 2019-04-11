@@ -3,80 +3,41 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 11:15 AM
+ * Date: 4/05/2019
+ * Time: 4:21 PM
  */
 
 
 namespace database;
 
 
-use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
-use messages\Messages;
+use models\Secret;
 
-class SecretDatabaseHandler
+class SecretDatabaseHandler extends DatabaseHandler
 {
     /**
      * @param string $secret
-     * @return array
-     * @throws EntryNotFoundException
+     * @return Secret
      * @throws \exceptions\DatabaseException
+     * @throws EntryNotFoundException
      */
-    public static function selectFromSecret(string $secret): array
+    public static function selectBySecret(string $secret): Secret
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, secret, name, exempt FROM \"fa_Secret\" WHERE secret = ?");
+        $select = $handler->prepare("SELECT secret, name FROM Secret WHERE secret = ? LIMIT 1");
         $select->bindParam(1, $secret, DatabaseConnection::PARAM_STR);
         $select->execute();
 
         $handler->close();
 
         if($select->getRowCount() === 1)
-            return $select->fetch();
+            return $select->fetchObject("models\Secret");
 
-        throw new EntryNotFoundException(Messages::SECURITY_APPTOKEN_NOT_FOUND, EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
-    }
-
-    /**
-     * @param int $tokenID
-     * @param int $routeID
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public static function doesSecretHaveAccessToRoute(int $tokenID, int $routeID): bool
-    {
-        $handler = new DatabaseConnection();
-
-        $select = $handler->prepare("SELECT secret FROM \"fa_Secret_Route\" WHERE secret = :token AND route = :route LIMIT 1");
-        $select->bindParam(':token', $tokenID, DatabaseConnection::PARAM_INT);
-        $select->bindParam(':route', $routeID, DatabaseConnection::PARAM_INT);
-        $select->execute();
-
-        $handler->close();
-
-        return $select->getRowCount() === 1;
-    }
-
-    /**
-     * @param int $id
-     * @return array
-     * @throws DatabaseException
-     */
-    public static function getSecretPermissionCodes(int $id): array
-    {
-        $handler = new DatabaseConnection();
-
-        $select = $handler->prepare("SELECT permission FROM \"fa_Secret_Permission\" WHERE secret = ?");
-        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
-        $select->execute();
-
-        $handler->close();
-
-        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+        throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::PRIMARY_KEY_NOT_FOUND], EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
     }
 }

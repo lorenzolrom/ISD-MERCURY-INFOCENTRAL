@@ -3,207 +3,144 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 10:44 AM
+ * Date: 4/05/2019
+ * Time: 4:06 PM
  */
 
 
 namespace controllers;
 
 
-use exceptions\ControllerException;
+use business\SecretOperator;
+use exceptions\EntryInUseException;
 use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
-use exceptions\TokenException;
-use factories\SecretFactory;
 use factories\ControllerFactory;
-use factories\RouteFactory;
-use factories\UserFactory;
-use factories\TokenFactory;
-use messages\Messages;
-use models\User;
+use models\HTTPRequest;
+use models\HTTPResponse;
+use models\Secret;
 
 class FrontController
 {
-    public static function processRequest(): string
+    /**
+     * @return Secret
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function currentSecret(): Secret
     {
-        // Final array to be output as JSON
-        $fa_finalOutput = [];
+        // Check for secret
+        if(!isset($_SERVER['HTTP_SECRET']))
+            throw new SecurityException(SecurityException::MESSAGES[SecurityException::KEY_NOT_SUPPLIED], SecurityException::KEY_NOT_SUPPLIED);
 
         try
         {
-            // Retrieve request URL and Path
-            if(isset($_SERVER['HTTPS']) AND $_SERVER['HTTPS'] == 'on')
-                $fa_requestedURL = "https";
-            else
-                $fa_requestedURL = "http";
-
-            $fa_requestedURL .= "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-
-            // Check if a route was supplied (extension + path)
-            if(!isset(explode(IC_CONFIG['baseURL'] . IC_CONFIG['baseURI'], $fa_requestedURL)[1]))
-                throw new RouteException(Messages::ROUTE_NOT_SUPPLIED, RouteException::ROUTE_NOT_SUPPLIED);
-
-            $fa_requestedURI = "/" . explode(IC_CONFIG['baseURL'] . IC_CONFIG['baseURI'], $fa_requestedURL)[1]; // Get portion of URL after application
-            $fa_requestedURIParts = explode('/', explode('?', $fa_requestedURI)[0]); // Break URI into pieces (ignore GET variables)
-
-            // Make sure header is set
-            if(!isset($_SERVER['HTTP_APPLICATION_SECRET']))
-                throw new SecurityException(Messages::SECURITY_APPTOKEN_NOT_SUPPLIED, SecurityException::APPTOKEN_NOT_SUPPLIED);
-
-            // Create application token object
-            $fa_suppliedAppToken = $_SERVER['HTTP_APPLICATION_SECRET'];
-            $fa_appToken = SecretFactory::getFromSecret($fa_suppliedAppToken);
-
-            // Create Route
-            $fa_route = RouteFactory::getRouteByPath($fa_requestedURIParts[1], $fa_requestedURIParts[2]);
-
-            // Determine if application has permission for route
-            if(!$fa_appToken->hasAccessToRoute($fa_route))
-                throw new SecurityException(Messages::SECURITY_APPTOKEN_NO_PERMISSION_FOR_ROUTE, SecurityException::APPTOKEN_NO_PERMISSION_FOR_ROUTE);
-
-            // Determine if controller is core or an extension
-            if($fa_route->getExtension() === "core")
-                $fa_routeControllerClassname = "/controllers/{$fa_route->getController()}Controller";
-            else
-                $fa_routeControllerClassname = "/extensions/{$fa_route->getExtension()}/controllers/{$fa_route->getController()}Controller";
-
-            // Check if controller class exists
-            $fa_routeControllerPath = dirname(__FILE__) . "/..$fa_routeControllerClassname.class.php";
-            if(!is_file($fa_routeControllerPath))
-                throw new ControllerException(Messages::CONTROLLER_NOT_FOUND, ControllerException::CONTROLLER_NOT_FOUND);
-            else
-            {
-                /** @noinspection PhpIncludeInspection */
-                require_once($fa_routeControllerPath);
-            }
-
-            // Load controller class
-            $fa_routeController = ControllerFactory::getController(str_replace("/", "\\", $fa_routeControllerClassname));
-
-            // Request results of route URI
-            $fa_routeURI = "";
-
-            for($i = 2; $i < sizeof($fa_requestedURIParts); $i++)
-            {
-                $fa_routeURI .= $fa_requestedURIParts[$i] . "/";
-            }
-
-            $fa_routeURI = rtrim($fa_routeURI, "/");
-
-            $fa_finalOutput = $fa_routeController->processURI($fa_routeURI);
-        }
-        catch(SecurityException $e)
-        {
-            switch($e->getCode())
-            {
-                default:
-                    http_response_code(401);
-                    break;
-            }
-
-            $fa_finalOutput['errors'] = [['type' => 'entryMissing', 'message' => $e->getMessage()]];
+            $key = SecretOperator::getSecret($_SERVER['HTTP_SECRET']);
+            return $key;
         }
         catch(EntryNotFoundException $e)
         {
-            switch($e->getCode())
-            {
-                default:
-                    http_response_code(404);
-                    break;
-            }
-
-            $fa_finalOutput['errors'] = [['type' => 'entryMissing', 'message' => $e->getMessage()]];
+            throw new SecurityException(SecurityException::MESSAGES[SecurityException::KEY_NOT_FOUND], SecurityException::KEY_NOT_FOUND, $e);
         }
-        catch(RouteException $e)
-        {
-            switch($e->getCode())
-            {
-                case RouteException::ROUTE_URI_NOT_FOUND:
-                    http_response_code(404);
-                    break;
-                default:
-                    http_response_code(400);
-                    break;
-            }
-
-            $fa_finalOutput['errors'] = [['type' => 'route', 'message' => $e->getMessage()]];
-        }
-        catch(\Exception $e)
-        {
-            http_response_code(500);
-            $fa_finalOutput['errors'] = [['type' => 'fatal', $e->getMessage()]];
-        }
-
-        return json_encode($fa_finalOutput);
     }
 
-    /**
-     * @return User Currently logged in user, if one is present
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     */
-    public static function getCurrentUser(): User
+    public static function processRequest()
     {
-        if(!isset($_SERVER['HTTP_USER_TOKEN']))
-            throw new SecurityException(Messages::SECURITY_NO_AUTHENTICATED_USER, SecurityException::USER_NOT_AUTHENTICATED);
+        // Final response object
+        $response = null;
 
         try
         {
-            $token = TokenFactory::getFromToken($_SERVER['HTTP_USER_TOKEN']);
 
-            // Has token been marked as expired?
-            if($token->getExpired())
-                throw new TokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, TokenException::HAS_EXPIRED);
-
-            // Has expire time passed?
-
-            if(strtotime($token->getExpireTime()) <= strtotime(date('Y-m-d H:i:s')))
+            // Receive request
+            switch($_SERVER['REQUEST_METHOD'])
             {
-                $token->expire();
-                throw new TokenException(Messages::USERTOKEN_TOKEN_HAS_EXPIRED, TokenException::HAS_EXPIRED);
+                case 'POST':
+                    $method = HTTPRequest::POST;
+                    break;
+                case 'PUT':
+                    $method = HTTPRequest::PUT;
+                    break;
+                case 'DELETE':
+                    $method = HTTPRequest::DELETE;
+                    break;
+                default:
+                    $method = HTTPRequest::GET;
             }
+
+            // Get secret
+            $key = self::currentSecret();
+
+            // Determine URI
+            if(isset($_SERVER['HTTPS']) AND $_SERVER['HTTPS'] == 'on')
+                $url = "https";
+            else
+                $url = "http";
+
+            $url .= "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+            $urlParts = explode(\Config::OPTIONS['baseURL'] . \Config::OPTIONS['baseURI'], $url);
+
+            if(isset($urlParts[1]))
+                $uriParts = explode('/', $urlParts[1]);
+            else
+                $uriParts = array();
+
+            // Create request
+            $request = new HTTPRequest($key, $method, $uriParts, self::getRequestBodyAsArray());
+
+            $response = ControllerFactory::getController($request)->getResponse();
+
+            if($response == NULL)
+                throw new RouteException(RouteException::MESSAGES[RouteException::REQUEST_INVALID], RouteException::REQUEST_INVALID);
+
         }
-        catch (EntryNotFoundException $e)
+        catch(RouteException $e)
         {
-            throw new SecurityException($e->getMessage(), SecurityException::USERTOKEN_NOT_FOUND);
+            $response = new HTTPResponse(HTTPResponse::BAD_REQUEST, array('errors' => array($e->getMessage())));
         }
-        catch (TokenException $e)
+        catch(EntryNotFoundException $e)
         {
-            throw new SecurityException($e->getMessage(), SecurityException::USERTOKEN_IS_EXPIRED);
+            $response = new HTTPResponse(HTTPResponse::NOT_FOUND, array('errors' => array($e->getMessage())));
+        }
+        catch(EntryInUseException $e)
+        {
+            $response = new HTTPResponse(HTTPResponse::CONFLICT, array('errors' => array($e->getMessage())));
+        }
+        catch(SecurityException $e)
+        {
+            if($e->getCode() == SecurityException::USER_NO_PERMISSION OR $e->getCode() == SecurityException::KEY_NO_PERMISSION)
+                $response = new HTTPResponse(HTTPResponse::FORBIDDEN, array('errors' => array($e->getMessage())));
+            else
+                $response = new HTTPResponse(HTTPResponse::UNAUTHORIZED, array('errors' => array($e->getMessage())));
+        }
+        catch(\Exception $e)
+        {
+            $response = new HTTPResponse(HTTPResponse::INTERNAL_SERVER_ERROR, array('errors' => array($e->getMessage())));
         }
 
-        return UserFactory::getFromID($token->getUser());
-    }
+        // Reply to the request
+        header('Content-type: application/vnd.api+json');
 
-    /**
-     * @param string $permission
-     * @throws EntryNotFoundException
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
-     */
-    public static function validatePermission(string $permission)
-    {
-        $secret = SecretFactory::getFromSecret($_SERVER['HTTP_APPLICATION_SECRET']);
+        // Request has been set
+        if($response !== NULL)
+        {
+            http_response_code($response->getResponseCode());
+            echo json_encode($response->getBody());
+            exit;
+        }
 
-        // Check if secret is exempt, if so validate its permissions
-        if($secret->getExempt() == 1 AND !in_array($permission, $secret->getPermissionCodes()))
-            throw new SecurityException(Messages::SECURITY_SECRET_DOES_NOT_HAVE_PERMISSION, SecurityException::SECRET_NO_PERMISSION);
-
-        if($secret->getExempt() == 0 AND !self::getCurrentUser()->hasPermission($permission))
-            throw new SecurityException(Messages::SECURITY_USER_DOES_NOT_HAVE_PERMISSION, SecurityException::USER_NO_PERMISSION);
     }
 
     /**
      * Converts data sent in a request document to an array
      * @return array
      */
-    public static function getDocumentAsArray(): array
+    public static function getRequestBodyAsArray(): array
     {
         $array = json_decode(file_get_contents('php://input'), TRUE);
 

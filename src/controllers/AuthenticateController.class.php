@@ -3,127 +3,91 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 3:23 PM
+ * Date: 4/07/2019
+ * Time: 9:47 AM
  */
 
 
 namespace controllers;
 
-
+use business\TokenOperator;
+use business\UserOperator;
 use exceptions\DatabaseException;
-use exceptions\EntryNotFoundException;
-use exceptions\RouteException;
 use exceptions\SecurityException;
-use factories\UserFactory;
-use factories\TokenFactory;
-use messages\Messages;
+use models\HTTPRequest;
+use models\HTTPResponse;
 
+/**
+ * Class AuthenticateController
+ *
+ * User authentication
+ *
+ * @package controllers
+ */
 class AuthenticateController extends Controller
 {
+    const LOGIN_FIELDS = array('username', 'password');
 
     /**
-     * @param string $uri
-     * @return array
-     * @throws DatabaseException
-     * @throws EntryNotFoundException
-     * @throws RouteException
-     * @throws SecurityException
+     * @return HTTPResponse|null
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws \exceptions\LDAPException
      */
-    public function processURI(string $uri): array
+    public function getResponse(): ?HTTPResponse
     {
-        $uriParts = explode("/", $uri);
-
-        if($uriParts[0] == "authenticate" AND isset($uriParts[1]))
+        if($this->request->method() == HTTPRequest::POST)
         {
-
-            if ($_SERVER['REQUEST_METHOD'] == "POST")
+            switch($this->request->next())
             {
-                if ($uriParts[1] == "login")
+                case "login":
                     return $this->loginUser();
             }
-            else if ($_SERVER['REQUEST_METHOD'] == "GET")
+        }
+        else if($this->request->method() == HTTPRequest::PUT)
+        {
+            switch($this->request->next())
             {
-                if ($uriParts[1] == "logout")
+                case "logout":
                     return $this->logoutUser();
-                else if ($uriParts[1] == "validate")
-                    return $this->validateToken();
             }
         }
 
-        throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
+        return NULL;
     }
 
     /**
-     * @return array
-     * @throws DatabaseException
-     * @throws RouteException
-     * @throws SecurityException
-     * @throws EntryNotFoundException
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws \exceptions\LDAPException
      */
-    private function loginUser(): array
+    private function loginUser(): HTTPResponse
     {
-        $submission = FrontController::getDocumentAsArray();
+        $credentials = $this->getFormattedBody(self::LOGIN_FIELDS, TRUE);
 
-        // Check for loginName and password
-        if(!isset($submission['data']['loginName']) OR !isset($submission['data']['password']))
-            throw new RouteException(Messages::ROUTE_REQUIRED_PARAMETER_MISSING, RouteException::REQUIRED_PARAMETER_MISSING);
+        if($credentials['username'] === NULL)
+            $credentials['username'] = "";
+        if($credentials['password'] == NULL)
+            $credentials['password'] = "";
 
-        // Check username
-        try
-        {
-            $user = UserFactory::getFromLoginName($submission['data']['loginName']);
-        }
-        catch (EntryNotFoundException $e)
-        {
-            throw new SecurityException(Messages::USER_NOT_FOUND, SecurityException::USER_LOGINNAME_NOT_FOUND);
-        }
-
-        // Check password
-        $hashedPassword = hash('SHA512', hash('SHA512',$submission['data']['password']));
-
-        if($user->getPassword() != $hashedPassword)
-            throw new SecurityException(Messages::USER_PASSWORD_IS_WRONG, SecurityException::USER_PASSWORD_IS_WRONG);
-
-        // Invalidate any existing tokens for this user
-        $user->expireAllTokens();
-
-        // Generate new login token
-        $token = TokenFactory::getNewToken($user);
-
-        // Return the newly created token
-        http_response_code(201);
-        return ['data' => [ 'type' => 'UserToken', 'token' => $token->getToken()]];
+        return new HTTPResponse(HTTPResponse::CREATED, array('token' => UserOperator::loginUser($credentials['username'], $credentials['password'])->getToken()));
     }
 
     /**
-     * @return array
+     * @return HTTPResponse
      * @throws DatabaseException
      * @throws SecurityException
-     * @throws EntryNotFoundException
      */
-    private function logoutUser(): array
+    private function logoutUser(): HTTPResponse
     {
-        FrontController::getCurrentUser()->logout();
+        $token = CurrentUserController::currentToken();
+        TokenOperator::expireToken($token);
 
-        http_response_code(204);
-        return array();
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
-    /**
-     * @return array
-     * @throws DatabaseException
-     * @throws EntryNotFoundException
-     * @throws SecurityException
-     */
-    private function validateToken(): array
-    {
-        FrontController::getCurrentUser();
-
-        http_response_code(204);
-        return[];
-    }
 }

@@ -3,58 +3,30 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 2:46 PM
+ * Date: 4/06/2019
+ * Time: 3:36 PM
  */
 
 
 namespace models;
 
 
-use database\UserDatabaseHandler;
-use factories\RoleFactory;
-use messages\ValidationError;
+use business\NotificationOperator;
+use business\RoleOperator;
 
-class User
+class User extends Model
 {
     private $id;
-    private $loginName;
-    private $authType;
-    private $password;
+    private $username;
     private $firstName;
     private $lastName;
-    private $displayName;
     private $email;
+    private $password;
     private $disabled;
-
-    /**
-     * User constructor.
-     * @param int $id
-     * @param string $loginName
-     * @param string $authType
-     * @param string $password
-     * @param string $firstName
-     * @param string $lastName
-     * @param string|null $displayName
-     * @param string|null $email
-     * @param string $disabled
-     */
-    public function __construct(int $id, string $loginName, string $authType, ?string $password, string $firstName,
-                                string $lastName, ?string $displayName, ?string $email, string $disabled)
-    {
-        $this->id = $id;
-        $this->loginName = $loginName;
-        $this->authType = $authType;
-        $this->password = $password;
-        $this->firstName = $firstName;
-        $this->lastName = $lastName;
-        $this->displayName = $displayName;
-        $this->email = $email;
-        $this->disabled = $disabled;
-    }
+    private $authType;
 
     /**
      * @return int
@@ -67,25 +39,9 @@ class User
     /**
      * @return string
      */
-    public function getLoginName(): string
+    public function getUsername(): string
     {
-        return $this->loginName;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAuthType(): string
-    {
-        return $this->authType;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPassword(): string
-    {
-        return $this->password;
+        return $this->username;
     }
 
     /**
@@ -105,212 +61,82 @@ class User
     }
 
     /**
-     * @return string|null
+     * @return string
      */
-    public function getDisplayName(): ?string
-    {
-        return $this->displayName;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getDisabled(): string
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDisabled(): int
     {
         return $this->disabled;
     }
 
     /**
-     * @return bool
-     * @throws \exceptions\DatabaseException
+     * @return string
      */
-    public function delete()
+    public function getAuthType(): string
     {
-        return UserDatabaseHandler::delete($this->id);
-    }
-
-    /**
-     * Marks all tokens for this user as expired
-     * @throws \exceptions\DatabaseException
-     */
-    public function expireAllTokens()
-    {
-        UserDatabaseHandler::expireAllTokensForUser($this->id);
+        return $this->authType;
     }
 
     /**
      * @return Role[]
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
      */
     public function getRoles(): array
     {
-        $roles = array();
+        return RoleOperator::getUserRoles($this);
+    }
 
-        $roleIDs = UserDatabaseHandler::selectUserRoleIDs($this->id);
+    /**
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public function getPermissions(): array
+    {
+        $permissions = array();
 
-        foreach($roleIDs as $roleID)
+        foreach(RoleOperator::getUserRoles($this) as $role)
         {
-            $roles[] = RoleFactory::getFromID($roleID);
+            foreach($role->getPermissions() as $permission)
+            {
+                if(!in_array($permission->getCode(), $permissions))
+                    $permissions[] = $permission->getCode();
+            }
         }
 
-        return $roles;
+        return $permissions;
     }
 
     /**
-     * @param string $permissionCode
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     */
-    public function hasPermission(string $permissionCode): bool
-    {
-        foreach($this->getRoles() as $role)
-        {
-            if(in_array($permissionCode, $role->getPermissionCodes()))
-                return TRUE;
-        }
-
-        return FALSE;
-    }
-
-    /**
-     * @throws \exceptions\DatabaseException
-     */
-    public function logout()
-    {
-        UserDatabaseHandler::expireAllTokensForUser($this->id);
-    }
-
-    /**
-     * @param int $roleID
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public function addRole(int $roleID): bool
-    {
-        return UserDatabaseHandler::addRoleToUser($this->id, $roleID);
-    }
-
-    /**
-     * @param int $roleID
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public function removeRole(int $roleID): bool
-    {
-        return UserDatabaseHandler::removeRoleFromUser($this->id, $roleID);
-    }
-
-    /**
-     * @param string|null $loginName
      * @return int
      * @throws \exceptions\DatabaseException
      */
-    public static function validateLoginName(?string $loginName): int
+    public function getUnreadNotificationCount(): int
     {
-        // Is not null
-        if($loginName === NULL)
-            return ValidationError::VALUE_IS_NULL;
-
-        // Is between 1 and 64 characters
-        if(strlen($loginName) < 1)
-            return ValidationError::VALUE_IS_TOO_SHORT;
-
-        if(strlen($loginName) > 64)
-            return ValidationError::VALUE_IS_TOO_LONG;
-
-        // Is not already taken
-        if(UserDatabaseHandler::isLoginNameTaken($loginName))
-            return ValidationError::VALUE_ALREADY_TAKEN;
-
-        return ValidationError::VALUE_IS_OK;
+        return NotificationOperator::getUnreadCount($this);
     }
 
     /**
-     * @param string|null $authType
-     * @return int
+     * @param string $password
+     * @return string
      */
-    public static function validateAuthType(?string $authType): int
+    public static function hashPassword(string $password): string
     {
-        // Is not null
-        if($authType === NULL)
-            return ValidationError::VALUE_IS_NULL;
-
-        // Is valid
-        if(!in_array($authType, ['local', 'ldap']))
-            return ValidationError::VALUE_IS_INVALID;
-
-        return ValidationError::VALUE_IS_OK;
-    }
-
-    /**
-     * Validator for first and last name
-     * @param string|null $name
-     * @return int
-     */
-    public static function validateXName(?string $name): int
-    {
-        // Is not null
-        if($name === NULL)
-            return ValidationError::VALUE_IS_NULL;
-
-        // Is between 1 and 32 characters
-        if(strlen($name) < 1)
-            return ValidationError::VALUE_IS_TOO_SHORT;
-        if(strlen($name) > 64)
-            return ValidationError::VALUE_IS_TOO_LONG;
-
-        return ValidationError::VALUE_IS_OK;
-    }
-
-    /**
-     * @param string|null $email
-     * @return int
-     */
-    public static function validateEmail(?string $email): int
-    {
-        if($email !== NULL AND !filter_var($email, FILTER_VALIDATE_EMAIL))
-            return ValidationError::VALUE_IS_INVALID;
-
-        return ValidationError::VALUE_IS_OK;
-    }
-
-    /**
-     * @param int|null $disabled
-     * @return int
-     */
-    public static function validateDisabled(?int $disabled): int
-    {
-        if($disabled === NULL)
-            return ValidationError::VALUE_IS_NULL;
-
-        if($disabled != 1 AND $disabled != 0)
-            return ValidationError::VALUE_IS_INVALID;
-
-        return ValidationError::VALUE_IS_OK;
-    }
-
-    /**
-     * @param string|null $password
-     * @return int
-     */
-    public static function validatePassword(?string $password): int
-    {
-        if($password === NULL)
-            return ValidationError::VALUE_IS_NULL;
-
-        if(strlen($password) < 8)
-            return ValidationError::VALUE_IS_TOO_SHORT;
-
-        return ValidationError::VALUE_IS_OK;
+        // TODO: replace with ARGON2 ID salt once account management is migrated to MERLOT app
+        return hash('SHA512', $password);
     }
 }

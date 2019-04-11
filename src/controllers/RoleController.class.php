@@ -3,318 +3,108 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 7:55 PM
+ * Date: 4/07/2019
+ * Time: 11:00 AM
  */
 
 
 namespace controllers;
 
 
-use database\RoleDatabaseHandler;
+use business\RoleOperator;
 use exceptions\EntryNotFoundException;
-use exceptions\RouteException;
-use factories\PermissionFactory;
-use factories\RoleFactory;
-use messages\Messages;
-use messages\ValidationError;
-use models\Role;
+use models\HTTPRequest;
+use models\HTTPResponse;
 
 class RoleController extends Controller
 {
 
     /**
-     * @param string $uri
-     * @return array
-     * @throws RouteException
+     * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
+     * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public function processURI(string $uri): array
+    public function getResponse(): ?HTTPResponse
     {
-        $uriParts = explode("/", $uri);
+        CurrentUserController::validatePermission('settings');
 
-        if($uriParts[0] == "roles")
+        $param = $this->request->next();
+
+        if($this->request->method() == HTTPRequest::GET)
         {
-            if ($_SERVER['REQUEST_METHOD'] == "GET")
+            switch($param)
             {
-                if (sizeof($uriParts) == 1) // Get list of roles
-                    return $this->getRoles();
-                else if (sizeof($uriParts) == 2) // Get role details
-                    return $this->getRole(intval($uriParts[1]));
-                else if (sizeof($uriParts) == 3 AND $uriParts[2] == "permissions") // Get role permissions
-                    return $this->getPermissions(intval($uriParts[1]));
-            }
-            else if ($_SERVER['REQUEST_METHOD'] == "POST")
-            {
-                if (sizeof($uriParts) == 1) // Create new role
-                    return $this->createRole();
-                else if (sizeof($uriParts) == 3 AND $uriParts[2] == "permissions") // Add permission to role
-                    return $this->addPermission(intval($uriParts[1]));
-            }
-            else if ($_SERVER['REQUEST_METHOD'] == "PUT")
-            {
-                if (sizeof($uriParts) == 2) // Update role
-                    return $this->updateRole(intval($uriParts[1]));
-            }
-            else if ($_SERVER['REQUEST_METHOD'] == "DELETE")
-            {
-                if (sizeof($uriParts) == 2) // Delete role
-                    return $this->deleteRole(intval($uriParts[1]));
-                else if (sizeof($uriParts) == 4 AND $uriParts[2] == "permissions") // Remove permission from role
-                    return $this->removePermission(intval($uriParts[1]), $uriParts[3]);
+                case null:
+                    return $this->getSearchResult();
+                default:
+                    if($this->request->next() == "permissions")
+                        return $this->getPermissionsById($param);
+                    return $this->getById($param);
             }
         }
 
-        throw new RouteException(Messages::ROUTE_URI_NOT_FOUND, RouteException::ROUTE_URI_NOT_FOUND);
+        return NULL;
     }
 
     /**
-     * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     */
-    private function getRoles(): array
-    {
-        FrontController::validatePermission('fa-roles-list');
-
-        $roleIDs = array();
-
-        foreach(RoleDatabaseHandler::selectAllIDs() as $roleID)
-        {
-            $role = RoleFactory::getFromID($roleID);
-            $roleIDs[] = ['type' => 'Role', 'id' => $role->getId(), 'displayName' => $role->getDisplayName()];
-        }
-
-        return ['data' => $roleIDs];
-    }
-
-    /**
-     * @param int $roleId
-     * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     */
-    private function getRole(int $roleId): array
-    {
-        FrontController::validatePermission('fa-roles-display');
-        $role = RoleFactory::getFromID($roleId);
-
-        return ['data' => ['type' => 'Role', 'id' => $role->getId(), 'displayName' => $role->getDisplayName()]];
-    }
-
-    /**
-     * @param int $roleId
-     * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     */
-    private function getPermissions(int $roleId): array
-    {
-        FrontController::validatePermission('fa-roles-display-permissions');
-        $role = RoleFactory::getFromID($roleId);
-
-        $permissions = array();
-
-        foreach($role->getPermissionCodes() as $permissionCode)
-        {
-            $permissions[] = ['type' => 'Permission', 'code' => $permissionCode];
-        }
-
-        return ['data' => $permissions];
-    }
-
-    /**
-     * @param array $vars
-     * @return array
-     * @throws \exceptions\DatabaseException
-     */
-    private function validateRole(array $vars): array
-    {
-        $errors = array();
-
-        // Validate Submission
-        if(!isset($vars['data']['displayName']))
-            $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
-        else
-        {
-            switch (Role::validateDisplayName($vars['data']['displayName'])) {
-                case ValidationError::VALUE_IS_NULL:
-                    $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
-                    break;
-                case ValidationError::VALUE_ALREADY_TAKEN:
-                    $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::MESSAGE_VALUE_ALREADY_TAKEN];
-                    break;
-                case ValidationError::VALUE_IS_TOO_SHORT:
-                    $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::getLengthMessage(1, 64)];
-                    break;
-                case ValidationError::VALUE_IS_TOO_LONG:
-                    $errors[] = ['type' => 'validation', 'field' => 'displayName', 'message' => ValidationError::getLengthMessage(1, 64)];
-                    break;
-            }
-        }
-
-        // Return errors, if present
-        if(!empty($errors))
-        {
-            http_response_code(409);
-            return ['errors' => $errors];
-        }
-
-        return [];
-    }
-
-    /**
-     * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     */
-    private function createRole(): array
-    {
-        FrontController::validatePermission('fa-roles-create');
-
-        $validation = $this->validateRole(FrontController::getDocumentAsArray());
-        if(!empty($validation))
-            return $validation;
-
-        // Create new role
-        $role = RoleFactory::getNew(FrontController::getDocumentAsArray()['data']['displayName']);
-
-        http_response_code(201);
-        return ['data' => ['type' => 'Role', 'id' => $role->getId()]];
-    }
-
-    /**
-     * @param int $roleID
-     * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     */
-    private function updateRole(int $roleID): array
-    {
-        FrontController::validatePermission('fa-roles-modify');
-
-        $role = RoleFactory::getFromID($roleID);
-
-        // Validate Submission
-        $validation = $this->validateRole(FrontController::getDocumentAsArray());
-        if(!empty($validation))
-            return $validation;
-
-        // Update role
-        $role->setDisplayName(FrontController::getDocumentAsArray()['data']['displayName']);
-
-        // Respond 'OK'
-        http_response_code(204);
-        return [];
-    }
-
-    /**
-     * @param int $roleID
-     * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     */
-    private function deleteRole(int $roleID): array
-    {
-        FrontController::validatePermission('fa-roles-delete');
-
-        $role = RoleFactory::getFromID($roleID);
-
-        // Delete role
-        $role->delete();
-
-        // Respond OK
-        http_response_code(204);
-        return [];
-    }
-
-    /**
-     * @param int $roleID
-     * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     */
-    private function addPermission(int $roleID): array
-    {
-        FrontController::validatePermission('fa-roles-modify');
-
-        $role = RoleFactory::getFromID($roleID);
-
-        $errors = array();
-
-        // Validate Submission
-        $submission = FrontController::getDocumentAsArray();
-
-        if(!isset($submission['data']['code']))
-            $errors[] = ['type' => 'validation', 'field' => 'code', 'message' => ValidationError::MESSAGE_VALUE_REQUIRED];
-        else
-        {
-            $permissionCode = $submission['data']['code'];
-            // Check if role already has permission
-            if(in_array($permissionCode, $role->getPermissionCodes()))
-                $errors[] = ['type' => 'validation', 'field' => 'code', 'message' => ValidationError::MESSAGE_VALUE_ALREADY_ASSIGNED];
-            else
-            {
-                // Check if permission code exists
-                try
-                {
-                    PermissionFactory::getFromCode($permissionCode);
-                }
-                catch(EntryNotFoundException $e)
-                {
-                    $errors[] = ['type' => 'validation', 'field' => 'permissionCode', 'message' => ValidationError::MESSAGE_VALUE_NOT_FOUND];
-                }
-            }
-        }
-
-        // Return errors, if present
-        if(!empty($errors))
-        {
-            http_response_code(409);
-            return ['errors' => $errors];
-        }
-
-        // Assign permission
-        $role->addPermission($submission['data']['permissionCode']);
-
-        http_response_code(204);
-        return [];
-    }
-
-    /**
-     * @param int $roleID
-     * @param string $permissionCode
-     * @return array
+     * @param string|null $param
+     * @return HTTPResponse
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
      */
-    private function removePermission(int $roleID, string $permissionCode): array
+    private function getById(?string $param): HTTPResponse
     {
-        FrontController::validatePermission('fa-roles-modify');
+        $role = RoleOperator::getRole((int)$param);
 
-        $role = RoleFactory::getFromID($roleID);
+        $data = array(
+            'id' => $role->getId(),
+            'name' => $role->getName()
+        );
 
-        if(!in_array($permissionCode, $role->getPermissionCodes()))
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     */
+    private function getSearchResult(): HTTPResponse
+    {
+        $data = array();
+
+        foreach(RoleOperator::search() as $role)
         {
-            throw new EntryNotFoundException(ValidationError::MESSAGE_VALUE_NOT_ASSIGNED, EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
+            $data[] = array(
+                'id' => $role->getId(),
+                'name' => $role->getName()
+            );
         }
 
-        $role->removePermission($permissionCode);
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
 
-        http_response_code(204);
-        return [];
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getPermissionsById(?string $param):HTTPResponse
+    {
+        $role = RoleOperator::getRole((int)$param);
+        $data = array();
+
+        foreach($role->getPermissions() as $permission)
+        {
+            $data[] = array(
+                'code' => $permission->getCode()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
     }
 }

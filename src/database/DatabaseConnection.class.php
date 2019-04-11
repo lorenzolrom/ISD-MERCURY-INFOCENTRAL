@@ -3,11 +3,11 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 10:48 AM
+ * Date: 4/05/2019
+ * Time: 4:03 PM
  */
 
 
@@ -15,7 +15,6 @@ namespace database;
 
 
 use exceptions\DatabaseException;
-use messages\Messages;
 
 class DatabaseConnection
 {
@@ -33,31 +32,20 @@ class DatabaseConnection
 
     /**
      * DatabaseConnection constructor.  Automatically connects to database using configured options.
-     * @param string $dbms
      * @throws DatabaseException In event of database connection failure
      */
-    public function __construct(string $dbms = "mysql")
+    public function __construct()
     {
         try
         {
-            if($dbms = "psql")
-            {
-                $this->handler = new \PDO("pgsql:dbname=" . IC_CONFIG['databaseName'] . ";host=" . IC_CONFIG['databaseHost'],
-                    IC_CONFIG['databaseUser'],
-                    IC_CONFIG['databasePassword'],
-                    array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC));
-            }
-            else
-            {
-                $this->handler = new \PDO("mysql:host=" . IC_CONFIG['databaseHost'] . ";dbname=" . IC_CONFIG['databaseName'],
-                    IC_CONFIG['databaseUser'],
-                    IC_CONFIG['databasePassword'],
-                    array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC));
-            }
+            $this->handler = new \PDO("mysql:host=" . \Config::OPTIONS['databaseHost'] . ";dbname=" . \Config::OPTIONS['databaseName'],
+                \Config::OPTIONS['databaseUser'],
+                \Config::OPTIONS['databasePassword'],
+                array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC));
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_FAILED_TO_CONNECT, DatabaseException::FAILED_TO_CONNECT, $e);
+            throw new DatabaseException(DatabaseException::MESSAGES[DatabaseException::FAILED_TO_CONNECT], DatabaseException::FAILED_TO_CONNECT, $e);
         }
     }
 
@@ -74,7 +62,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_DIRECT_QUERY_FAILED, DatabaseException::DIRECT_QUERY_FAILED, $e);
+            throw new DatabaseException(DatabaseException::MESSAGES[DatabaseException::DIRECT_QUERY_FAILED], DatabaseException::DIRECT_QUERY_FAILED, $e);
         }
     }
 
@@ -110,7 +98,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_TRANSACTION_START_FAILED, DatabaseException::TRANSACTION_START_FAILED, $e);
+            throw new DatabaseException(DatabaseException::MESSAGES[DatabaseException::TRANSACTION_START_FAILED], DatabaseException::TRANSACTION_START_FAILED, $e);
         }
     }
 
@@ -128,7 +116,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_TRANSACTION_ROLLBACK_FAILED, DatabaseException::TRANSACTION_ROLLBACK_FAILED, $e);
+            throw new DatabaseException(DatabaseException::MESSAGES[DatabaseException::TRANSACTION_ROLLBACK_FAILED], DatabaseException::TRANSACTION_ROLLBACK_FAILED, $e);
         }
     }
 
@@ -146,7 +134,7 @@ class DatabaseConnection
         }
         catch(\PDOException $e)
         {
-            throw new DatabaseException(Messages::DATABASE_TRANSACTION_COMMIT_FAILED, DatabaseException::TRANSACTION_COMMIT_FAILED, $e);
+            throw new DatabaseException(DatabaseException::MESSAGES[DatabaseException::TRANSACTION_COMMIT_FAILED], DatabaseException::TRANSACTION_COMMIT_FAILED, $e);
         }
     }
 

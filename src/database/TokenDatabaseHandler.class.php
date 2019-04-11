@@ -3,11 +3,11 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 3:33 PM
+ * Date: 4/07/2019
+ * Time: 9:04 AM
  */
 
 
@@ -15,70 +15,99 @@ namespace database;
 
 
 use exceptions\EntryNotFoundException;
-use exceptions\TokenException;
-use messages\Messages;
+use models\Token;
 
-class TokenDatabaseHandler
+class TokenDatabaseHandler extends DatabaseHandler
 {
     /**
      * @param string $token
-     * @return array
+     * @return Token
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function selectFromToken(string $token): array
+    public static function selectByToken(string $token): Token
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT token, \"user\", \"issueTime\", \"expireTime\", expired, \"ipAddress\" FROM \"fa_Token\" WHERE token = ? LIMIT 1");
+        $select = $handler->prepare("SELECT token, user, issueTime, expireTime, expired, ipAddress FROM Token WHERE token = ? LIMIT 1");
         $select->bindParam(1, $token, DatabaseConnection::PARAM_STR);
         $select->execute();
 
         $handler->close();
 
-        if($select->getRowCount() === 1)
-            return $select->fetch();
+        if($select->getRowCount() !== 1)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::PRIMARY_KEY_NOT_FOUND], EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
 
-        throw new EntryNotFoundException(Messages::SECURITY_USERTOKEN_NOT_FOUND, EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
-    }
-
-    /**
-     * @param array $columns
-     * @return string Supplied token (also PK of new token entry)
-     * @throws \exceptions\DatabaseException
-     */
-    public static function insert(array $columns): string
-    {
-        $handler = new DatabaseConnection();
-
-        $insert = $handler->prepare("INSERT INTO \"fa_Token\" (token, \"user\", \"issueTime\", \"expireTime\", \"ipAddress\") 
-                                            VALUES (:token, :user, NOW(), NOW() + INTERVAL '1 hours', :ipAddress)");
-        $insert->bindParam('token', $columns['token'], DatabaseConnection::PARAM_STR);
-        $insert->bindParam('user', $columns['user'], DatabaseConnection::PARAM_INT);
-        $insert->bindParam('ipAddress', $columns['ipAddress'], DatabaseConnection::PARAM_STR);
-        $insert->execute();
-
-        $handler->close();
-
-        return $columns['token'];
+        return $select->fetchObject("models\Token");
     }
 
     /**
      * @param string $token
-     * @throws TokenException
+     * @param int $user
+     * @param string $issueTime
+     * @param string $expireTime
+     * @param int $expired
+     * @param string $ipAddress
+     * @return Token
+     * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function expireToken(string $token)
+    public static function insert(string $token, int $user, string $issueTime, string $expireTime, int $expired, string $ipAddress): Token
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE \"fa_Token\" SET expired = 1 WHERE token = ?");
-        $update->bindParam(1, $token,DatabaseConnection::PARAM_STR);
+        $insert = $handler->prepare("INSERT INTO Token (token, user, issueTime, expireTime, expired, ipAddress) VALUES (:token, :user, :issueTime, :expireTime, :expired, :ipAddress)");
+        $insert->bindParam('token', $token, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('issueTime', $issueTime, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('expireTime', $expireTime, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('expired', $expired, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('ipAddress', $ipAddress, DatabaseConnection::PARAM_STR);
+        $insert->execute();
+
+        $handler->close();
+
+        return self::selectByToken($token);
+    }
+
+    /**
+     * @param string $token
+     * @param string $expireTime
+     * @param int $expired
+     * @return Token
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(string $token, string $expireTime, int $expired): Token
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare("UPDATE Token SET expireTime = :expireTime, expired = :expired WHERE token = :token");
+        $update->bindParam('expireTime', $expireTime, DatabaseConnection::PARAM_STR);
+        $update->bindParam('expired', $expired, DatabaseConnection::PARAM_INT);
+        $update->bindParam('token', $token, DatabaseConnection::PARAM_STR);
         $update->execute();
 
         $handler->close();
 
-        if($update->getRowCount() !== 1)
-            throw new TokenException(Messages::USERTOKEN_ALREADY_EXPIRED, TokenException::ALREADY_EXPIRED);
+        return self::selectByToken($token);
+    }
+
+    /**
+     * @param int $user
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function markExpiredForUser(int $user): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare("UPDATE Token SET expired = 1 WHERE user = ?");
+        $update->bindParam(1, $user, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return $update->getRowCount() !== 0;
     }
 }

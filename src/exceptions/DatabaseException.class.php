@@ -3,23 +3,34 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 10:49 AM
+ * Date: 4/05/2019
+ * Time: 4:04 PM
  */
 
 
 namespace exceptions;
 
 
-class DatabaseException extends \Exception
+class DatabaseException extends MercuryException
 {
-    const FAILED_TO_CONNECT = 1;
-    const DIRECT_QUERY_FAILED = 2;
-    const PREPARED_QUERY_FAILED = 3;
-    const TRANSACTION_START_FAILED = 4;
-    const TRANSACTION_COMMIT_FAILED = 5;
-    const TRANSACTION_ROLLBACK_FAILED = 6;
+    // Error Codes
+    const FAILED_TO_CONNECT = 101;
+    const DIRECT_QUERY_FAILED = 102;
+    const PREPARED_QUERY_FAILED = 103;
+    const TRANSACTION_START_FAILED = 104;
+    const TRANSACTION_COMMIT_FAILED = 105;
+    const TRANSACTION_ROLLBACK_FAILED = 106;
+
+    // Error Messages
+    const MESSAGES = [
+        self::FAILED_TO_CONNECT => "Could Not Establish Connection To Database",
+        self::DIRECT_QUERY_FAILED => "Query Failed To Execute (Direct)",
+        self::PREPARED_QUERY_FAILED => "Query Failed To Execute (Prepared)",
+        self::TRANSACTION_START_FAILED => "Transaction Failed To Start",
+        self::TRANSACTION_COMMIT_FAILED => "Transaction Failed To Commit",
+        self::TRANSACTION_ROLLBACK_FAILED => "Transaction Failed To Rollback"
+    ];
 }

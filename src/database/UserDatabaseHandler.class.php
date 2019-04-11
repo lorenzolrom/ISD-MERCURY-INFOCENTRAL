@@ -3,11 +3,11 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 2:51 PM
+ * Date: 4/06/2019
+ * Time: 3:39 PM
  */
 
 
@@ -15,272 +15,132 @@ namespace database;
 
 
 use exceptions\EntryNotFoundException;
+use models\User;
 
-class UserDatabaseHandler
+class UserDatabaseHandler extends DatabaseHandler
 {
-    // Valid column names in the User table
-    const COLUMNS = ['loginName', 'authType', 'password', 'firstName', 'lastName', 'displayName', 'email', 'disabled'];
-
     /**
      * @param int $id
-     * @return array
+     * @return User
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function selectFromID(int $id): array
+    public static function selectById(int $id): User
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, \"loginName\", \"authType\", password, \"firstName\", \"lastName\", 
-                                            \"displayName\", email, disabled FROM \"fa_User\" WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT id, username, firstName, lastName, email, password, disabled, authType FROM User WHERE id = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
         $handler->close();
 
-        if($select->getRowCount() === 1)
-            return $select->fetch();
+        if($select->getRowCount() !== 1)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::PRIMARY_KEY_NOT_FOUND], EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
 
-        throw new EntryNotFoundException(\messages\Messages::USER_NOT_FOUND, EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
+        return $select->fetchObject("models\User");
     }
 
     /**
-     * @param string $loginName
-     * @return array
+     * @param string $username
+     * @return User
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function selectFromLoginName(string $loginName): array
+    public static function selectByUsername(string $username): User
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM \"fa_User\" WHERE \"loginName\" = ? LIMIT 1");
-        $select->bindParam(1, $loginName, DatabaseConnection::PARAM_STR);
+        $select = $handler->prepare("SELECT id FROM User WHERE username = ? LIMIT 1");
+        $select->bindParam(1, $username, DatabaseConnection::PARAM_STR);
         $select->execute();
 
         $handler->close();
 
-        if($select->getRowCount() === 1)
-            return self::selectFromID($select->fetchColumn());
+        if($select->getRowCount() !== 1)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
 
-        throw new EntryNotFoundException(\messages\Messages::USER_NOT_FOUND, EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+        return self::selectById($select->fetchColumn());
     }
 
     /**
-     * @param int $userID
-     * @throws \exceptions\DatabaseException
-     */
-    public static function expireAllTokensForUser(int $userID)
-    {
-        $handler = new DatabaseConnection();
-
-        $update = $handler->prepare("UPDATE \"fa_Token\" SET expired = 1 WHERE user = ?");
-        $update->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
-        $update->execute();
-
-        $handler->close();
-    }
-
-    /**
-     * @param int $userID
-     * @return array List of Numerical Role IDs
-     * @throws \exceptions\DatabaseException
-     */
-    public static function selectUserRoleIDs(int $userID): array
-    {
-        $handler = new DatabaseConnection();
-
-        $select = $handler->prepare("SELECT role FROM \"fa_User_Role\" WHERE user = ?");
-        $select->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
-        $select->execute();
-
-        $handler->close();
-
-        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
-    }
-
-    /**
-     * @return array
-     * @throws \exceptions\DatabaseException
-     */
-    public static function selectAllLoginNames(): array
-    {
-        $handler = new DatabaseConnection();
-
-        $select = $handler->prepare("SELECT \"loginName\" FROM \"fa_User\"");
-        $select->execute();
-
-        $handler->close();
-
-        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
-    }
-
-    /**
-     * @return array
-     * @throws \exceptions\DatabaseException
-     */
-    public static function selectAllIDs(): array
-    {
-        $handler = new DatabaseConnection();
-
-        $select = $handler->prepare("SELECT id FROM \"fa_User\"");
-        $select->execute();
-
-        $handler->close();
-
-        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
-    }
-
-    /**
-     * @param string $loginName
-     * @param string $authType
-     * @param string $password
+     * @param string $username
      * @param string $firstName
      * @param string $lastName
-     * @param string|null $displayName
-     * @param string|null $email
-     * @param int $disabled
-     * @return int
+     * @param array $disabled
+     * @return User[]
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(string $loginName, string $authType, ?string $password, string $firstName,
-                                  string $lastName, ?string $displayName, ?string $email, int $disabled): int
+    public static function select(string $username = "%", string $firstName = "%", string $lastName = "%", $disabled = array()): array
     {
+        $query = "SELECT id FROM User WHERE username LIKE :username AND firstName LIKE :firstName AND lastName LIKE :lastName";
+
+        if(is_array($disabled) AND !empty($disabled))
+            $query .= " AND disabled IN (" . self::getBooleanString($disabled) . ")";
+
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO fa_User (\"loginName\", \"authType\", password, \"firstName\", \"lastName\", 
-                     \"displayName\", email, disabled) VALUES (:loginName, :authType, :password, :firstName, :lastName, 
-                     :displayName, :email, :disabled)");
-        $insert->bindParam('loginName', $loginName, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('authType', $authType, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('password', $password, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('firstName', $firstName, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('lastName', $lastName, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('displayName', $displayName, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('email', $email, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('disabled', $disabled, DatabaseConnection::PARAM_INT);
-        $insert->execute();
-
-        $newUserID = $handler->getLastInsertId();
+        $select = $handler->prepare($query);
+        $select->bindParam('username', $username, DatabaseConnection::PARAM_STR);
+        $select->bindParam('firstName', $firstName, DatabaseConnection::PARAM_STR);
+        $select->bindParam('lastName', $lastName, DatabaseConnection::PARAM_STR);
+        $select->execute();
 
         $handler->close();
 
-        return $newUserID;
+        $users = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try
+            {
+                $users[] = self::selectById($id);
+            }
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $users;
     }
 
     /**
      * @param int $id
-     * @return bool
+     * @param string $password
+     * @return User
+     * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function delete(int $id): bool
+    public static function updatePassword(int $id, string $password): User
     {
         $handler = new DatabaseConnection();
 
-        $delete = $handler->prepare("DELETE FROM \"fa_User\" WHERE id = ?");
-        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
-        $delete->execute();
-
-        $handler->close();
-
-        return $delete->getRowCount() === 1;
-    }
-
-    /**
-     * @param int $id ID record to update
-     * @param string $column A valid column name
-     * @param string|null $value New value
-     * @param string $type Type of value (e.g., string, int)
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public static function updateStringValue(int $id, string $column, ?string $value, string $type): bool
-    {
-        if(!in_array($column, self::COLUMNS))
-            return FALSE;
-
-        switch($type)
-        {
-            case "string":
-                $typeCode = DatabaseConnection::PARAM_STR;
-                break;
-            case "int":
-                $typeCode = DatabaseConnection::PARAM_INT;
-                break;
-            case "null":
-                $typeCode = DatabaseConnection::PARAM_NULL;
-                break;
-            default:
-                return FALSE;
-        }
-
-        $handler = new DatabaseConnection();
-
-        $update = $handler->prepare("UPDATE \"fa_User\" SET $column = ? WHERE id = ?");
-        $update->bindParam(1, $value, $typeCode);
-        $update->bindParam(2, $id, DatabaseConnection::PARAM_INT);
+        $update = $handler->prepare("UPDATE User SET password = :password WHERE id = :id");
+        $update->bindParam('password', $password, DatabaseConnection::PARAM_STR);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->execute();
 
         $handler->close();
 
-        return $update->getRowCount() === 1;
+        return self::selectById($id);
     }
 
     /**
-     * @param string $loginName
-     * @return bool
+     * @param int $id
+     * @return string|null
      * @throws \exceptions\DatabaseException
      */
-    public static function isLoginNameTaken(string $loginName): bool
+    public static function selectUsernameFromId(int $id): ?string
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT \"loginName\" FROM \"fa_User\" WHERE \"loginName\" = ? LIMIT 1");
-        $select->bindParam(1, $loginName, DatabaseConnection::PARAM_STR);
+        $select = $handler->prepare("SELECT username FROM User WHERE id = ? LIMIT 1");
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
         $handler->close();
 
-        return $select->getRowCount() === 1;
-    }
+        if($select->getRowCount() === 0)
+            return NULL;
 
-    /**
-     * @param int $userID
-     * @param int $roleID
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public static function addRoleToUser(int $userID, int $roleID): bool
-    {
-        $handler = new DatabaseConnection();
-
-        $insert = $handler->prepare("INSERT INTO \"fa_User_Role\"(user, role) VALUES (?, ?)");
-        $insert->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
-        $insert->bindParam(2, $roleID, DatabaseConnection::PARAM_INT);
-        $insert->execute();
-
-        $handler->close();
-
-        return $insert->getRowCount() === 1;
-    }
-
-    /**
-     * @param int $userID
-     * @param int $roleID
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public static function removeRoleFromUser(int $userID, int $roleID): bool
-    {
-        $handler = new DatabaseConnection();
-
-        $delete = $handler->prepare("DELETE FROM \"fa_User_Role\" WHERE user = ? AND role = ?");
-        $delete->bindParam(1, $userID, DatabaseConnection::PARAM_INT);
-        $delete->bindParam(2, $roleID, DatabaseConnection::PARAM_INT);
-        $delete->execute();
-
-        $handler->close();
-
-        return $delete->getRowCount() === 1;
+        return $select->fetchColumn();
     }
 }

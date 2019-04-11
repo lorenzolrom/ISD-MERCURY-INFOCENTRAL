@@ -3,22 +3,24 @@
  * LLR Technologies & Associated Services
  * Information Systems Development
  *
- * MERCURY InfoCentral
+ * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/17/2019
- * Time: 11:41 AM
+ * Date: 4/05/2019
+ * Time: 5:59 PM
  */
 
 
 namespace exceptions;
 
 
-class RouteException extends \Exception
+class RouteException extends MercuryException
 {
-    const ROUTE_NOT_SUPPLIED = 401;
-    const ROUTE_URI_NOT_FOUND = 402;
-    const REQUIRED_PARAMETER_MISSING = 403;
-    const REQUIRED_PARAMETER_IS_INVALID = 404;
-    const REQUIRED_DOCUMENT_PARAMETER_MISSING = 405;
+    const REQUIRED_PARAMETER_IS_INVALID = 401;
+    const REQUEST_INVALID = 402;
+
+    const MESSAGES = array(
+        self::REQUIRED_PARAMETER_IS_INVALID => "A required URI parameter was not supplied, or is invalid",
+        self::REQUEST_INVALID => "No suitable functions were found to handle the request or request method"
+    );
 }

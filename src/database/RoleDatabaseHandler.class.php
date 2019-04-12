@@ -29,7 +29,7 @@ class RoleDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, name FROM Role WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `name` FROM `Role` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -50,7 +50,7 @@ class RoleDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT role FROM User_Role WHERE user = ?");
+        $select = $handler->prepare("SELECT `role` FROM `User_Role` WHERE user = ?");
         $select->bindParam(1, $userId, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -79,7 +79,7 @@ class RoleDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM Role WHERE name LIKE ?");
+        $select = $handler->prepare("SELECT `id` FROM `Role` WHERE `name` LIKE ?");
         $select->bindParam(1, $name, DatabaseConnection::PARAM_STR);
         $select->execute();
 

@@ -29,7 +29,7 @@ class UserDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, username, firstName, lastName, email, password, disabled, authType FROM User WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `username`, `firstName`, `lastName`, `email`, `password`, `disabled`, `authType` FROM `User` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -51,7 +51,7 @@ class UserDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM User WHERE username = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id` FROM `User` WHERE `username` = ? LIMIT 1");
         $select->bindParam(1, $username, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -73,7 +73,7 @@ class UserDatabaseHandler extends DatabaseHandler
      */
     public static function select(string $username = "%", string $firstName = "%", string $lastName = "%", $disabled = array()): array
     {
-        $query = "SELECT id FROM User WHERE username LIKE :username AND firstName LIKE :firstName AND lastName LIKE :lastName";
+        $query = "SELECT `id` FROM `User` WHERE `username` LIKE :username AND `firstName` LIKE :firstName AND `lastName` LIKE :lastName";
 
         if(is_array($disabled) AND !empty($disabled))
             $query .= " AND disabled IN (" . self::getBooleanString($disabled) . ")";
@@ -113,7 +113,7 @@ class UserDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE User SET password = :password WHERE id = :id");
+        $update = $handler->prepare("UPDATE `User` SET `password` = :password WHERE id = :id");
         $update->bindParam('password', $password, DatabaseConnection::PARAM_STR);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->execute();
@@ -132,7 +132,7 @@ class UserDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT username FROM User WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `username` FROM `User` WHERE id = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 

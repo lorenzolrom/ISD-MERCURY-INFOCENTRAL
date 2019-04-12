@@ -31,10 +31,10 @@ class AssetDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, commodity, warehouse, assetTag, parent, location, serialNumber, 
-                                            manufactureDate, purchaseOrder, notes, createDate, discarded, discardDate, 
-                                            lastModifyDate, lastModifyUser, verified, verifyDate, verifyUser FROM 
-                                            ITSM_Asset WHERE assetTag = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `commodity`, `warehouse`, `assetTag`, `parent`, `location`, `serialNumber`, 
+                                            `manufactureDate`, `purchaseOrder`, `notes`, `createDate`, `discarded`, `discardDate`, 
+                                            `lastModifyDate`, `lastModifyUser`, `verified`, `verifyDate`, `verifyUser` FROM 
+                                            `ITSM_Asset` WHERE `assetTag` = ? LIMIT 1");
 
         $select->bindParam(1, $assetTag, DatabaseConnection::PARAM_INT);
         $select->execute();
@@ -45,5 +45,15 @@ class AssetDatabaseHandler extends DatabaseHandler
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::PRIMARY_KEY_NOT_FOUND], EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
 
         return $select->fetchObject("models\itsm\Asset");
+    }
+
+    public static function select(string $assetTag = '%', string $serialNumber = '%', array $inWarehouse = array(),
+                                  array $isDiscarded = array(), string $buildingCode = '%', string $locationCode = '%',
+                                  string $warehouseCode = '%', string $poNumber = '%', string $manufacturer = '%',
+                                  string $model = '%', string $commodityCode = '%', string $commodityName = '%',
+                                  array $commodityType = array(), array $assetType = array(),
+                                  array $isVerified = array()): array
+    {
+        return array();
     }
 }

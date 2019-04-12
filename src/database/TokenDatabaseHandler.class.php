@@ -29,7 +29,7 @@ class TokenDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT token, user, issueTime, expireTime, expired, ipAddress FROM Token WHERE token = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `token`, `user`, `issueTime`, `expireTime`, `expired`, `ipAddress` FROM `Token` WHERE `token` = ? LIMIT 1");
         $select->bindParam(1, $token, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -56,7 +56,7 @@ class TokenDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO Token (token, user, issueTime, expireTime, expired, ipAddress) VALUES (:token, :user, :issueTime, :expireTime, :expired, :ipAddress)");
+        $insert = $handler->prepare('INSERT INTO `Token` (`token`, `user`, `issueTime`, `expireTime`, `expired`, `ipAddress`) VALUES (:token, :user, :issueTime, :expireTime, :expired, :ipAddress)');
         $insert->bindParam('token', $token, DatabaseConnection::PARAM_STR);
         $insert->bindParam('user', $user, DatabaseConnection::PARAM_INT);
         $insert->bindParam('issueTime', $issueTime, DatabaseConnection::PARAM_STR);
@@ -82,7 +82,7 @@ class TokenDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE Token SET expireTime = :expireTime, expired = :expired WHERE token = :token");
+        $update = $handler->prepare("UPDATE `Token` SET `expireTime` = :expireTime, `expired` = :expired WHERE `token` = :token");
         $update->bindParam('expireTime', $expireTime, DatabaseConnection::PARAM_STR);
         $update->bindParam('expired', $expired, DatabaseConnection::PARAM_INT);
         $update->bindParam('token', $token, DatabaseConnection::PARAM_STR);
@@ -102,7 +102,7 @@ class TokenDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE Token SET expired = 1 WHERE user = ?");
+        $update = $handler->prepare("UPDATE `Token` SET `expired` = 1 WHERE `user` = ?");
         $update->bindParam(1, $user, DatabaseConnection::PARAM_INT);
         $update->execute();
 

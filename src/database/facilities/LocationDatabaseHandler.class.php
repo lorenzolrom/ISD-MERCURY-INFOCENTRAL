@@ -33,7 +33,7 @@ class LocationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, building, code, name, createDate, createUser, lastModifyDate, lastModifyUser FROM FacilitiesCore_Location WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `building`, `code`, `name`, `createDate`, `createUser`, `lastModifyDate`, `lastModifyUser` FROM `FacilitiesCore_Location` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -54,7 +54,7 @@ class LocationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM FacilitiesCore_Location WHERE building = ?");
+        $select = $handler->prepare("SELECT `id` FROM `FacilitiesCore_Location` WHERE `building` = ?");
         $select->bindParam(1, $buildingId, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -90,8 +90,8 @@ class LocationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $create = $handler->prepare("INSERT INTO FacilitiesCore_Location (building, code, name, createDate, 
-                                     createUser, lastModifyDate, lastModifyUser) VALUES (:building, :code, :name, 
+        $create = $handler->prepare("INSERT INTO `FacilitiesCore_Location` (`building`, `code`, `name`, `createDate`, 
+                                     `createUser`, `lastModifyDate`, `lastModifyUser`) VALUES (:building, :code, :name, 
                                      :createDate, :createUser, :lastModifyDate, :lastModifyUser)");
 
         $create->bindParam('building', $building, DatabaseConnection::PARAM_INT);
@@ -124,7 +124,7 @@ class LocationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE FacilitiesCore_Location SET code = :code, name = :name, lastModifyDate = :lastModifyDate, lastModifyUser = :lastModifyUser WHERE id = :id");
+        $update = $handler->prepare("UPDATE `FacilitiesCore_Location` SET `code` = :code, `name` = :name, `lastModifyDate` = :lastModifyDate, `lastModifyUser` = :lastModifyUser WHERE `id` = :id");
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
@@ -149,7 +149,7 @@ class LocationDatabaseHandler extends DatabaseHandler
 
         try
         {
-            $delete = $handler->prepare("DELETE FROM FacilitiesCore_Location WHERE id = ?");
+            $delete = $handler->prepare("DELETE FROM `FacilitiesCore_Location` WHERE `id` = ?");
             $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
             $delete->execute();
         }
@@ -175,7 +175,7 @@ class LocationDatabaseHandler extends DatabaseHandler
 
         try
         {
-            $delete = $handler->prepare("DELETE FROM FacilitiesCore_Location WHERE building = ?");
+            $delete = $handler->prepare("DELETE FROM `FacilitiesCore_Location` WHERE `building` = ?");
             $delete->bindParam(1, $buildingId, DatabaseConnection::PARAM_INT);
             $delete->execute();
         }
@@ -199,7 +199,7 @@ class LocationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM FacilitiesCore_Location WHERE building = :building AND code = :code LIMIT 1");
+        $select = $handler->prepare("SELECT id FROM `FacilitiesCore_Location` WHERE `building` = :building AND `code` = :code LIMIT 1");
         $select->bindParam('building', $buildingId, DatabaseConnection::PARAM_INT);
         $select->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $select->execute();

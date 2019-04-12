@@ -28,7 +28,7 @@ class NotificationDatabaseHandler extends DatabaseHandler
      */
     public static function selectById(int $id, bool $preventDeleted = FALSE): Notification
     {
-        $query = "SELECT id, user, title, data, `read`, deleted, important, time FROM Notification WHERE id = ?" . ($preventDeleted ? " AND deleted = 0" : "") . " LIMIT 1";
+        $query = "SELECT `id`, `user`, `title`, `data`, `read`, `deleted`, `important`, `time` FROM `Notification` WHERE id = ?" . ($preventDeleted ? " AND `deleted` = 0" : "") . " LIMIT 1";
 
         $handler = new DatabaseConnection();
 
@@ -53,7 +53,7 @@ class NotificationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT COUNT(id) FROM Notification WHERE user = ? AND `read` = 0 AND deleted = 0");
+        $select = $handler->prepare("SELECT COUNT(`id`) FROM `Notification` WHERE `user` = ? AND `read` = 0 AND `deleted` = 0");
         $select->bindParam(1, $userId, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -72,7 +72,7 @@ class NotificationDatabaseHandler extends DatabaseHandler
      */
     public static function selectByUser(int $user, $read = array(), $deleted = array(), $important = array()): array
     {
-        $query = "SELECT id FROM Notification WHERE user = ?";
+        $query = 'SELECT `id` FROM `Notification` WHERE user = ?';
 
         // Apply read filter
         if(is_array($read) AND !empty($read))
@@ -80,11 +80,11 @@ class NotificationDatabaseHandler extends DatabaseHandler
 
         // Apply deleted filter
         if(is_array($deleted) AND !empty($deleted))
-            $query .= " AND deleted IN (" . self::getBooleanString($deleted) . ")";
+            $query .= " AND `deleted` IN (" . self::getBooleanString($deleted) . ")";
 
         // Apply important filter
         if(is_array($important) AND !empty($important))
-            $query .= " AND important IN (" . self::getBooleanString($important) . ")";
+            $query .= " AND `important` IN (" . self::getBooleanString($important) . ")";
 
         $handler = new DatabaseConnection();
 
@@ -120,7 +120,7 @@ class NotificationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE Notification SET `read` = :read, deleted = :deleted WHERE id = :id");
+        $update = $handler->prepare("UPDATE `Notification` SET `read` = :read, `deleted` = :deleted WHERE `id` = :id");
         $update->bindParam('read', $read, DatabaseConnection::PARAM_INT);
         $update->bindParam('deleted', $deleted, DatabaseConnection::PARAM_INT);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);

@@ -29,7 +29,7 @@ class PermissionDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT code FROM Permission WHERE code = ?");
+        $select = $handler->prepare("SELECT `code` FROM `Permission` WHERE `code` = ?");
         $select->bindParam(1, $code, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -49,7 +49,7 @@ class PermissionDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT code FROM Permission");
+        $select = $handler->prepare("SELECT `code` FROM `Permission`");
         $select->execute();
 
         $handler->close();
@@ -77,7 +77,7 @@ class PermissionDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT permission FROM Role_Permission WHERE role = ?");
+        $select = $handler->prepare("SELECT `permission` FROM `Role_Permission` WHERE role = ?");
         $select->bindParam(1, $roleId, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -106,7 +106,7 @@ class PermissionDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT `permission` FROM Secret_Permission WHERE `secret` = ?");
+        $select = $handler->prepare("SELECT `permission` FROM `Secret_Permission` WHERE `secret` = ?");
         $select->bindParam(1, $secret, DatabaseConnection::PARAM_STR);
         $select->execute();
 

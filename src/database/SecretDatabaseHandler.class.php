@@ -29,7 +29,7 @@ class SecretDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT secret, name FROM Secret WHERE secret = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `secret`, `name` FROM `Secret` WHERE `secret` = ? LIMIT 1");
         $select->bindParam(1, $secret, DatabaseConnection::PARAM_STR);
         $select->execute();
 

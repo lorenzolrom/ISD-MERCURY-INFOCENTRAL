@@ -31,7 +31,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, number, name, description, owner, type, status, publicFacing, lifeExpectancy, dataVolume, authType, port, createUser, createDate, lastModifyUser, lastModifyDate FROM ITSM_Application WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `number`, `name`, `description`, `owner`, `type`, `status`, `publicFacing`, `lifeExpectancy`, `dataVolume`, `authType`, `port`, `createUser`, `createDate`, `lastModifyUser`, `lastModifyDate` FROM `ITSM_Application` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -53,7 +53,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM ITSM_Application WHERE number = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id` FROM `ITSM_Application` WHERE `number` = ? LIMIT 1");
         $select->bindParam(1, $number, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -86,41 +86,41 @@ class ApplicationDatabaseHandler extends DatabaseHandler
                                   $publicFacing = array(), $lifeExpectancy = array(), $dataVolume = array(), $authType = array(), string $port = "%",
                                   string $host = "%", string $vhost = "%", $status = array()): array
     {
-        $query = "SELECT ITSM_Application.id FROM ITSM_Application WHERE number LIKE :number AND name LIKE :name AND description LIKE :description AND owner IN (SELECT id FROM User WHERE username LIKE :username) AND port LIKE :port";
+        $query = "SELECT `ITSM_Application`.`id` FROM `ITSM_Application` WHERE `number` LIKE :number AND `name` LIKE :name AND `description` LIKE :description AND `owner` IN (SELECT `id` FROM `User` WHERE `username` LIKE :username) AND `port` LIKE :port";
 
         // Apply virtual host filter
         if($vhost != "%" AND $vhost != "%%")
-            $query .= " AND id IN (SELECT application FROM ITSM_Application_VHost WHERE vhost IN (SELECT id FROM ITSM_VHost WHERE domain LIKE :vhost OR subdomain LIKE :vhost OR CONCAT(subdomain, '.', domain) LIKE :vhost))";
+            $query .= " AND `id` IN (SELECT `application` FROM `ITSM_Application_VHost` WHERE `vhost` IN (SELECT `id` FROM `ITSM_VHost` WHERE `domain` LIKE :vhost OR `subdomain` LIKE :vhost OR CONCAT(`subdomain`, '.', `domain`) LIKE :vhost))";
 
         // Apply host filter (will match ip address, system name, or asset tag)
         if($host != "%" AND $host != "%%")
-            $query .= " AND id IN (SELECT application FROM ITSM_Application_Host WHERE host IN (SELECT id FROM ITSM_Host WHERE ipAddress LIKE :host OR systemName LIKE :host OR asset IN (SELECT id FROM ITSM_Asset WHERE assetTag LIKE :host)))";
+            $query .= " AND `id` IN (SELECT `application` FROM `ITSM_Application_Host` WHERE `host` IN (SELECT `id` FROM `ITSM_Host` WHERE `ipAddress` LIKE :host OR `systemName` LIKE :host OR `asset` IN (SELECT `id` FROM `ITSM_Asset` WHERE `assetTag` LIKE :host)))";
 
         // Apply type filter
         if(is_array($type) AND !empty($type))
-            $query .= " AND status IN (SELECT id FROM Attribute WHERE extension = 'itsm' AND type = 'aitt' AND CODE IN (" . self::getAttributeCodeString($type) . "))";
+            $query .= " AND `status` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'aitt' AND `code` IN (" . self::getAttributeCodeString($type) . "))";
 
         // Apply public facing filter
         if(is_array($publicFacing) AND !empty($publicFacing))
-            $query .= " AND publicFacing IN (" . self::getBooleanString($publicFacing) . ")";
+            $query .= " AND `publicFacing` IN (" . self::getBooleanString($publicFacing) . ")";
 
         // Apply life expectancy filter
         if(is_array($lifeExpectancy) AND !empty($lifeExpectancy))
-            $query .= " AND lifeExpectancy IN (SELECT id FROM Attribute WHERE extension = 'itsm' AND type = 'aitl' AND CODE IN (" . self::getAttributeCodeString($lifeExpectancy) . "))";
+            $query .= " AND `lifeExpectancy` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'aitl' AND `code` IN (" . self::getAttributeCodeString($lifeExpectancy) . "))";
 
         // Apply data volume filter
         if(is_array($dataVolume) AND !empty($dataVolume))
-            $query .= " AND dataVolume IN (SELECT id FROM Attribute WHERE extension = 'itsm' AND type = 'aitd' AND CODE IN (" . self::getAttributeCodeString($dataVolume) . "))";
+            $query .= " AND `dataVolume` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'aitd' AND `code` IN (" . self::getAttributeCodeString($dataVolume) . "))";
 
         // Apply auth type filter
         if(is_array($authType) AND !empty($authType))
-            $query .= " AND authType IN (SELECT id FROM Attribute WHERE extension = 'itsm' AND type = 'aita' AND CODE IN (" . self::getAttributeCodeString($authType) . "))";
+            $query .= " AND `authType` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'aita' AND `code` IN (" . self::getAttributeCodeString($authType) . "))";
 
         // Apply status filter
         if(is_array($status) AND !empty($status))
-            $query .= " AND status IN (SELECT id FROM Attribute WHERE extension = 'itsm' AND type = 'aits' AND CODE IN (" . self::getAttributeCodeString($status) . "))";
+            $query .= " AND `status` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'aits' AND `code` IN (" . self::getAttributeCodeString($status) . "))";
 
-        $query .= " ORDER BY number DESC";
+        $query .= " ORDER BY `number` DESC";
 
         $handler = new DatabaseConnection();
 

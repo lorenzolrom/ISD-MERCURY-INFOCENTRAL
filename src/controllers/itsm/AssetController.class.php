@@ -24,6 +24,9 @@ use models\HTTPResponse;
 
 class AssetController extends Controller
 {
+    const SEARCH_FIELDS = array('assetTag', 'serialNumber', 'isWarehouse', 'isDiscarded', 'buildingCode',
+        'locationCode', 'warehouseCode', 'purchaseOrder', 'manufacturer', 'model', 'commodityCode', 'commodityName',
+        'commodityType', 'assetType', 'isVerified');
 
     /**
      * @return HTTPResponse|null
@@ -78,5 +81,17 @@ class AssetController extends Controller
             'verifyDate' => $asset->getVerifyDate(),
             'verifyUser' => ($asset->getVerifyUser() !== NULL) ? UserOperator::usernameFromId($asset->getVerifyUser()) : NULL
         ));
+    }
+
+    /**
+     * @param bool $search
+     * @param bool $strict
+     * @return HTTPResponse
+     */
+    private function getSearchResult(bool $search = FALSE, bool $strict = FALSE): HTTPResponse
+    {
+        return new HTTPResponse(HTTPResponse::NOT_IMPLEMENTED);
+
+        // TODO: groupBy (e.g. location)
     }
 }

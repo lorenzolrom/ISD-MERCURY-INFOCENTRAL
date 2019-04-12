@@ -33,7 +33,7 @@ class VHostDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, domain, id, domain, subdomain, name, host, registrar, status, renewCost, notes, registerDate, expireDate, createDate, createUser, modifyDate, modifyUser FROM ITSM_VHost WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `domain`, `subdomain`, `name`, `host`, `registrar`, `status`, `renewCost`, `notes`, `registerDate`, `expireDate`, `createDate`, `createUser`, `modifyDate`, `modifyUser` FROM `ITSM_VHost` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -65,10 +65,10 @@ class VHostDatabaseHandler extends DatabaseHandler
         // Add status filter, if it is supplied
         if(is_array($status) AND !empty($status))
         {
-            $query .= " AND status IN (SELECT id FROM Attribute WHERE extension = 'itsm' AND type='wdns' AND code IN (" . self::getAttributeCodeString($status) . "))";
+            $query .= " AND `status` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'wdns' AND `code` IN (" . self::getAttributeCodeString($status) . "))";
         }
 
-        $query .= "ORDER BY domain, subdomain ASC";
+        $query .= "ORDER BY `domain`, `subdomain` ASC";
 
         $handler = new DatabaseConnection();
 

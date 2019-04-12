@@ -29,7 +29,7 @@ class AttributeDatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, extension, type, code, name FROM Attribute WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `extension`, `type`, `code`, `name` FROM `Attribute` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 

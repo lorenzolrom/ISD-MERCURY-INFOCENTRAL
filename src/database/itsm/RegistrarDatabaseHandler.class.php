@@ -31,7 +31,7 @@ class RegistrarDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, code, name, url, phone, createDate, createUser, lastModifyDate, lastModifyUser FROM ITSM_Registrar WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `code`, `name`, `url`, `phone`, `createDate`, `createUser`, `lastModifyDate`, `lastModifyUser` FROM `ITSM_Registrar` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -53,7 +53,7 @@ class RegistrarDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id FROM ITSM_Registrar WHERE code LIKE :code AND name LIKE :name ORDER BY code ASC");
+        $select = $handler->prepare("SELECT `id` FROM `ITSM_Registrar` WHERE `code` LIKE :code AND `name` LIKE :name ORDER BY `code` ASC");
         $select->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $select->bindParam('name', $name, DatabaseConnection::PARAM_STR);
         $select->execute();

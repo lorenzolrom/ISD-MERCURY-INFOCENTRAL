@@ -18,12 +18,14 @@ use business\facilities\BuildingOperator;
 use business\facilities\LocationOperator;
 use exceptions\ValidationException;
 use models\Model;
+use utilities\Validator;
 
 class Building extends Model
 {
     private const MESSAGES = array(
         'CODE_LENGTH' => 'Building code must be between 1 and 32 characters',
         'CODE_UNIQUE' => 'Building code already in use',
+        'CODE_INVALID' => 'Building code must contain letters, numbers, and dashes only',
         'NAME_LENGTH' => 'Building name must be between 1 and 64 characters',
         'ADDRESS' => 'Address required',
         'CITY' => 'City required',
@@ -152,6 +154,10 @@ class Building extends Model
         if($code === NULL)
             throw new ValidationException(self::MESSAGES['CODE_LENGTH'], ValidationException::VALUE_IS_NULL);
 
+        // not already taken
+        if(!BuildingOperator::codeIsUnique($code))
+            throw new ValidationException(self::MESSAGES['CODE_UNIQUE'], ValidationException::VALUE_ALREADY_TAKEN);
+
         // at least 1 character
         if(strlen($code) < 1)
             throw new ValidationException(self::MESSAGES['CODE_LENGTH'], ValidationException::VALUE_TOO_SHORT);
@@ -160,9 +166,9 @@ class Building extends Model
         if(strlen($code) > 32)
             throw new ValidationException(self::MESSAGES['CODE_LENGTH'], ValidationException::VALUE_TOO_LONG);
 
-        // not already taken
-        if(!BuildingOperator::codeIsUnique($code))
-            throw new ValidationException(self::MESSAGES['CODE_UNIQUE'], ValidationException::VALUE_ALREADY_TAKEN);
+        // valid characters
+        if(!Validator::alnumDashOnly($code))
+            throw new ValidationException(self::MESSAGES['CODE_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
 
         return TRUE;
     }

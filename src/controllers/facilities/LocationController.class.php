@@ -122,7 +122,7 @@ class LocationController extends Controller
         $errors = LocationOperator::createLocation($building, $fields['code'], $fields['name']);
 
         if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors['errors']);
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
 
         return new HTTPResponse(HTTPResponse::CREATED, $errors);
     }
@@ -144,9 +144,9 @@ class LocationController extends Controller
 
         $errors = LocationOperator::updateLocation($location, $fields['code'], $fields['name']);
 
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors['errors']);
+        if(!isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::NO_CONTENT);
 
-        return new HTTPResponse(HTTPResponse::NO_CONTENT, $errors);
+        return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
     }
 }

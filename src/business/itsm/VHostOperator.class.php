@@ -26,7 +26,7 @@ class VHostOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      */
-    public static function getVHost(int $id)
+    public static function getVHost(int $id):VHost
     {
         return VHostDatabaseHandler::selectById($id);
     }

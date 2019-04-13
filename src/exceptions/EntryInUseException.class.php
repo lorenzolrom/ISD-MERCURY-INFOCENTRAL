@@ -19,6 +19,6 @@ class EntryInUseException extends MercuryException
      const ENTRY_IN_USE = 1500;
 
      const MESSAGES = array(
-         self::ENTRY_IN_USE => 'Record is references by one or more other records'
+         self::ENTRY_IN_USE => 'Record is referenced by one or more other records'
      );
 }

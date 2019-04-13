@@ -17,12 +17,14 @@ namespace models\facilities;
 use business\facilities\LocationOperator;
 use exceptions\ValidationException;
 use models\Model;
+use utilities\Validator;
 
 class Location extends Model
 {
     private const MESSAGES = array(
         'CODE_LENGTH' => 'Location code must be between 1 and 32 characters',
         'CODE_UNIQUE' => 'Location code already in use',
+        'CODE_INVALID' => 'Location code must contain letters, numbers, and dashes only',
         'NAME_LENGTH' => 'Location name must be between 1 and 64 characters',
         'BUILDING' => 'Building is not valid'
     );
@@ -124,6 +126,10 @@ class Location extends Model
         // not already taken
         if(!LocationOperator::codeIsUnique($building, $code))
             throw new ValidationException(self::MESSAGES['CODE_UNIQUE'], ValidationException::VALUE_ALREADY_TAKEN);
+
+        // valid characters
+        if(!Validator::alnumDashOnly($code))
+            throw new ValidationException(self::MESSAGES['CODE_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
 
         return TRUE;
     }

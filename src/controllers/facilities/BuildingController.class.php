@@ -219,7 +219,7 @@ class BuildingController extends Controller
         $errors = BuildingOperator::createBuilding($fields['code'], $fields['name'], $fields['streetAddress'], $fields['city'], $fields['state'], $fields['zipCode']);
 
         if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors['errors']);
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
 
         return new HTTPResponse(HTTPResponse::CREATED, $errors);
     }

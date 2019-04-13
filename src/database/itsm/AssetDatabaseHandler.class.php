@@ -47,6 +47,24 @@ class AssetDatabaseHandler extends DatabaseHandler
         return $select->fetchObject("models\itsm\Asset");
     }
 
+    /**
+     * @param string $assetTag
+     * @param string $serialNumber
+     * @param array $inWarehouse
+     * @param array $isDiscarded
+     * @param string $buildingCode
+     * @param string $locationCode
+     * @param string $warehouseCode
+     * @param string $poNumber
+     * @param string $manufacturer
+     * @param string $model
+     * @param string $commodityCode
+     * @param string $commodityName
+     * @param array $commodityType
+     * @param array $assetType
+     * @param array $isVerified
+     * @return Asset[]
+     */
     public static function select(string $assetTag = '%', string $serialNumber = '%', array $inWarehouse = array(),
                                   array $isDiscarded = array(), string $buildingCode = '%', string $locationCode = '%',
                                   string $warehouseCode = '%', string $poNumber = '%', string $manufacturer = '%',
@@ -55,5 +73,23 @@ class AssetDatabaseHandler extends DatabaseHandler
                                   array $isVerified = array()): array
     {
         return array();
+    }
+
+    /**
+     * @param int $commodityType
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function isCommodityTypeInUse(int $commodityType): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `id` FROM `ITSM_Asset` WHERE `commodity` = ? LIMIT 1");
+        $select->bindParam(1, $commodityType, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
     }
 }

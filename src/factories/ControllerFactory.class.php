@@ -15,13 +15,13 @@ namespace factories;
 
 
 use controllers\AuthenticateController;
-use controllers\bookworm\VolumeController;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use controllers\facilities\BuildingController;
 use controllers\facilities\LocationController;
 use controllers\itsm\ApplicationController;
 use controllers\itsm\AssetController;
+use controllers\itsm\CommodityController;
 use controllers\itsm\RegistrarController;
 use controllers\itsm\VHostController;
 use controllers\PermissionController;
@@ -49,8 +49,8 @@ class ControllerFactory
         $route = $request->next();
         switch($route)
         {
-            case "volumes": // TODO: remove when project is completed
-                return new VolumeController($request);
+            case "commodities":
+                return new CommodityController($request);
             case "assets":
                 return new AssetController($request);
             case "vhosts":

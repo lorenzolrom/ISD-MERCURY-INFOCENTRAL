@@ -44,10 +44,15 @@ class HTTPResponse
      * HTTPResponse constructor.
      * @param int $responseCode
      * @param array $body
+     * @param bool $errors
      */
-    public function __construct(int $responseCode, array $body = array())
+    public function __construct(int $responseCode, array $body = array(), bool $errors = FALSE)
     {
         $this->responseCode = $responseCode;
+
+        if($errors)
+            $this->body = array('errors' => $body);
+
         $this->body = $body;
     }
 

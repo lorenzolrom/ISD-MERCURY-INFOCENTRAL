@@ -24,6 +24,7 @@ use controllers\itsm\AssetController;
 use controllers\itsm\CommodityController;
 use controllers\itsm\RegistrarController;
 use controllers\itsm\VHostController;
+use controllers\itsm\WarehouseController;
 use controllers\PermissionController;
 use controllers\RoleController;
 use controllers\UserController;
@@ -51,6 +52,8 @@ class ControllerFactory
         {
             case "commodities":
                 return new CommodityController($request);
+            case "warehouses":
+                return new WarehouseController($request);
             case "assets":
                 return new AssetController($request);
             case "vhosts":

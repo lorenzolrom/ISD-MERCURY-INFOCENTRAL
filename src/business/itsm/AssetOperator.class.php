@@ -47,15 +47,16 @@ class AssetOperator extends Operator
      * @param array $commodityType
      * @param array $assetType
      * @param array $isVerified
-     * @return array
+     * @return Asset[]
+     * @throws \exceptions\DatabaseException
      */
-    public static function search(string $assetTag = '%', string $serialNumber = '%', array $inWarehouse = array(),
-                                  array $isDiscarded = array(), string $buildingCode = '%', string $locationCode = '%',
+    public static function search(string $assetTag = '%', string $serialNumber = '%', $inWarehouse = array(),
+                                  $isDiscarded = array(), string $buildingCode = '%', string $locationCode = '%',
                                   string $warehouseCode = '%', string $poNumber = '%', string $manufacturer = '%',
                                   string $model = '%', string $commodityCode = '%', string $commodityName = '%',
-                                  array $commodityType = array(), array $assetType = array(),
-                                  array $isVerified = array()): array
+                                  $commodityType = array(), $assetType = array(),
+                                  $isVerified = array()): array
     {
-        return array();
+        return AssetDatabaseHandler::select($assetTag, $serialNumber, $inWarehouse, $isDiscarded, $buildingCode, $locationCode, $warehouseCode, $poNumber, $manufacturer, $model, $commodityCode, $commodityName, $commodityType, $assetType, $isVerified);
     }
 }

@@ -14,7 +14,12 @@
 namespace controllers\itsm;
 
 
+use business\AttributeOperator;
+use business\facilities\LocationOperator;
 use business\itsm\AssetOperator;
+use business\itsm\CommodityOperator;
+use business\itsm\PurchaseOrderOperator;
+use business\itsm\WarehouseOperator;
 use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
@@ -24,7 +29,7 @@ use models\HTTPResponse;
 
 class AssetController extends Controller
 {
-    const SEARCH_FIELDS = array('assetTag', 'serialNumber', 'isWarehouse', 'isDiscarded', 'buildingCode',
+    const SEARCH_FIELDS = array('assetTag', 'serialNumber', 'inWarehouse', 'isDiscarded', 'buildingCode',
         'locationCode', 'warehouseCode', 'purchaseOrder', 'manufacturer', 'model', 'commodityCode', 'commodityName',
         'commodityType', 'assetType', 'isVerified');
 
@@ -40,12 +45,22 @@ class AssetController extends Controller
 
         $param = $this->request->next();
 
-        if($this->request->method() == HTTPRequest::GET)
+        if($this->request->method() === HTTPRequest::GET)
         {
             switch($param)
             {
+                case null:
+                    return $this->getSearchResult();
                 default:
                     return $this->getAsset($param);
+            }
+        }
+        else if($this->request->method() === HTTPRequest::POST)
+        {
+            switch($param)
+            {
+                case "search":
+                    return $this->getSearchResult(TRUE);
             }
         }
 
@@ -66,11 +81,12 @@ class AssetController extends Controller
             'assetTag' => $asset->getAssetTag(),
             'commodity' => $asset->getCommodity(),
             'warehouse' => $asset->getWarehouse(),
+            'warehouseCode' => WarehouseOperator::codeFromId($asset->getWarehouse()),
             'parent' => $asset->getParent(), // TODO: convert to asset tag
-            'location' => $asset->getLocation(),
+            'location' => $asset->getLocation(), // TODO: also include building code and location code
             'serialNumber' => $asset->getSerialNumber(),
             'manufactureDate' => $asset->getManufactureDate(),
-            'purchaseOrder' => $asset->getPurchaseOrder(), // TODO: convert to #,
+            'purchaseOrder' => PurchaseOrderOperator::numberFromId($asset->getPurchaseOrder()),
             'notes' => $asset->getNotes(),
             'createDate' => $asset->getCreateDate(),
             'discarded' => $asset->getDiscarded(),
@@ -87,11 +103,45 @@ class AssetController extends Controller
      * @param bool $search
      * @param bool $strict
      * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws EntryNotFoundException
      */
     private function getSearchResult(bool $search = FALSE, bool $strict = FALSE): HTTPResponse
     {
-        return new HTTPResponse(HTTPResponse::NOT_IMPLEMENTED);
+        if($search)
+        {
+            $args = $this->getFormattedBody(self::SEARCH_FIELDS, $strict);
 
-        // TODO: groupBy (e.g. location)
+            $assets = AssetOperator::search($args['assetTag'], $args['serialNumber'], $args['inWarehouse'],
+                $args['isDiscarded'], $args['buildingCode'], $args['locationCode'], $args['warehouseCode'],
+                $args['purchaseOrder'], $args['manufacturer'], $args['model'], $args['commodityCode'],
+                $args['commodityName'], $args['commodityType'], $args['assetType'], $args['isVerified']);
+        }
+        else
+        {
+            $assets = AssetOperator::search();
+        }
+
+        $data = array();
+
+        foreach($assets as $asset)
+        {
+            $commodity = CommodityOperator::getCommodity($asset->getCommodity());
+
+            $data[] = array(
+                'inWorksheet' => '', // TODO: check if asset is in worksheet
+                'assetTag' => $asset->getAssetTag(),
+                'commodityCode' => $commodity->getCode(),
+                'commodityName' => $commodity->getName(),
+                'assetType' => AttributeOperator::nameFromId($commodity->getAssetType()),
+                'serialNumber' => $asset->getSerialNumber(),
+                'location' => LocationOperator::getFullLocationCode($asset->getLocation()),
+                'warehouse' => WarehouseOperator::codeFromId($asset->getWarehouse()),
+                'verified' => $asset->getVerified(),
+                'returnOrderNumber' => '' // TODO: check for current return order
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
     }
 }

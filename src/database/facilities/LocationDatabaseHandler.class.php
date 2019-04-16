@@ -208,4 +208,46 @@ class LocationDatabaseHandler extends DatabaseHandler
 
         return $select->getRowCount() === 1;
     }
+
+    /**
+     * @param int $code
+     * @return string|null
+     * @throws DatabaseException
+     */
+    public static function selectCodeFromId(int $code): ?string
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `code` FROM `FacilitiesCore_Location` WHERE `id` = ? LIMIT 1");
+        $select->bindParam(1, $code, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return null;
+
+        return $select->fetchColumn();
+    }
+
+    /**
+     * @param int $id
+     * @return int|null
+     * @throws DatabaseException
+     */
+    public static function selectBuildingFromId(int $id): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `building` FROM `FacilitiesCore_Location` WHERE `id` = ? LIMIT 1");
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return null;
+
+        return $select->fetchColumn();
+    }
 }

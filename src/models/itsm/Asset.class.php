@@ -83,7 +83,7 @@ class Asset extends ITSMModel
     /**
      * @return string
      */
-    public function getSerialNumber(): string
+    public function getSerialNumber(): ?string
     {
         return $this->serialNumber;
     }

@@ -16,6 +16,7 @@ namespace database\facilities;
 
 use database\DatabaseConnection;
 use database\DatabaseHandler;
+use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use models\facilities\Building;
 
@@ -202,5 +203,27 @@ class BuildingDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $code
+     * @return string|null
+     * @throws DatabaseException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectCodeFromId(int $code): ?string
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `code` FROM `FacilitiesCore_Building` WHERE `id` = ? LIMIT 1");
+        $select->bindParam(1, $code, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return null;
+
+        return $select->fetchColumn();
     }
 }

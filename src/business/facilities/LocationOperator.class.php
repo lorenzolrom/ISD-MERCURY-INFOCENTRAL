@@ -16,6 +16,7 @@ namespace business\facilities;
 
 use business\Operator;
 use controllers\CurrentUserController;
+use database\facilities\BuildingDatabaseHandler;
 use database\facilities\LocationDatabaseHandler;
 use exceptions\ValidationException;
 use models\facilities\Building;
@@ -109,6 +110,23 @@ class LocationOperator extends Operator
     public static function codeIsUnique(Building $building, string $code): bool
     {
         return !LocationDatabaseHandler::isCodeInUse($building->getId(), $code);
+    }
+
+    /**
+     * @param int $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getFullLocationCode(?int $id): ?string
+    {
+        if($id === NULL)
+            return NULL;
+
+        $fullLocationCode = BuildingDatabaseHandler::selectCodeFromId(LocationDatabaseHandler::selectBuildingFromId($id));
+
+        $fullLocationCode .= " " . LocationDatabaseHandler::selectCodeFromId($id);
+
+        return $fullLocationCode;
     }
 
     /**

@@ -202,4 +202,14 @@ class CommodityOperator extends Operator
 
         return $errors;
     }
+
+    /**
+     * @param int|null $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function assetTypeNameFromId(?int $id): ?string
+    {
+        return CommodityDatabaseHandler::selectNameById((int) $id);
+    }
 }

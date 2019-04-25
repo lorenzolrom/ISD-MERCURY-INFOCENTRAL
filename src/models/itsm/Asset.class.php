@@ -91,7 +91,7 @@ class Asset extends ITSMModel
     /**
      * @return string
      */
-    public function getManufactureDate(): string
+    public function getManufactureDate(): ?string
     {
         return $this->manufactureDate;
     }
@@ -107,7 +107,7 @@ class Asset extends ITSMModel
     /**
      * @return string
      */
-    public function getNotes(): string
+    public function getNotes(): ?string
     {
         return $this->notes;
     }

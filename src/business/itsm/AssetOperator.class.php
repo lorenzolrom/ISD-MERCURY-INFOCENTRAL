@@ -59,4 +59,24 @@ class AssetOperator extends Operator
     {
         return AssetDatabaseHandler::select($assetTag, $serialNumber, $inWarehouse, $isDiscarded, $buildingCode, $locationCode, $warehouseCode, $poNumber, $manufacturer, $model, $commodityCode, $commodityName, $commodityType, $assetType, $isVerified);
     }
+
+    /**
+     * @param int|null $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function assetTagFromId(?int $id): ?string
+    {
+        return AssetDatabaseHandler::selectAssetTagById((int) $id);
+    }
+
+    /**
+     * @param string $assetTag
+     * @return Asset[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getChildren(string $assetTag): array
+    {
+        return AssetDatabaseHandler::selectAssetByParent($assetTag);
+    }
 }

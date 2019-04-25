@@ -15,6 +15,7 @@ namespace controllers\itsm;
 
 
 use business\AttributeOperator;
+use business\facilities\BuildingOperator;
 use business\facilities\LocationOperator;
 use business\itsm\AssetOperator;
 use business\itsm\CommodityOperator;
@@ -52,6 +53,8 @@ class AssetController extends Controller
                 case null:
                     return $this->getSearchResult();
                 default:
+                    if($this->request->next() == 'children')
+                        return $this->getChildren($param);
                     return $this->getAsset($param);
             }
         }
@@ -76,14 +79,45 @@ class AssetController extends Controller
     private function getAsset(?string $param): HTTPResponse
     {
         $asset = AssetOperator::getAsset((int)$param);
+        $commodity = CommodityOperator::getCommodity($asset->getCommodity());
+
+        $hasLocation = $asset->getLocation() !== NULL ? TRUE : FALSE;
+        $location = null;
+        $building = null;
+
+        if($hasLocation)
+        {
+            $location = LocationOperator::getLocation($asset->getLocation());
+            $building = BuildingOperator::getBuilding($location->getBuilding());
+        }
+
+        $hasWarehouse = $asset->getWarehouse() !== NULL ? TRUE : FALSE;
+        $warehouse = null;
+
+        if($hasWarehouse)
+        {
+            $warehouse = WarehouseOperator::getWarehouse($asset->getWarehouse());
+        }
 
         return new HTTPResponse(HTTPResponse::OK, array(
             'assetTag' => $asset->getAssetTag(),
             'commodity' => $asset->getCommodity(),
+            'commodityCode' => $commodity->getCode(),
+            'commodityName' => $commodity->getName(),
+            'commodityType' => AttributeOperator::nameFromId($commodity->getCommodityType()),
+            'commodityManufacturer' => $commodity->getManufacturer(),
+            'commodityModel' => $commodity->getModel(),
+            'assetType' => AttributeOperator::nameFromId($commodity->getAssetType()),
             'warehouse' => $asset->getWarehouse(),
-            'warehouseCode' => WarehouseOperator::codeFromId($asset->getWarehouse()),
-            'parent' => $asset->getParent(), // TODO: convert to asset tag
-            'location' => $asset->getLocation(), // TODO: also include building code and location code
+            'warehouseCode' => $hasWarehouse ? $warehouse->getCode() : NULL,
+            'warehouseName' => $hasWarehouse ? $warehouse->getName() : NULL,
+            'parentAssetTag' => AssetOperator::assetTagFromId($asset->getParent()),
+            'location' => $asset->getLocation(),
+            'building' => $hasLocation ? $building->getId() : NULL,
+            'buildingCode' => $hasLocation ? $building->getCode() : NULL,
+            'buildingName' => $hasLocation ? $building->getName() : NULL,
+            'locationCode' => $hasLocation ? $location->getCode() : NULL,
+            'locationName' => $hasLocation ? $location->getName() : NULL,
             'serialNumber' => $asset->getSerialNumber(),
             'manufactureDate' => $asset->getManufactureDate(),
             'purchaseOrder' => PurchaseOrderOperator::numberFromId($asset->getPurchaseOrder()),
@@ -139,6 +173,31 @@ class AssetController extends Controller
                 'warehouse' => WarehouseOperator::codeFromId($asset->getWarehouse()),
                 'verified' => $asset->getVerified(),
                 'returnOrderNumber' => '' // TODO: check for current return order
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getChildren(?string $param): HTTPResponse
+    {
+        $asset = AssetOperator::getAsset((int) $param);
+
+        $children = AssetOperator::getChildren($asset->getAssetTag());
+
+        $data = array();
+
+        foreach($children as $child)
+        {
+            $data[] = array(
+                'assetTag' => $child->getAssetTag(),
+                'commodityName' => CommodityOperator::assetTypeNameFromId($child->getCommodity())
             );
         }
 

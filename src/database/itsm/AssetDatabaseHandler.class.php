@@ -180,6 +180,27 @@ class AssetDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectAssetTagById(int $id): ?string
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `assetTag` FROM `ITSM_Asset` WHERE `id` = ? LIMIT 1");
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return null;
+
+        return $select->fetchColumn();
+    }
+
+    /**
      * @param int $commodityType
      * @return bool
      * @throws \exceptions\DatabaseException
@@ -213,5 +234,34 @@ class AssetDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param string $parentAssetTag
+     * @return Asset[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectAssetByParent(string $parentAssetTag): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `assetTag` FROM `ITSM_Asset` WHERE `parent` IN (SELECT `id` FROM `ITSM_Asset` WHERE `assetTag` = ?)");
+        $select->bindParam(1, $parentAssetTag, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        $children = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $assetTag)
+        {
+            try
+            {
+                $children[] = self::selectByAssetTag($assetTag);
+            }
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $children;
     }
 }

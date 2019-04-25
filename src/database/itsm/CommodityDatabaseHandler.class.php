@@ -222,4 +222,25 @@ class CommodityDatabaseHandler extends DatabaseHandler
 
         return $select->getRowCount() === 1;
     }
+
+    /**
+     * @param int $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectNameById(int $id): ?string
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `name` FROM `ITSM_Commodity` WHERE `id` = ?");
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return NULL;
+
+        return $select->fetchColumn();
+    }
 }

@@ -122,6 +122,16 @@ class BuildingOperator extends Operator
     }
 
     /**
+     * @param int|null $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function codeFromId(?int $id): ?string
+    {
+        return BuildingDatabaseHandler::selectCodeFromId((int) $id);
+    }
+
+    /**
      * @param string|null $code
      * @param string|null $name
      * @param string|null $streetAddress

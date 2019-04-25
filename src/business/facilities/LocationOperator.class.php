@@ -130,6 +130,16 @@ class LocationOperator extends Operator
     }
 
     /**
+     * @param int|null $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function codeFromId(?int $id): ?string
+    {
+        return LocationDatabaseHandler::selectCodeFromId((int) $id);
+    }
+
+    /**
      * @param Building $building
      * @param string|null $code
      * @param string|null $name

@@ -94,4 +94,132 @@ class VendorDatabaseHandler extends DatabaseHandler
 
         return $vendors;
     }
+
+    /**
+     * @param string $code
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdFromCode(string $code): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_Vendor` WHERE `code` = ? LIMIT 1');
+        $select->bindParam(1, $code, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return NULL;
+
+        return $select->fetchColumn();
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function delete(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare("DELETE FROM `ITSM_Vendor` WHERE `id` = ?");
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @param string $code
+     * @param string $name
+     * @param string $streetAddress
+     * @param string $city
+     * @param string $state
+     * @param string $zipCode
+     * @param string $phone
+     * @param string $fax
+     * @param string $lastModifyDate
+     * @param int $lastModifyUser
+     * @return Vendor
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(int $id, string $code, string $name, string $streetAddress, string $city,
+                                  string $state, string $zipCode, string $phone, string $fax, string $lastModifyDate,
+                                  int $lastModifyUser): Vendor
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `ITSM_Vendor` SET `code` = :code, `name` = :name, 
+                         `streetAddress` = :streetAddress, `city` = :city, `state` = :state, `zipCode` = :zipCode, 
+                         `phone` = :phone, `fax` = :fax, `lastModifyDate` = :lastModifyDate, `lastModifyUser` = 
+                           :lastModifyUser WHERE `id` = :id');
+
+        $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $update->bindParam('streetAddress', $streetAddress, DatabaseConnection::PARAM_STR);
+        $update->bindParam('city', $city, DatabaseConnection::PARAM_STR);
+        $update->bindParam('state', $state, DatabaseConnection::PARAM_STR);
+        $update->bindParam('zipCode', $zipCode, DatabaseConnection::PARAM_STR);
+        $update->bindParam('phone', $phone, DatabaseConnection::PARAM_STR);
+        $update->bindParam('fax', $fax, DatabaseConnection::PARAM_STR);
+        $update->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param string $code
+     * @param string $name
+     * @param string $streetAddress
+     * @param string $city
+     * @param string $state
+     * @param string $zipCode
+     * @param string $phone
+     * @param string $fax
+     * @param string $createDate
+     * @param int $createUser
+     * @return Vendor
+     * @throws \exceptions\DatabaseException
+     * @throws EntryNotFoundException
+     */
+    public static function insert(string $code, string $name, string $streetAddress, string $city, string $state,
+                                  string $zipCode, string $phone, string $fax, string $createDate, int $createUser): Vendor
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `ITSM_Vendor` (code, name, streetAddress, city, state, zipCode, 
+                           phone, fax, createDate, createUser, lastModifyDate, lastModifyUser) VALUES (:code, :name, 
+                           :streetAddress, :city, :state, :zipCode, :phone, :fax, :createDate, :createUser, 
+                           :createDate, :createUser)');
+
+        $insert->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('streetAddress', $streetAddress, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('city', $city, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('state', $state, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('zipCode', $zipCode, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('phone', $phone, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('fax', $fax, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('createUser', $createUser, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('createDate', $createDate, DatabaseConnection::PARAM_STR);
+        $insert->execute();
+
+        $id = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
 }

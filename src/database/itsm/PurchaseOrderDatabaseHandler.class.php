@@ -38,6 +38,24 @@ class PurchaseOrderDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $vendorId
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function doPurchaseOrdersReferenceVendor(int $vendorId): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_PurchaseOrder` WHERE `vendor` = ? LIMIT 1');
+        $select->bindParam(1, $vendorId, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
+
+    /**
      * @param int $id
      * @return int|null
      * @throws \exceptions\DatabaseException

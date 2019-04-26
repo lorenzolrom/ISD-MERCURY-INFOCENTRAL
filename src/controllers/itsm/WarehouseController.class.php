@@ -142,9 +142,12 @@ class WarehouseController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryInUseException
+     * @throws \exceptions\SecurityException
      */
     private function deleteWarehouse(?string $param): HTTPResponse
     {
+        CurrentUserController::validatePermission(array('itsm_inventory-warehouses-w'));
+
         $warehouse = WarehouseOperator::getWarehouse((int)$param);
         WarehouseOperator::deleteWarehouse($warehouse);
 

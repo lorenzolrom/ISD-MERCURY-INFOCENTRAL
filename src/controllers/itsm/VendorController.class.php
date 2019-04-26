@@ -31,6 +31,7 @@ class VendorController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      * @throws EntryNotFoundException
+     * @throws \exceptions\EntryInUseException
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -54,7 +55,17 @@ class VendorController extends Controller
             {
                 case "search":
                     return $this->getSearchResults(TRUE);
+                case null:
+                    return $this->createVendor();
             }
+        }
+        else if($this->request->method() === HTTPRequest::PUT)
+        {
+            return $this->updateVendor($param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            return $this->deleteVendor($param);
         }
 
         return NULL;
@@ -118,5 +129,68 @@ class VendorController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws EntryNotFoundException
+     */
+    private function createVendor(): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-vendors-w'));
+
+        $args = $this->getFormattedBody(self::FIELDS,TRUE);
+
+        $errors = VendorOperator::createVendor($args['code'], $args['name'], $args['streetAddress'], $args['city'],
+            $args['state'], $args['zipCode'], $args['phone'], $args['fax']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws EntryNotFoundException
+     */
+    private function updateVendor(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-vendors-w'));
+
+        $vendor = VendorOperator::getVendor((int) $param);
+
+        $args = $this->getFormattedBody(self::FIELDS,TRUE);
+
+        $errors = VendorOperator::updateVendor($vendor, $args['code'], $args['name'], $args['streetAddress'], $args['city'],
+            $args['state'], $args['zipCode'], $args['phone'], $args['fax']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryInUseException
+     * @throws \exceptions\SecurityException
+     */
+    private function deleteVendor(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-vendors-w'));
+
+        $vendor = VendorOperator::getVendor((int) $param);
+        VendorOperator::deleteVendor($vendor);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

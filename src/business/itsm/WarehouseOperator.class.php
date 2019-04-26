@@ -79,7 +79,7 @@ class WarehouseOperator extends Operator
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public static function updateWarehouse(Warehouse $warehouse, string $code, string $name): array
+    public static function updateWarehouse(Warehouse $warehouse, ?string $code, ?string $name): array
     {
         $errors = self::validateSubmission($code, $name, $warehouse);
 

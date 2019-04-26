@@ -36,4 +36,22 @@ class ReturnOrderDatabaseHandler extends DatabaseHandler
 
         return $select->getRowCount() === 1;
     }
+
+    /**
+     * @param int $vendorId
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function doReturnOrdersReferenceVendor(int $vendorId): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_ReturnOrder` WHERE `vendor` = ? LIMIT 1');
+        $select->bindParam(1, $vendorId, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
 }

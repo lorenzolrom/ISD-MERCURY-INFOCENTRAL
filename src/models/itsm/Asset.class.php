@@ -14,8 +14,17 @@
 namespace models\itsm;
 
 
+use database\itsm\AssetDatabaseHandler;
+use exceptions\ValidationException;
+
 class Asset extends ITSMModel
 {
+    private const MESSAGES = array(
+        'TAG_IN_USE' => 'Asset # is in use',
+        'TAG_INVALID' => 'Asset # can only consist of digits',
+        'SERIAL_NUMBER' => 'Serial number cannot exceed 64 characters'
+    );
+
     private $id;
     private $commodity;
     private $warehouse;
@@ -152,5 +161,48 @@ class Asset extends ITSMModel
         return $this->verifyUser;
     }
 
+    /**
+     * @param string|null $assetTag
+     * @return bool
+     * @throws ValidationException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function validateAssetTag(?string $assetTag): bool
+    {
+        // not null
+        if($assetTag === NULL)
+            throw new ValidationException(self::MESSAGES['TAG_INVALID'], ValidationException::VALUE_IS_NULL);
 
+        // at least 1 character
+        if(strlen($assetTag) < 1)
+            throw new ValidationException(self::MESSAGES['TAG_INVALID'], ValidationException::VALUE_TOO_SHORT);
+
+        // only numbers
+        if(!ctype_digit($assetTag))
+            throw new ValidationException(self::MESSAGES['TAG_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
+
+        // not in use
+        if(AssetDatabaseHandler::selectIdByAssetTag($assetTag) !== NULL)
+            throw new ValidationException(self::MESSAGES['TAG_IN_USE'], ValidationException::VALUE_ALREADY_TAKEN);
+
+        return TRUE;
+    }
+
+    /**
+     * @param string|null $serialNumber
+     * @return bool
+     * @throws ValidationException
+     */
+    public static function validateSerialNumber(?string $serialNumber): bool
+    {
+        // not null
+        if($serialNumber === NULL)
+            throw new ValidationException(self::MESSAGES['SERIAL_NUMBER'], ValidationException::VALUE_IS_NULL);
+
+        // not greater than 64 chars
+        if(strlen($serialNumber) > 64)
+            throw new ValidationException(self::MESSAGES['SERIAL_NUMBER'], ValidationException::VALUE_TOO_LONG);
+
+        return TRUE;
+    }
 }

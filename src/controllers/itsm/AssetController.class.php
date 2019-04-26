@@ -32,7 +32,7 @@ class AssetController extends Controller
 {
     const SEARCH_FIELDS = array('assetTag', 'serialNumber', 'inWarehouse', 'isDiscarded', 'buildingCode',
         'locationCode', 'warehouseCode', 'purchaseOrder', 'manufacturer', 'model', 'commodityCode', 'commodityName',
-        'commodityType', 'assetType', 'isVerified');
+        'commodityType', 'assetType', 'isVerified', 'notes');
 
     /**
      * @return HTTPResponse|null
@@ -65,6 +65,10 @@ class AssetController extends Controller
                 case "search":
                     return $this->getSearchResult(TRUE);
             }
+        }
+        else if($this->request->method() === HTTPRequest::PUT)
+        {
+            return $this->updateAsset($param);
         }
 
         return NULL;
@@ -202,5 +206,28 @@ class AssetController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param string|null $assetTag
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws EntryNotFoundException
+     */
+    private function updateAsset(?string $assetTag): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
+        $asset = AssetOperator::getAsset((int) $assetTag);
+
+        $args = $this->getFormattedBody(self::SEARCH_FIELDS, TRUE);
+
+        $errors = AssetOperator::updateAsset($asset, $args['assetTag'], $args['serialNumber'], $args['notes']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

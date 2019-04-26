@@ -15,7 +15,9 @@ namespace business\itsm;
 
 
 use business\Operator;
+use controllers\CurrentUserController;
 use database\itsm\AssetDatabaseHandler;
+use exceptions\ValidationException;
 use models\itsm\Asset;
 
 class AssetOperator extends Operator
@@ -61,6 +63,28 @@ class AssetOperator extends Operator
     }
 
     /**
+     * @param Asset $asset
+     * @param string|null $assetTag
+     * @param string|null $serialNumber
+     * @param string|null $notes
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function updateAsset(Asset $asset, ?string $assetTag, ?string $serialNumber, ?string $notes): array
+    {
+        $errors = self::validateSubmission($assetTag, $serialNumber, $asset);
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        $user = CurrentUserController::currentUser();
+
+        return array('id' => AssetDatabaseHandler::update($asset->getId(), $assetTag, $serialNumber, $notes, date('Y-m-d'), $user->getId()));
+    }
+
+    /**
      * @param int|null $id
      * @return string|null
      * @throws \exceptions\DatabaseException
@@ -78,5 +102,28 @@ class AssetOperator extends Operator
     public static function getChildren(string $assetTag): array
     {
         return AssetDatabaseHandler::selectAssetByParent($assetTag);
+    }
+
+    /**
+     * @param string|null $assetTag
+     * @param string|null $serialNumber
+     * @param Asset|null $asset
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function validateSubmission(?string $assetTag, ?string $serialNumber, ?Asset $asset = NULL): array
+    {
+        $errors = array();
+
+        if($asset === NULL OR $asset->getAssetTag() != $assetTag)
+        {
+            try{Asset::validateAssetTag($assetTag);}
+            catch(ValidationException $e){$errors[] = $e->getMessage();}
+        }
+
+        try{Asset::validateSerialNumber($serialNumber);}
+        catch(ValidationException $e){$errors[] = $e->getMessage();}
+
+        return $errors;
     }
 }

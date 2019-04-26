@@ -201,6 +201,27 @@ class AssetDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param string $assetTag
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdByAssetTag(string $assetTag): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `id` FROM `ITSM_Asset` WHERE `assetTag` = ? LIMIT 1");
+        $select->bindParam(1, $assetTag, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return null;
+
+        return $select->fetchColumn();
+    }
+
+    /**
      * @param int $commodityType
      * @return bool
      * @throws \exceptions\DatabaseException
@@ -263,5 +284,34 @@ class AssetDatabaseHandler extends DatabaseHandler
         }
 
         return $children;
+    }
+
+    /**
+     * @param int $id
+     * @param int $assetTag
+     * @param string $serialNumber
+     * @param string|null $notes
+     * @param string $lastModifyDate
+     * @param int $lastModifyUser
+     * @return Asset
+     * @throws \exceptions\DatabaseException
+     * @throws EntryNotFoundException
+     */
+    public static function update(int $id, int $assetTag, string $serialNumber, ?string $notes, string $lastModifyDate, int $lastModifyUser): Asset
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare("UPDATE `ITSM_Asset` SET `assetTag` = :assetTag, `serialNumber` = :serialNumber, `notes` = :notes, `lastModifyUser` = :lastModifyUser, `lastModifyDate` = :lastModifyDate WHERE `id` = :id");
+        $update->bindParam('assetTag', $assetTag, DatabaseConnection::PARAM_INT);
+        $update->bindParam('serialNumber', $serialNumber, DatabaseConnection::PARAM_STR);
+        $update->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
+        $update->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
+        $update->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectByAssetTag(self::selectAssetTagById($id));
     }
 }

@@ -40,10 +40,6 @@ class Building extends Model
     private $city;
     private $state;
     private $zipCode;
-    private $createDate;
-    private $createUser;
-    private $lastModifyDate;
-    private $lastModifyUser;
 
     /**
      * @return int
@@ -99,38 +95,6 @@ class Building extends Model
     public function getZipCode(): string
     {
         return $this->zipCode;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCreateDate(): string
-    {
-        return $this->createDate;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCreateUser(): int
-    {
-        return $this->createUser;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLastModifyDate(): string
-    {
-        return $this->lastModifyDate;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLastModifyUser(): string
-    {
-        return $this->lastModifyUser;
     }
 
     /**

@@ -15,11 +15,11 @@ namespace business\facilities;
 
 
 use business\Operator;
-use controllers\CurrentUserController;
 use database\facilities\BuildingDatabaseHandler;
 use database\facilities\LocationDatabaseHandler;
 use exceptions\ValidationException;
 use models\facilities\Building;
+use utilities\HistoryRecorder;
 
 class BuildingOperator extends Operator
 {
@@ -46,15 +46,21 @@ class BuildingOperator extends Operator
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public static function createBuilding(?string $code, ?string $name, ?string $streetAddress,?string $city, ?string $state, ?string $zipCode): array
+    public static function createBuilding(?string $code, ?string $name, ?string $streetAddress, ?string $city, ?string $state, ?string $zipCode): array
     {
         $errors = self::validateSubmission($code, $name, $streetAddress, $city, $state, $zipCode);
-        $user = CurrentUserController::currentUser();
 
-        if(empty($errors))
-            return array('id' => BuildingDatabaseHandler::create($code, $name, $streetAddress, $city, $state, $zipCode, date('Y-m-d'), $user->getId(), date('Y-m-d'), $user->getId())->getId());
+        if(!empty($errors))
+            return array('errors' => $errors);
 
-        return array('errors' => $errors);
+        $building = BuildingDatabaseHandler::create($code, $name, $streetAddress, $city, $state, $zipCode);
+
+        HistoryRecorder::writeHistory('FacilitiesCore_Building', HistoryRecorder::CREATE, $building->getId(), $building,
+            array('code' => $code, 'name' => $name, 'streetAddress' => $streetAddress, 'city' => $city,
+                'state' => $state, 'zipCode' => $zipCode));
+
+        return array('id' => $building->getId());
+
     }
 
     /**
@@ -74,10 +80,16 @@ class BuildingOperator extends Operator
     {
         $errors = self::validateSubmission($code, $name, $streetAddress, $city, $state, $zipCode, $building);
 
-        if(empty($errors))
-            BuildingDatabaseHandler::update($building->getId(), $code, $name, $streetAddress, $city, $state, $zipCode, date('Y-m-d'), CurrentUserController::currentUser()->getId());
+        if(!empty($errors))
+            return array('errors' => $errors);
 
-        return $errors;
+        $newBuilding = BuildingDatabaseHandler::update($building->getId(), $code, $name, $streetAddress, $city, $state, $zipCode);
+
+        HistoryRecorder::writeHistory('FacilitiesCore_Building', HistoryRecorder::MODIFY, $building->getId(), $building,
+            array('code' => $code, 'name' => $name, 'streetAddress' => $streetAddress, 'city' => $city,
+                'state' => $state, 'zipCode' => $zipCode));
+
+        return array('id' => $newBuilding->getId());
     }
 
     /**
@@ -85,6 +97,8 @@ class BuildingOperator extends Operator
      * @return bool
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryInUseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     public static function deleteBuilding(Building $building): bool
     {
@@ -92,6 +106,8 @@ class BuildingOperator extends Operator
         LocationDatabaseHandler::deleteByBuilding($building->getId());
 
         BuildingDatabaseHandler::delete($building->getId());
+
+        HistoryRecorder::writeHistory('FacilitiesCore_Building', HistoryRecorder::DELETE, $building->getId(), $building);
 
         return TRUE;
     }

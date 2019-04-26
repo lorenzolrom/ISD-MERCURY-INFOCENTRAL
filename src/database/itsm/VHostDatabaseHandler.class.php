@@ -33,7 +33,7 @@ class VHostDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT `id`, `domain`, `subdomain`, `name`, `host`, `registrar`, `status`, `renewCost`, `notes`, `registerDate`, `expireDate`, `createDate`, `createUser`, `modifyDate`, `modifyUser` FROM `ITSM_VHost` WHERE `id` = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `domain`, `subdomain`, `name`, `host`, `registrar`, `status`, `renewCost`, `notes`, `registerDate`, `expireDate` FROM `ITSM_VHost` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 

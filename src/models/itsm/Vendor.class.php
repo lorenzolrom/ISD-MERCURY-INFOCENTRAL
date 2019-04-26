@@ -16,9 +16,10 @@ namespace models\itsm;
 
 use database\itsm\VendorDatabaseHandler;
 use exceptions\ValidationException;
+use models\Model;
 use utilities\Validator;
 
-class Vendor extends ITSMModel
+class Vendor extends Model
 {
     private const MESSAGES = array(
         'CODE_LENGTH' => 'Vendor code must be between 1 and 32 characters',

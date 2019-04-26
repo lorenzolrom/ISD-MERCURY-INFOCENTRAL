@@ -16,7 +16,6 @@ namespace controllers\itsm;
 
 use business\AttributeOperator;
 use business\itsm\CommodityOperator;
-use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
@@ -118,11 +117,7 @@ class CommodityController extends Controller
             'assetTypeName' => AttributeOperator::nameFromId($commodity->getAssetType()),
             'manufacturer' => $commodity->getManufacturer(),
             'model' => $commodity->getModel(),
-            'unitCost' => $commodity->getUnitCost(),
-            'createUser' => UserOperator::usernameFromId($commodity->getCreateUser()),
-            'createDate' => $commodity->getCreateDate(),
-            'lastModifyUser' => UserOperator::usernameFromId($commodity->getLastModifyUser()),
-            'lastModifyDate' => $commodity->getLastModifyDate()
+            'unitCost' => $commodity->getUnitCost()
         );
 
         return new HTTPResponse(HTTPResponse::OK, $data);

@@ -29,10 +29,6 @@ class VHost
     private $notes;
     private $registerDate;
     private $expireDate;
-    private $createDate;
-    private $createUser;
-    private $modifyDate;
-    private $modifyUser;
 
     /**
      * @return int
@@ -120,38 +116,6 @@ class VHost
     public function getExpireDate(): ?string
     {
         return $this->expireDate;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCreateDate(): string
-    {
-        return $this->createDate;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCreateUser(): int
-    {
-        return $this->createUser;
-    }
-
-    /**
-     * @return string
-     */
-    public function getModifyDate(): string
-    {
-        return $this->modifyDate;
-    }
-
-    /**
-     * @return int
-     */
-    public function getModifyUser(): int
-    {
-        return $this->modifyUser;
     }
 
 }

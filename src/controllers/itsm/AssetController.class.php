@@ -126,11 +126,8 @@ class AssetController extends Controller
             'manufactureDate' => $asset->getManufactureDate(),
             'purchaseOrder' => PurchaseOrderOperator::numberFromId($asset->getPurchaseOrder()),
             'notes' => $asset->getNotes(),
-            'createDate' => $asset->getCreateDate(),
             'discarded' => $asset->getDiscarded(),
             'discardDate' => $asset->getDiscardDate(),
-            'lastModifyDate' => $asset->getLastModifyDate(),
-            'lastModifyUser' => UserOperator::usernameFromId($asset->getLastModifyUser()),
             'verified' => $asset->getVerified(),
             'verifyDate' => $asset->getVerifyDate(),
             'verifyUser' => ($asset->getVerifyUser() !== NULL) ? UserOperator::usernameFromId($asset->getVerifyUser()) : NULL

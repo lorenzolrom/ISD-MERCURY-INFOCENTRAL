@@ -15,7 +15,6 @@ namespace controllers\itsm;
 
 
 use business\itsm\WarehouseOperator;
-use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
@@ -85,11 +84,7 @@ class WarehouseController extends Controller
             'id' => $warehouse->getId(),
             'code' => $warehouse->getCode(),
             'name' => $warehouse->getName(),
-            'closed' => $warehouse->getClosed(),
-            'createUser' => UserOperator::usernameFromId($warehouse->getCreateUser()),
-            'createDate' => $warehouse->getCreateDate(),
-            'lastModifyUser' => UserOperator::usernameFromId($warehouse->getLastModifyUser()),
-            'lastModifyDate' => $warehouse->getLastModifyDate()
+            'closed' => $warehouse->getClosed()
         ));
     }
 

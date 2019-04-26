@@ -15,13 +15,13 @@ namespace business\itsm;
 
 
 use business\Operator;
-use controllers\CurrentUserController;
 use database\itsm\PurchaseOrderDatabaseHandler;
 use database\itsm\ReturnOrderDatabaseHandler;
 use database\itsm\VendorDatabaseHandler;
 use exceptions\EntryInUseException;
 use exceptions\ValidationException;
 use models\itsm\Vendor;
+use utilities\HistoryRecorder;
 
 class VendorOperator extends Operator
 {
@@ -77,9 +77,13 @@ class VendorOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        $user = CurrentUserController::currentUser();
+        $vendor = VendorDatabaseHandler::insert($code, $name, $streetAddress, $city, $state, $zipCode, $phone, $fax);
 
-        return array('id' => VendorDatabaseHandler::insert($code, $name, $streetAddress, $city, $state, $zipCode, $phone, $fax, date('Y-m-d'), $user->getId())->getId());
+        HistoryRecorder::writeHistory('ITSM_Vendor', HistoryRecorder::CREATE, $vendor->getId(), $vendor,
+            array('code' => $code, 'name' => $name, 'streetAddress' => $streetAddress, 'city' => $city,
+                'state' => $state, 'zipCode' => $zipCode, 'phone' => $phone, 'fax' => $fax));
+
+        return array('id' => $vendor->getId());
     }
 
     /**
@@ -105,16 +109,22 @@ class VendorOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        $user = CurrentUserController::currentUser();
+        $newVendor = VendorDatabaseHandler::update($vendor->getId(), $code, $name, $streetAddress, $city, $state, $zipCode, $phone, $fax);
 
-        return array('id' => VendorDatabaseHandler::update($vendor->getId(), $code, $name, $streetAddress, $city, $state, $zipCode, $phone, $fax, date('Y-m-d'), $user->getId())->getId());
+        HistoryRecorder::writeHistory('ITSM_Vendor', HistoryRecorder::MODIFY, $vendor->getId(), $vendor,
+            array('code' => $code, 'name' => $name, 'streetAddress' => $streetAddress, 'city' => $city,
+                'state' => $state, 'zipCode' => $zipCode, 'phone' => $phone, 'fax' => $fax));
+
+        return array('id' => $newVendor->getId());
     }
 
     /**
      * @param Vendor $vendor
      * @return bool
-     * @throws \exceptions\DatabaseException
      * @throws EntryInUseException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     public static function deleteVendor(Vendor $vendor): bool
     {
@@ -124,6 +134,8 @@ class VendorOperator extends Operator
         {
             throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE);
         }
+
+        HistoryRecorder::writeHistory('ITSM_Vendor', HistoryRecorder::DELETE, $vendor->getId(), $vendor);
 
         return VendorDatabaseHandler::delete($vendor->getId());
     }

@@ -32,7 +32,7 @@ class VendorDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $select = $handler->prepare("SELECT `id`, `code`, `name`, `streetAddress`, `city`, `state`, `zipCode`,
-            `phone`, `fax`, `createDate`, `createUser`, `lastModifyDate`, `lastModifyUser` FROM `ITSM_Vendor`
+            `phone`, `fax` FROM `ITSM_Vendor`
             WHERE `id` = ? LIMIT 1");
 
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
@@ -144,22 +144,18 @@ class VendorDatabaseHandler extends DatabaseHandler
      * @param string $zipCode
      * @param string $phone
      * @param string $fax
-     * @param string $lastModifyDate
-     * @param int $lastModifyUser
      * @return Vendor
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
     public static function update(int $id, string $code, string $name, string $streetAddress, string $city,
-                                  string $state, string $zipCode, string $phone, string $fax, string $lastModifyDate,
-                                  int $lastModifyUser): Vendor
+                                  string $state, string $zipCode, string $phone, string $fax): Vendor
     {
         $handler = new DatabaseConnection();
 
         $update = $handler->prepare('UPDATE `ITSM_Vendor` SET `code` = :code, `name` = :name, 
                          `streetAddress` = :streetAddress, `city` = :city, `state` = :state, `zipCode` = :zipCode, 
-                         `phone` = :phone, `fax` = :fax, `lastModifyDate` = :lastModifyDate, `lastModifyUser` = 
-                           :lastModifyUser WHERE `id` = :id');
+                         `phone` = :phone, `fax` = :fax WHERE `id` = :id');
 
         $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
@@ -169,8 +165,6 @@ class VendorDatabaseHandler extends DatabaseHandler
         $update->bindParam('zipCode', $zipCode, DatabaseConnection::PARAM_STR);
         $update->bindParam('phone', $phone, DatabaseConnection::PARAM_STR);
         $update->bindParam('fax', $fax, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->execute();
 
@@ -188,21 +182,18 @@ class VendorDatabaseHandler extends DatabaseHandler
      * @param string $zipCode
      * @param string $phone
      * @param string $fax
-     * @param string $createDate
-     * @param int $createUser
      * @return Vendor
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      */
     public static function insert(string $code, string $name, string $streetAddress, string $city, string $state,
-                                  string $zipCode, string $phone, string $fax, string $createDate, int $createUser): Vendor
+                                  string $zipCode, string $phone, string $fax): Vendor
     {
         $handler = new DatabaseConnection();
 
         $insert = $handler->prepare('INSERT INTO `ITSM_Vendor` (code, name, streetAddress, city, state, zipCode, 
-                           phone, fax, createDate, createUser, lastModifyDate, lastModifyUser) VALUES (:code, :name, 
-                           :streetAddress, :city, :state, :zipCode, :phone, :fax, :createDate, :createUser, 
-                           :createDate, :createUser)');
+                           phone, fax) VALUES (:code, :name, 
+                           :streetAddress, :city, :state, :zipCode, :phone, :fax)');
 
         $insert->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
@@ -212,8 +203,6 @@ class VendorDatabaseHandler extends DatabaseHandler
         $insert->bindParam('zipCode', $zipCode, DatabaseConnection::PARAM_STR);
         $insert->bindParam('phone', $phone, DatabaseConnection::PARAM_STR);
         $insert->bindParam('fax', $fax, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('createUser', $createUser, DatabaseConnection::PARAM_INT);
-        $insert->bindParam('createDate', $createDate, DatabaseConnection::PARAM_STR);
         $insert->execute();
 
         $id = $handler->getLastInsertId();

@@ -33,10 +33,6 @@ class Location extends Model
     private $building;
     private $code;
     private $name;
-    private $createDate;
-    private $createUser;
-    private $lastModifyDate;
-    private $lastModifyUser;
 
     /**
      * @return int
@@ -68,38 +64,6 @@ class Location extends Model
     public function getName(): string
     {
         return $this->name;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCreateDate(): string
-    {
-        return $this->createDate;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCreateUser(): int
-    {
-        return $this->createUser;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLastModifyDate(): string
-    {
-        return $this->lastModifyDate;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLastModifyUser(): string
-    {
-        return $this->lastModifyUser;
     }
 
     /**

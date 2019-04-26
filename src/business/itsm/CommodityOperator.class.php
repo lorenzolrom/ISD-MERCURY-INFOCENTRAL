@@ -16,7 +16,6 @@ namespace business\itsm;
 
 use business\AttributeOperator;
 use business\Operator;
-use controllers\CurrentUserController;
 use database\AttributeDatabaseHandler;
 use database\itsm\AssetDatabaseHandler;
 use database\itsm\CommodityDatabaseHandler;
@@ -24,6 +23,7 @@ use exceptions\EntryInUseException;
 use exceptions\ValidationException;
 use models\Attribute;
 use models\itsm\Commodity;
+use utilities\HistoryRecorder;
 
 class CommodityOperator extends Operator
 {
@@ -71,15 +71,21 @@ class CommodityOperator extends Operator
                                            ?float $unitCost): array
     {
         $errors = self::validateSubmission($code, $name, $commodityTypeCode, $assetTypeCode, $manufacturer, $model, $unitCost);
-        $user = CurrentUserController::currentUser();
 
-        if(empty($errors))
-            return array('id' => CommodityDatabaseHandler::insert($code, $name,
-                AttributeOperator::idFromCode('itsm', 'coty', $commodityTypeCode),
-                AttributeOperator::idFromCode('itsm', 'asty', $assetTypeCode), $manufacturer, $model,
-                (float)$unitCost, $user->getId(), date('Y-m-d'), $user->getId(), date('Y-m-d'))->getId());
+        if(!empty($errors))
+            return array('errors' => $errors);
 
-        return array('errors' => $errors);
+        $commodityType = AttributeOperator::idFromCode('itsm', 'coty', $commodityTypeCode);
+        $assetType = AttributeOperator::idFromCode('itsm', 'asty', $assetTypeCode);
+        $unitCost = (float)$unitCost;
+
+        $commodity = CommodityDatabaseHandler::insert($code, $name,
+            $commodityType, $assetType, $manufacturer, $model, $unitCost);
+
+        HistoryRecorder::writeHistory('ITSM_Commodity', HistoryRecorder::CREATE, $commodity->getId(),
+            $commodity, array('code' => $code, 'name' => $name, 'commodityType' => $commodityType, 'assetType' => $assetType, 'manufacturer' => $manufacturer, 'model' => $model, 'unitCost' => $unitCost));
+
+        return array('id' => $commodity->getId());
     }
 
     /**
@@ -101,15 +107,21 @@ class CommodityOperator extends Operator
                                            ?string $model, ?float $unitCost): array
     {
         $errors = self::validateSubmission($code, $name, $commodityTypeCode, $assetTypeCode, $manufacturer, $model, $unitCost, $commodity);
-        $user = CurrentUserController::currentUser();
 
-        if(empty($errors))
-            return array('id' => CommodityDatabaseHandler::update($commodity->getId(), $code, $name,
-                AttributeOperator::idFromCode('itsm', 'coty', $commodityTypeCode),
-                AttributeOperator::idFromCode('itsm', 'asty', $assetTypeCode), $manufacturer, $model,
-                (float)$unitCost, $user->getId(), date('Y-m-d'))->getId());
+        if(!empty($errors))
+            return array('errors' => $errors);
 
-        return array('errors' => $errors);
+        $commodityType = AttributeOperator::idFromCode('itsm', 'coty', $commodityTypeCode);
+        $assetType = AttributeOperator::idFromCode('itsm', 'asty', $assetTypeCode);
+        $unitCost = (float)$unitCost;
+
+        $newCommodity = CommodityDatabaseHandler::update($commodity->getId(), $code, $name,
+            $commodityType,$assetType, $manufacturer, $model, $unitCost);
+
+        HistoryRecorder::writeHistory('ITSM_Commodity', HistoryRecorder::CREATE, $commodity->getId(),
+            $commodity, array('code' => $code, 'name' => $name, 'commodityType' => $commodityType, 'assetType' => $assetType, 'manufacturer' => $manufacturer, 'model' => $model, 'unitCost' => $unitCost));
+
+        return array('id' => $newCommodity->getId());
     }
 
     /**
@@ -117,11 +129,15 @@ class CommodityOperator extends Operator
      * @return bool
      * @throws EntryInUseException
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     public static function deleteCommodity(Commodity $commodity): bool
     {
         if(AssetDatabaseHandler::isCommodityTypeInUse($commodity->getId()))
             throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE);
+
+        HistoryRecorder::writeHistory('ITSM_Commodity', HistoryRecorder::DELETE, $commodity->getId(), $commodity);
 
         return CommodityDatabaseHandler::delete($commodity->getId());
     }

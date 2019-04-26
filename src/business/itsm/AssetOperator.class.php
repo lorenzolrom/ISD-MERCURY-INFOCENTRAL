@@ -19,6 +19,7 @@ use controllers\CurrentUserController;
 use database\itsm\AssetDatabaseHandler;
 use exceptions\ValidationException;
 use models\itsm\Asset;
+use utilities\HistoryRecorder;
 
 class AssetOperator extends Operator
 {
@@ -79,9 +80,9 @@ class AssetOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        $user = CurrentUserController::currentUser();
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, array('assetTag' => $assetTag, 'serialNumber' => $serialNumber, 'notes' => $notes));
 
-        return array('id' => AssetDatabaseHandler::update($asset->getId(), $assetTag, $serialNumber, $notes, date('Y-m-d'), $user->getId()));
+        return array('id' => AssetDatabaseHandler::update($asset->getId(), $assetTag, $serialNumber, $notes));
     }
 
     /**
@@ -123,6 +124,69 @@ class AssetOperator extends Operator
 
         try{Asset::validateSerialNumber($serialNumber);}
         catch(ValidationException $e){$errors[] = $e->getMessage();}
+
+        return $errors;
+    }
+
+    /**
+     * @param Asset $asset
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    public static function verifyAsset(Asset $asset): array
+    {
+        $errors = self::assetCanBeModified($asset);
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        AssetDatabaseHandler::updateVerified($asset->getId(), 1, date('Y-m-d'), CurrentUserController::currentUser()->getId());
+
+        return $errors;
+    }
+
+    /**
+     * @param Asset $asset
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function unVerifyAsset(Asset $asset): array
+    {
+        $errors = self::assetCanBeModified($asset);
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        AssetDatabaseHandler::updateVerified($asset->getId(), 0, NULL, NULL);
+
+        return array('errors' => $errors);
+    }
+
+    public static function linkToParent(Asset $asset, ?string $parentAssetTag): array
+    {
+        return array();
+    }
+
+    public static function unlinkFromParent(Asset $asset): array
+    {
+        return array();
+    }
+
+    /**
+     * @param Asset $asset
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private static function assetCanBeModified(Asset $asset): array
+    {
+        $errors = array();
+
+        if(AssetDatabaseHandler::isAssetDiscarded($asset->getAssetTag()))
+            $errors[] = 'Asset is discarded';
 
         return $errors;
     }

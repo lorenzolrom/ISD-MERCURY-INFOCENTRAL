@@ -80,11 +80,7 @@ class ApplicationController extends Controller
             'lifeExpectancy' => $application->getLifeExpectancy(),
             'dataVolume' => $application->getDataVolume(),
             'authType' => $application->getAuthType(),
-            'port' => $application->getPort(),
-            'createUser' => $application->getCreateUser(),
-            'createDate' => $application->getCreateDate(),
-            'lastModifyUser' => $application->getLastModifyUser(),
-            'lastModifyDate' => $application->getLastModifyDate()
+            'port' => $application->getPort()
         );
 
         return new HTTPResponse(HTTPResponse::OK, $data);

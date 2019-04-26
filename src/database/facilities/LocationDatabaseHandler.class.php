@@ -33,7 +33,7 @@ class LocationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT `id`, `building`, `code`, `name`, `createDate`, `createUser`, `lastModifyDate`, `lastModifyUser` FROM `FacilitiesCore_Location` WHERE `id` = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `building`, `code`, `name` FROM `FacilitiesCore_Location` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -78,29 +78,19 @@ class LocationDatabaseHandler extends DatabaseHandler
      * @param int $building
      * @param string $code
      * @param string $name
-     * @param string $createDate
-     * @param int $createUser
-     * @param string $lastModifyDate
-     * @param int $lastModifyUser
      * @return Location
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function create(int $building, string $code, string $name, string $createDate, int $createUser, string $lastModifyDate, int $lastModifyUser): Location
+    public static function create(int $building, string $code, string $name): Location
     {
         $handler = new DatabaseConnection();
 
-        $create = $handler->prepare("INSERT INTO `FacilitiesCore_Location` (`building`, `code`, `name`, `createDate`, 
-                                     `createUser`, `lastModifyDate`, `lastModifyUser`) VALUES (:building, :code, :name, 
-                                     :createDate, :createUser, :lastModifyDate, :lastModifyUser)");
+        $create = $handler->prepare("INSERT INTO `FacilitiesCore_Location` (`building`, `code`, `name`) VALUES (:building, :code, :name)");
 
         $create->bindParam('building', $building, DatabaseConnection::PARAM_INT);
         $create->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $create->bindParam('name', $name, DatabaseConnection::PARAM_STR);
-        $create->bindParam('createDate', $createDate, DatabaseConnection::PARAM_STR);
-        $create->bindParam('createUser', $createUser, DatabaseConnection::PARAM_INT);
-        $create->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
-        $create->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
         $create->execute();
 
         $id = $handler->getLastInsertId();
@@ -114,22 +104,18 @@ class LocationDatabaseHandler extends DatabaseHandler
      * @param int $id
      * @param string $code
      * @param string $name
-     * @param string $lastModifyDate
-     * @param int $lastModifyUser
      * @return Location
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function update(int $id, string $code, string $name, string $lastModifyDate, int $lastModifyUser): Location
+    public static function update(int $id, string $code, string $name): Location
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE `FacilitiesCore_Location` SET `code` = :code, `name` = :name, `lastModifyDate` = :lastModifyDate, `lastModifyUser` = :lastModifyUser WHERE `id` = :id");
+        $update = $handler->prepare("UPDATE `FacilitiesCore_Location` SET `code` = :code, `name` = :name WHERE `id` = :id");
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
         $update->execute();
 
         $handler->close();

@@ -31,7 +31,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT `id`, `number`, `name`, `description`, `owner`, `type`, `status`, `publicFacing`, `lifeExpectancy`, `dataVolume`, `authType`, `port`, `createUser`, `createDate`, `lastModifyUser`, `lastModifyDate` FROM `ITSM_Application` WHERE `id` = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `number`, `name`, `description`, `owner`, `type`, `status`, `publicFacing`, `lifeExpectancy`, `dataVolume`, `authType`, `port` FROM `ITSM_Application` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 

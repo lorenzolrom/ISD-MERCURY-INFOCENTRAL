@@ -15,9 +15,10 @@ namespace models\itsm;
 
 use business\itsm\WarehouseOperator;
 use exceptions\ValidationException;
+use models\Model;
 use utilities\Validator;
 
-class Warehouse extends ITSMModel
+class Warehouse extends Model
 {
     private const MESSAGES = array(
         'CODE_LENGTH' => 'Warehouse code must be between 1 and 32 characters',

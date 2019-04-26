@@ -30,10 +30,6 @@ class Application extends Model
     private $dataVolume;
     private $authType;
     private $port;
-    private $createUser;
-    private $createDate;
-    private $lastModifyUser;
-    private $lastModifyDate;
 
     /**
      * @return int
@@ -130,38 +126,5 @@ class Application extends Model
     {
         return $this->port;
     }
-
-    /**
-     * @return int
-     */
-    public function getCreateUser(): int
-    {
-        return $this->createUser;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCreateDate(): string
-    {
-        return $this->createDate;
-    }
-
-    /**
-     * @return int
-     */
-    public function getLastModifyUser(): int
-    {
-        return $this->lastModifyUser;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLastModifyDate(): string
-    {
-        return $this->lastModifyDate;
-    }
-
 
 }

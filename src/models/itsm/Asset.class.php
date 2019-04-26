@@ -16,8 +16,9 @@ namespace models\itsm;
 
 use database\itsm\AssetDatabaseHandler;
 use exceptions\ValidationException;
+use models\Model;
 
-class Asset extends ITSMModel
+class Asset extends Model
 {
     private const MESSAGES = array(
         'TAG_IN_USE' => 'Asset # is in use',

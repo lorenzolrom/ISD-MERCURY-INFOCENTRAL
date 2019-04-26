@@ -14,7 +14,9 @@
 namespace models\itsm;
 
 
-class ReturnOrder extends ITSMModel
+use models\Model;
+
+class ReturnOrder extends Model
 {
     private $id;
     private $number;

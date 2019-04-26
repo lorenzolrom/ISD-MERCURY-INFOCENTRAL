@@ -14,7 +14,9 @@
 namespace models\itsm;
 
 
-class PurchaseOrder extends ITSMModel
+use models\Model;
+
+class PurchaseOrder extends Model
 {
     private $id;
     private $number;

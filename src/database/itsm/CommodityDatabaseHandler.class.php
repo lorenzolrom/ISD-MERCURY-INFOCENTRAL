@@ -32,8 +32,7 @@ class CommodityDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $select = $handler->prepare("SELECT `id`, `code`, `name`, `commodityType`, `assetType`, `manufacturer`, 
-                                           `model`, `unitCost`, `createUser`, `createDate`, `lastModifyDate`, 
-                                          `lastModifyUser` FROM `ITSM_Commodity` WHERE `id` = ? LIMIT 1");
+                                           `model`, `unitCost` FROM `ITSM_Commodity` WHERE `id` = ? LIMIT 1");
 
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
@@ -105,24 +104,18 @@ class CommodityDatabaseHandler extends DatabaseHandler
      * @param string $manufacturer
      * @param string $model
      * @param float $unitCost
-     * @param int $createUser
-     * @param string $createDate
-     * @param int $lastModifyUser
-     * @param string $lastModifyDate
      * @return Commodity
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
     public static function insert(string $code, string $name, int $commodityType, int $assetType, string $manufacturer,
-                                  string $model, float $unitCost, int $createUser, string $createDate,
-                                  int $lastModifyUser, string $lastModifyDate): Commodity
+                                  string $model, float $unitCost): Commodity
     {
         $handler = new DatabaseConnection();
 
         $insert = $handler->prepare("INSERT INTO `ITSM_Commodity` (`code`, `name`, `commodityType`, `assetType`, 
-                            `manufacturer`, `model`, `unitCost`, `createUser`, `createDate`, `lastModifyDate`, `lastModifyUser`) 
-                            VALUES (:code, :name, :commodityType, :assetType, :manufacturer, :model, :unitCost, 
-                                    :createUser, :createDate, :lastModifyDate, :lastModifyUser)");
+                            `manufacturer`, `model`, `unitCost`) 
+                            VALUES (:code, :name, :commodityType, :assetType, :manufacturer, :model, :unitCost)");
 
         $insert->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
@@ -131,10 +124,6 @@ class CommodityDatabaseHandler extends DatabaseHandler
         $insert->bindParam('manufacturer', $manufacturer, DatabaseConnection::PARAM_STR);
         $insert->bindParam('model', $model, DatabaseConnection::PARAM_STR);
         $insert->bindParam('unitCost', $unitCost, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('createUser', $createUser, DatabaseConnection::PARAM_INT);
-        $insert->bindParam('createDate', $createDate, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
-        $insert->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
         $insert->execute();
 
         $id = $handler->getLastInsertId();
@@ -153,22 +142,18 @@ class CommodityDatabaseHandler extends DatabaseHandler
      * @param string $manufacturer
      * @param string $model
      * @param float $unitCost
-     * @param int $lastModifyUser
-     * @param string $lastModifyDate
      * @return Commodity
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
     public static function update(int $id, string $code, string $name, int $commodityType, int $assetType,
-                                  string $manufacturer, string $model, float $unitCost, int $lastModifyUser,
-                                  string $lastModifyDate): Commodity
+                                  string $manufacturer, string $model, float $unitCost): Commodity
     {
         $handler = new DatabaseConnection();
 
         $update = $handler->prepare("UPDATE `ITSM_Commodity` SET `code` = :code, `name` = :name, 
                             `commodityType` = :commodityType, `assetType` = :assetType, `manufacturer` = :manufacturer, 
-                            `model` = :model, `unitCost` = :unitCost, `lastModifyUser` = :lastModifyUser, 
-                            `lastModifyDate` = :lastModifyDate WHERE `id` = :id");
+                            `model` = :model, `unitCost` = :unitCost WHERE `id` = :id");
 
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
@@ -178,8 +163,6 @@ class CommodityDatabaseHandler extends DatabaseHandler
         $update->bindParam('manufacturer', $manufacturer, DatabaseConnection::PARAM_STR);
         $update->bindParam('model', $model, DatabaseConnection::PARAM_STR);
         $update->bindParam('unitCost', $unitCost, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
-        $update->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
         $update->execute();
 
         $handler->close();

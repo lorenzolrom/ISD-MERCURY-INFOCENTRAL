@@ -31,7 +31,7 @@ class RegistrarDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT `id`, `code`, `name`, `url`, `phone`, `createDate`, `createUser`, `lastModifyDate`, `lastModifyUser` FROM `ITSM_Registrar` WHERE `id` = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `code`, `name`, `url`, `phone` FROM `ITSM_Registrar` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 

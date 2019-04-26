@@ -15,7 +15,6 @@ namespace controllers\facilities;
 
 
 use business\facilities\BuildingOperator;
-use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
@@ -93,11 +92,7 @@ class BuildingController extends Controller
             'streetAddress' => $building->getStreetAddress(),
             'city' => $building->getCity(),
             'state' => $building->getState(),
-            'zipCode' => $building->getZipCode(),
-            'createDate' => $building->getCreateDate(),
-            'createUser' => UserOperator::usernameFromId($building->getCreateUser()),
-            'lastModifyDate' => $building->getLastModifyDate(),
-            'lastModifyUser' => UserOperator::usernameFromId($building->getLastModifyUser())
+            'zipCode' => $building->getZipCode()
         );
 
         return new HTTPResponse(HTTPResponse::OK, $data);
@@ -181,7 +176,7 @@ class BuildingController extends Controller
 
         $errors = BuildingOperator::updateBuilding($building, $fields['code'], $fields['name'], $fields['streetAddress'], $fields['city'], $fields['state'], $fields['zipCode']);
 
-        if(!empty($errors))
+        if(isset($errors['errors']))
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);

@@ -15,7 +15,6 @@ namespace business\itsm;
 
 
 use business\Operator;
-use controllers\CurrentUserController;
 use database\itsm\AssetDatabaseHandler;
 use database\itsm\PurchaseOrderDatabaseHandler;
 use database\itsm\ReturnOrderDatabaseHandler;
@@ -23,6 +22,7 @@ use database\itsm\WarehouseDatabaseHandler;
 use exceptions\EntryInUseException;
 use exceptions\ValidationException;
 use models\itsm\Warehouse;
+use utilities\HistoryRecorder;
 
 class WarehouseOperator extends Operator
 {
@@ -65,9 +65,11 @@ class WarehouseOperator extends Operator
             return array('errors' => $errors);
 
 
-        $user = CurrentUserController::currentUser();
+        $warehouse = WarehouseDatabaseHandler::insert($code, $name, 0);
 
-        return array('id' => WarehouseDatabaseHandler::insert($code, $name, 0, $user->getId(), date('Y-m-d'))->getId());
+        HistoryRecorder::writeHistory('ITSM_Warehouse', HistoryRecorder::CREATE, $warehouse->getId(), $warehouse, array('code' => $code, 'name' => $name));
+
+        return array('id' => $warehouse->getId());
     }
 
     /**
@@ -86,9 +88,11 @@ class WarehouseOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        $user = CurrentUserController::currentUser();
+        HistoryRecorder::writeHistory('ITSM_Warehouse', HistoryRecorder::MODIFY, $warehouse->getId(), $warehouse, array('code' => $code, 'name' => $name));
 
-        return array('id' => WarehouseDatabaseHandler::update($warehouse->getId(), $code, $name, $user->getId(), date('Y-m-d'))->getId());
+        $warehouse = WarehouseDatabaseHandler::update($warehouse->getId(), $code, $name);
+
+        return array('id' => $warehouse->getId());
     }
 
     /**
@@ -96,6 +100,8 @@ class WarehouseOperator extends Operator
      * @return bool
      * @throws EntryInUseException
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     public static function deleteWarehouse(Warehouse $warehouse): bool
     {
@@ -105,6 +111,8 @@ class WarehouseOperator extends Operator
         {
             throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE);
         }
+
+        HistoryRecorder::writeHistory('ITSM_Warehouse', HistoryRecorder::DELETE, $warehouse->getId(), $warehouse);
 
         return WarehouseDatabaseHandler::delete($warehouse->getId());
     }

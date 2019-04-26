@@ -15,12 +15,12 @@ namespace business\facilities;
 
 
 use business\Operator;
-use controllers\CurrentUserController;
 use database\facilities\BuildingDatabaseHandler;
 use database\facilities\LocationDatabaseHandler;
 use exceptions\ValidationException;
 use models\facilities\Building;
 use models\facilities\Location;
+use utilities\HistoryRecorder;
 
 class LocationOperator extends Operator
 {
@@ -50,10 +50,14 @@ class LocationOperator extends Operator
      * @return bool
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryInUseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     public static function deleteLocation(Location $location): bool
     {
         LocationDatabaseHandler::delete($location->getId());
+
+        HistoryRecorder::writeHistory('FacilitiesCore_Location', HistoryRecorder::DELETE, $location->getId(), $location);
 
         return TRUE;
     }
@@ -70,12 +74,15 @@ class LocationOperator extends Operator
     public static function createLocation(Building $building, ?string $code, ?string $name): array
     {
         $errors = self::validateSubmission($building, $code, $name);
-        $user = CurrentUserController::currentUser();
 
         if(!empty($errors))
             return array('errors' => $errors);
 
-        return array('id' => LocationDatabaseHandler::create($building->getId(), $code, $name, date('Y-m-d'), $user->getId(), date('Y-m-d'), $user->getId())->getId());
+        $location = LocationDatabaseHandler::create($building->getId(), $code, $name);
+
+        HistoryRecorder::writeHistory('FacilitiesCore_Location', HistoryRecorder::CREATE, $location->getId(), $location, array('building' => $building->getId(), 'code' => $code, 'name' => $name));
+
+        return array('id' => $location->getId());
 
     }
 
@@ -92,13 +99,15 @@ class LocationOperator extends Operator
     {
         $building = BuildingOperator::getBuilding($location->getBuilding());
         $errors = self::validateSubmission($building, $code, $name, $location);
-        $user = CurrentUserController::currentUser();
 
         if(!empty($errors))
             return array('errors' => $errors);
 
-        LocationDatabaseHandler::update($location->getId(), $code, $name, date('Y-m-d'), $user->getId());
-        return array();
+        $newLocation = LocationDatabaseHandler::update($location->getId(), $code, $name);
+
+        HistoryRecorder::writeHistory('FacilitiesCore_Location', HistoryRecorder::MODIFY, $location->getId(), $location, array('building' => $building->getId(), 'code' => $code, 'name' => $name));
+
+        return array('id' => $newLocation->getId());
     }
 
     /**

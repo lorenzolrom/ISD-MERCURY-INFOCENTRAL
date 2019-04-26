@@ -15,7 +15,6 @@ namespace controllers\itsm;
 
 
 use business\itsm\VendorOperator;
-use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
@@ -90,11 +89,7 @@ class VendorController extends Controller
             'state' => $vendor->getState(),
             'zipCode' => $vendor->getZipCode(),
             'phone' => $vendor->getPhone(),
-            'fax' => $vendor->getFax(),
-            'createDate' => $vendor->getCreateDate(),
-            'createUser' => UserOperator::usernameFromId($vendor->getCreateUser()),
-            'lastModifyDate' => $vendor->getLastModifyDate(),
-            'lastModifyUser' => UserOperator::usernameFromId($vendor->getLastModifyUser())
+            'fax' => $vendor->getFax()
         ));
     }
 

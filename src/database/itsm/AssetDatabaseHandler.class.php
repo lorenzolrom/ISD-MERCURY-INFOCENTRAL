@@ -32,8 +32,8 @@ class AssetDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $select = $handler->prepare("SELECT `id`, `commodity`, `warehouse`, `assetTag`, `parent`, `location`, `serialNumber`, 
-                                            `manufactureDate`, `purchaseOrder`, `notes`, `createDate`, `discarded`, `discardDate`, 
-                                            `lastModifyDate`, `lastModifyUser`, `verified`, `verifyDate`, `verifyUser` FROM 
+                                            `manufactureDate`, `purchaseOrder`, `notes`, `discarded`, `discardDate`, 
+                                            `verified`, `verifyDate`, `verifyUser` FROM 
                                             `ITSM_Asset` WHERE `assetTag` = ? LIMIT 1");
 
         $select->bindParam(1, $assetTag, DatabaseConnection::PARAM_INT);
@@ -42,7 +42,7 @@ class AssetDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         if($select->getRowCount() !== 1)
-            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::PRIMARY_KEY_NOT_FOUND], EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
 
         return $select->fetchObject("models\itsm\Asset");
     }
@@ -258,6 +258,28 @@ class AssetDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $assetTag
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function isAssetDiscarded(int $assetTag): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `discarded` FROM `ITSM_Asset` WHERE `assetTag` = ? LIMIT 1');
+        $select->bindParam(1, $assetTag, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+
+        return $select->fetchColumn() == 1;
+    }
+
+    /**
      * @param string $parentAssetTag
      * @return Asset[]
      * @throws \exceptions\DatabaseException
@@ -291,27 +313,67 @@ class AssetDatabaseHandler extends DatabaseHandler
      * @param int $assetTag
      * @param string $serialNumber
      * @param string|null $notes
-     * @param string $lastModifyDate
-     * @param int $lastModifyUser
      * @return Asset
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      */
-    public static function update(int $id, int $assetTag, string $serialNumber, ?string $notes, string $lastModifyDate, int $lastModifyUser): Asset
+    public static function update(int $id, int $assetTag, string $serialNumber, ?string $notes): Asset
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE `ITSM_Asset` SET `assetTag` = :assetTag, `serialNumber` = :serialNumber, `notes` = :notes, `lastModifyUser` = :lastModifyUser, `lastModifyDate` = :lastModifyDate WHERE `id` = :id");
+        $update = $handler->prepare("UPDATE `ITSM_Asset` SET `assetTag` = :assetTag, `serialNumber` = :serialNumber, `notes` = :notes WHERE `id` = :id");
         $update->bindParam('assetTag', $assetTag, DatabaseConnection::PARAM_INT);
         $update->bindParam('serialNumber', $serialNumber, DatabaseConnection::PARAM_STR);
         $update->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
-        $update->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->execute();
 
         $handler->close();
 
         return self::selectByAssetTag(self::selectAssetTagById($id));
+    }
+
+    /**
+     * @param int $id
+     * @param int $verified
+     * @param string|null $verifyDate
+     * @param int|null $verifyUser
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function updateVerified(int $id, int $verified, ?string $verifyDate, ?int $verifyUser): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `ITSM_Asset` SET `verified` = :verified, `verifyDate` = :verifyDate, `verifyUser` = :verifyUser WHERE `id` = :id');
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->bindParam('verified', $verified, DatabaseConnection::PARAM_INT);
+        $update->bindParam('verifyDate', $verifyDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('verifyUser', $verifyUser, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return $update->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @param int|null $parent
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function updateParent(int $id, ?int $parent): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `ITSM_Asset` SET `parent` = :parent WHERE `id` = :id');
+        $update->bindParam('parent', $parent, DatabaseConnection::PARAM_INT);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return $update->getRowCount() === 1;
     }
 }

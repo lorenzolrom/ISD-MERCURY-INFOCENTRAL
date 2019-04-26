@@ -31,8 +31,7 @@ class WarehouseDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT `id`, `code`, `name`, `closed`, `createDate`, `createUser`, `lastModifyDate`,
-                                          `lastModifyUser` FROM `ITSM_Warehouse` WHERE `id` = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `code`, `name`, `closed` FROM `ITSM_Warehouse` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -105,25 +104,18 @@ class WarehouseDatabaseHandler extends DatabaseHandler
      * @param string $code
      * @param string $name
      * @param int $closed
-     * @param int $createUser
-     * @param string $createDate
      * @return Warehouse
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(string $code, string $name, int $closed, int $createUser, string $createDate): Warehouse
+    public static function insert(string $code, string $name, int $closed): Warehouse
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare("INSERT INTO `ITSM_Warehouse` (code, name, createDate, createUser, closed,
-                              lastModifyDate, lastModifyUser) VALUES (:code, :name, :createDate, :createUser, :closed, :lastModifyDate, :lastModifyUser)");
+        $insert = $handler->prepare("INSERT INTO `ITSM_Warehouse` (code, name, closed) VALUES (:code, :name, :closed)");
         $insert->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
         $insert->bindParam('closed', $closed, DatabaseConnection::PARAM_INT);
-        $insert->bindParam('createUser', $createUser, DatabaseConnection::PARAM_INT);
-        $insert->bindParam('createDate', $createDate, DatabaseConnection::PARAM_STR);
-        $insert->bindParam('lastModifyUser', $createUser, DatabaseConnection::PARAM_INT);
-        $insert->bindParam('lastModifyDate', $createDate, DatabaseConnection::PARAM_STR);
         $insert->execute();
 
         $id = $handler->getLastInsertId();
@@ -137,22 +129,17 @@ class WarehouseDatabaseHandler extends DatabaseHandler
      * @param int $id
      * @param string $code
      * @param string $name
-     * @param int $lastModifyUser
-     * @param string $lastModifyDate
      * @return Warehouse
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function update(int $id, string $code, string $name, int $lastModifyUser, string $lastModifyDate): Warehouse
+    public static function update(int $id, string $code, string $name): Warehouse
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE `ITSM_Warehouse` SET `code` = :code, `name` = :name,
-                            `lastModifyDate` = :lastModifyDate, `lastModifyUser` = :lastModifyUser WHERE `id` = :id");
+        $update = $handler->prepare("UPDATE `ITSM_Warehouse` SET `code` = :code, `name` = :name WHERE `id` = :id");
         $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->execute();
 

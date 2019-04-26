@@ -16,7 +16,6 @@ namespace controllers\facilities;
 
 use business\facilities\BuildingOperator;
 use business\facilities\LocationOperator;
-use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
@@ -77,11 +76,7 @@ class LocationController extends Controller
             'buildingCode' => $building->getCode(),
             'buildingName' => $building->getName(),
             'code' => $location->getCode(),
-            'name' => $location->getName(),
-            'createDate' => $location->getCreateDate(),
-            'createUser' => UserOperator::usernameFromId($location->getCreateUser()),
-            'lastModifyDate' => $location->getLastModifyDate(),
-            'lastModifyUser' => UserOperator::usernameFromId($location->getLastModifyUser())
+            'name' => $location->getName()
         );
 
         return new HTTPResponse(HTTPResponse::OK, $data);

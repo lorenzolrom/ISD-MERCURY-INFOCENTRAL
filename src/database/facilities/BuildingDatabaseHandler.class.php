@@ -32,7 +32,7 @@ class BuildingDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT id, code, name, streetAddress, city, state, zipCode, createDate, createUser, lastModifyDate, lastModifyUser FROM FacilitiesCore_Building WHERE id = ? LIMIT 1");
+        $select = $handler->prepare("SELECT id, code, name, streetAddress, city, state, zipCode FROM FacilitiesCore_Building WHERE id = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -93,20 +93,18 @@ class BuildingDatabaseHandler extends DatabaseHandler
      * @param string $city
      * @param string $state
      * @param string $zipCode
-     * @param string $lastModifyDate
-     * @param int $lastModifyUser
      * @return Building
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
     public static function update(int $id, string $code, string $name, string $streetAddress, string $city,
-                                  string $state, string $zipCode, string $lastModifyDate, int $lastModifyUser): Building
+                                  string $state, string $zipCode): Building
     {
         $handler = new DatabaseConnection();
 
         $update = $handler->prepare("UPDATE FacilitiesCore_Building SET code = :code, name = :name, 
-                                   streetAddress = :streetAddress, city = :city, state = :state, zipCode = :zipCode, 
-                                   lastModifyDate = :lastModifyDate, lastModifyUser = :lastModifyUser WHERE id = :id");
+                                   streetAddress = :streetAddress, city = :city, state = :state, zipCode = :zipCode 
+                                   WHERE id = :id");
 
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
@@ -115,8 +113,6 @@ class BuildingDatabaseHandler extends DatabaseHandler
         $update->bindParam('city', $city, DatabaseConnection::PARAM_STR);
         $update->bindParam('state', $state, DatabaseConnection::PARAM_STR);
         $update->bindParam('zipCode', $zipCode, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
-        $update->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
         $update->execute();
 
         $handler->close();
@@ -131,24 +127,18 @@ class BuildingDatabaseHandler extends DatabaseHandler
      * @param string $city
      * @param string $state
      * @param string $zipCode
-     * @param string $createDate
-     * @param int $createUser
-     * @param string $lastModifyDate
-     * @param int $lastModifyUser
      * @return Building
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
     public static function create(string $code, string $name, string $streetAddress, string $city, string $state,
-                                  string $zipCode, string $createDate, int $createUser, string $lastModifyDate,
-                                  int $lastModifyUser): Building
+                                  string $zipCode): Building
     {
         $handler = new DatabaseConnection();
 
         $create = $handler->prepare("INSERT INTO FacilitiesCore_Building (code, name, streetAddress, city, state, 
-                                     zipCode, createDate, createUser, lastModifyDate, lastModifyUser) VALUES (:code, 
-                                      :name, :streetAddress, :city, :state, :zipCode, :createDate, :createUser, 
-                                      :lastModifyDate, :lastModifyUser)");
+                                     zipCode) VALUES (:code, 
+                                      :name, :streetAddress, :city, :state, :zipCode)");
 
         $create->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $create->bindParam('name', $name, DatabaseConnection::PARAM_STR);
@@ -156,10 +146,6 @@ class BuildingDatabaseHandler extends DatabaseHandler
         $create->bindParam('city', $city, DatabaseConnection::PARAM_STR);
         $create->bindParam('state', $state, DatabaseConnection::PARAM_STR);
         $create->bindParam('zipCode', $zipCode, DatabaseConnection::PARAM_STR);
-        $create->bindParam('createDate', $createDate, DatabaseConnection::PARAM_STR);
-        $create->bindParam('createUser', $createUser, DatabaseConnection::PARAM_INT);
-        $create->bindParam('lastModifyDate', $lastModifyDate, DatabaseConnection::PARAM_STR);
-        $create->bindParam('lastModifyUser', $lastModifyUser, DatabaseConnection::PARAM_INT);
         $create->execute();
 
         $id = $handler->getLastInsertId();

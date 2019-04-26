@@ -17,9 +17,10 @@ namespace models\itsm;
 use business\AttributeOperator;
 use business\itsm\CommodityOperator;
 use exceptions\ValidationException;
+use models\Model;
 use utilities\Validator;
 
-class Commodity extends ITSMModel
+class Commodity extends Model
 {
     private const MESSAGES = array(
         'CODE_LENGTH' => 'Commodity code must be between 1 and 32 characters',

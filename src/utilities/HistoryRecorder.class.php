@@ -55,7 +55,7 @@ class HistoryRecorder
             if(!isset($oldValues[$varName]))
                 $oldValues[$varName] = NULL;
 
-            if($newValues[$varName] !== $oldValues[$varName] OR $action === self::CREATE)
+            if($newValues[$varName] != $oldValues[$varName] OR $action === self::CREATE)
                 HistoryDatabaseHandler::insertHistoryItem($record->getId(), $varName, $oldValues[$varName], $newValues[$varName]);
         }
 

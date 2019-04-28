@@ -22,6 +22,7 @@ use controllers\facilities\LocationController;
 use controllers\itsm\ApplicationController;
 use controllers\itsm\AssetController;
 use controllers\itsm\CommodityController;
+use controllers\itsm\HostController;
 use controllers\itsm\RegistrarController;
 use controllers\itsm\VendorController;
 use controllers\itsm\VHostController;
@@ -51,6 +52,8 @@ class ControllerFactory
         $route = $request->next();
         switch($route)
         {
+            case "hosts":
+                return new HostController($request);
             case "commodities":
                 return new CommodityController($request);
             case "warehouses":

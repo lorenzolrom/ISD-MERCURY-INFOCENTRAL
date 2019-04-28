@@ -147,7 +147,7 @@ class WarehouseOperator extends Operator
      * @return array
      * @throws \exceptions\DatabaseException
      */
-    public static function validateSubmission(?string $code, ?string $name, ?Warehouse $warehouse = NULL): array
+    private static function validateSubmission(?string $code, ?string $name, ?Warehouse $warehouse = NULL): array
     {
         $errors = array();
 

@@ -96,4 +96,22 @@ class VHostDatabaseHandler extends DatabaseHandler
 
         return $vhosts;
     }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function doVHostsReferenceHost(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_VHost` WHERE `host` = ? LIMIT 1');
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
 }

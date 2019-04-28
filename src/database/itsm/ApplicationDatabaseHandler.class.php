@@ -154,4 +154,22 @@ class ApplicationDatabaseHandler extends DatabaseHandler
 
         return $apps;
     }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function doApplicationsReferenceHost(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `application` FROM `ITSM_Application_Host` WHERE `host` = ? LIMIT 1');
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
 }

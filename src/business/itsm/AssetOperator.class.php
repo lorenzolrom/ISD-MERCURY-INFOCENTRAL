@@ -96,6 +96,16 @@ class AssetOperator extends Operator
     }
 
     /**
+     * @param string|null $assetTag
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function idFromAssetTag(?string $assetTag): ?int
+    {
+        return AssetDatabaseHandler::selectIdByAssetTag((string)$assetTag);
+    }
+
+    /**
      * @param string $assetTag
      * @return Asset[]
      * @throws \exceptions\DatabaseException

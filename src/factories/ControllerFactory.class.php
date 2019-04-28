@@ -19,6 +19,7 @@ use controllers\Controller;
 use controllers\CurrentUserController;
 use controllers\facilities\BuildingController;
 use controllers\facilities\LocationController;
+use controllers\HistoryController;
 use controllers\itsm\ApplicationController;
 use controllers\itsm\AssetController;
 use controllers\itsm\CommodityController;
@@ -72,6 +73,8 @@ class ControllerFactory
                 return new BuildingController($request);
             case "locations":
                 return new LocationController($request);
+            case "history":
+                return new HistoryController($request);
             case "users":
                 return new UserController($request);
             case "roles":

@@ -44,17 +44,19 @@ class HistoryDatabaseHandler extends DatabaseHandler
     /**
      * @param string $table
      * @param string $index
+     * @param string $action
      * @param string $username
      * @return History[]
      * @throws \exceptions\DatabaseException
      */
-    public static function select(string $table, string $index = '%', string $username = '%'): array
+    public static function select(string $table, string $index = '%', string $action = '%', string $username = '%'): array
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id` FROM `History` WHERE `table` LIKE :table AND `index` LIKE :index AND `username` LIKE :username');
+        $select = $handler->prepare('SELECT `id` FROM `History` WHERE `table` LIKE :table AND `index` LIKE :index AND `action` LIKE :action AND `username` LIKE :username');
         $select->bindParam('table', $table, DatabaseConnection::PARAM_STR);
         $select->bindParam('index', $index, DatabaseConnection::PARAM_STR);
+        $select->bindParam('action', $action, DatabaseConnection::PARAM_STR);
         $select->bindParam('username', $username, DatabaseConnection::PARAM_STR);
         $select->execute();
 

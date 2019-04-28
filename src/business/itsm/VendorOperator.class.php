@@ -109,11 +109,11 @@ class VendorOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        $newVendor = VendorDatabaseHandler::update($vendor->getId(), $code, $name, $streetAddress, $city, $state, $zipCode, $phone, $fax);
-
         HistoryRecorder::writeHistory('ITSM_Vendor', HistoryRecorder::MODIFY, $vendor->getId(), $vendor,
             array('code' => $code, 'name' => $name, 'streetAddress' => $streetAddress, 'city' => $city,
                 'state' => $state, 'zipCode' => $zipCode, 'phone' => $phone, 'fax' => $fax));
+
+        $newVendor = VendorDatabaseHandler::update($vendor->getId(), $code, $name, $streetAddress, $city, $state, $zipCode, $phone, $fax);
 
         return array('id' => $newVendor->getId());
     }

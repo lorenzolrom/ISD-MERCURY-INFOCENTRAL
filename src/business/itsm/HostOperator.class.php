@@ -117,13 +117,13 @@ class HostOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        $newHost = HostDatabaseHandler::update($host->getId(), AssetDatabaseHandler::selectIdByAssetTag($assetTag), $ipAddress,
-            $macAddress, $systemName, $systemCPU, $systemRAM, $systemOS, $systemDomain);
-
         HistoryRecorder::writeHistory('ITSM_Host', HistoryRecorder::MODIFY, $host->getId(), $host,
             array('asset' => AssetDatabaseHandler::selectIdByAssetTag($assetTag), 'ipAddress' => $ipAddress,
                 'macAddress' => $macAddress, 'systemName' => $systemName, 'systemCPU' => $systemCPU,
                 'systemRAM' => $systemRAM, 'systemOS' => $systemOS, 'systemDomain' => $systemDomain));
+
+        $newHost = HostDatabaseHandler::update($host->getId(), AssetDatabaseHandler::selectIdByAssetTag($assetTag), $ipAddress,
+            $macAddress, $systemName, $systemCPU, $systemRAM, $systemOS, $systemDomain);
 
         return array('id' => $newHost->getId());
     }

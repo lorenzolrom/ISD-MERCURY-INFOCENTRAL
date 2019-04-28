@@ -83,11 +83,11 @@ class BuildingOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        $newBuilding = BuildingDatabaseHandler::update($building->getId(), $code, $name, $streetAddress, $city, $state, $zipCode);
-
         HistoryRecorder::writeHistory('FacilitiesCore_Building', HistoryRecorder::MODIFY, $building->getId(), $building,
             array('code' => $code, 'name' => $name, 'streetAddress' => $streetAddress, 'city' => $city,
                 'state' => $state, 'zipCode' => $zipCode));
+
+        $newBuilding = BuildingDatabaseHandler::update($building->getId(), $code, $name, $streetAddress, $city, $state, $zipCode);
 
         return array('id' => $newBuilding->getId());
     }
@@ -102,12 +102,12 @@ class BuildingOperator extends Operator
      */
     public static function deleteBuilding(Building $building): bool
     {
+        HistoryRecorder::writeHistory('FacilitiesCore_Building', HistoryRecorder::DELETE, $building->getId(), $building);
+
         // Delete locations
         LocationDatabaseHandler::deleteByBuilding($building->getId());
 
         BuildingDatabaseHandler::delete($building->getId());
-
-        HistoryRecorder::writeHistory('FacilitiesCore_Building', HistoryRecorder::DELETE, $building->getId(), $building);
 
         return TRUE;
     }

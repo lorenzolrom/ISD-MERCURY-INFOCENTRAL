@@ -55,9 +55,9 @@ class LocationOperator extends Operator
      */
     public static function deleteLocation(Location $location): bool
     {
-        LocationDatabaseHandler::delete($location->getId());
-
         HistoryRecorder::writeHistory('FacilitiesCore_Location', HistoryRecorder::DELETE, $location->getId(), $location);
+
+        LocationDatabaseHandler::delete($location->getId());
 
         return TRUE;
     }
@@ -103,9 +103,9 @@ class LocationOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        $newLocation = LocationDatabaseHandler::update($location->getId(), $code, $name);
-
         HistoryRecorder::writeHistory('FacilitiesCore_Location', HistoryRecorder::MODIFY, $location->getId(), $location, array('building' => $building->getId(), 'code' => $code, 'name' => $name));
+
+        $newLocation = LocationDatabaseHandler::update($location->getId(), $code, $name);
 
         return array('id' => $newLocation->getId());
     }

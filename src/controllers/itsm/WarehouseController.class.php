@@ -34,7 +34,7 @@ class WarehouseController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission("itsm_inventory-warehouses-r");
+        CurrentUserController::validatePermission(array("itsm_inventory-warehouses-r", 'itsm_inventory-assets-r'));
 
         $param = $this->request->next();
 

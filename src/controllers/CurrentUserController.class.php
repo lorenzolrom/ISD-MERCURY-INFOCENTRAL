@@ -14,6 +14,7 @@
 namespace controllers;
 
 
+use business\BulletinOperator;
 use business\NotificationOperator;
 use business\TokenOperator;
 use business\UserOperator;
@@ -145,6 +146,7 @@ class CurrentUserController extends Controller
                 case "permissions": return $this->getCurrentUserPermissions();
                 case "unreadNotificationCount": return $this->getUnreadNotificationCount();
                 case "unreadNotifications": return $this->getUnreadNotifications();
+                case "bulletins": return $this->getUserBulletins();
                 case "notifications":
                     $param = $this->request->next();
                     switch($param)
@@ -365,5 +367,26 @@ class CurrentUserController extends Controller
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function getUserBulletins(): HTTPResponse
+    {
+        $data = array();
+
+        foreach(BulletinOperator::getBulletinsByUser(CurrentUserController::currentUser()) as $bulletin)
+        {
+            $data[] = array(
+                'title' => $bulletin->getTitle(),
+                'message' => $bulletin->getMessage(),
+                'type' => $bulletin->getType()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
     }
 }

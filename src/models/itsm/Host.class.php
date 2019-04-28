@@ -26,6 +26,7 @@ class Host extends Model
         'ASSET_TAG' => 'Asset tag not found',
         'IP_ADDRESS_LENGTH' => 'I.P. must be between 1 and 39 characters',
         'IP_ADDRESS_IN_USE' => 'I.P. address is already in use',
+        'IP_ADDRESS_INVALID' => 'I.P. address is not valid',
         'MAC_ADDRESS_LENGTH' => 'MAC address must be 17 characters',
         'MAC_ADDRESS_FORMAT' => 'MAC address must consist of letters, numbers, and - only',
         'MAC_ADDRESS_IN_USE' => 'MAC address is already in use',
@@ -153,8 +154,12 @@ class Host extends Model
         if(HostDatabaseHandler::isIPAddressInUse($ipAddress))
             throw new ValidationException(self::MESSAGES['IP_ADDRESS_IN_USE'], ValidationException::VALUE_ALREADY_TAKEN);
 
+        // Greater than one character
         if(strlen($ipAddress) < 1)
             throw new ValidationException(self::MESSAGES['IP_ADDRESS_LENGTH'], ValidationException::VALUE_TOO_SHORT);
+
+        if(!filter_var($ipAddress, FILTER_VALIDATE_IP))
+            throw new ValidationException(self::MESSAGES['IP_ADDRESS_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
 
         // not greater than 39 characters
         if(strlen($ipAddress) > 39)

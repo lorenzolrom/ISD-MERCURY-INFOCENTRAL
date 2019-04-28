@@ -115,7 +115,7 @@ class CommodityOperator extends Operator
         $assetType = AttributeOperator::idFromCode('itsm', 'asty', $assetTypeCode);
         $unitCost = (float)$unitCost;
 
-        HistoryRecorder::writeHistory('ITSM_Commodity', HistoryRecorder::CREATE, $commodity->getId(),
+        HistoryRecorder::writeHistory('ITSM_Commodity', HistoryRecorder::MODIFY, $commodity->getId(),
             $commodity, array('code' => $code, 'name' => $name, 'commodityType' => $commodityType, 'assetType' => $assetType, 'manufacturer' => $manufacturer, 'model' => $model, 'unitCost' => $unitCost));
 
         $newCommodity = CommodityDatabaseHandler::update($commodity->getId(), $code, $name,

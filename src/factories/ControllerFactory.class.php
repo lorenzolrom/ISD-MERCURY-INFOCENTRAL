@@ -13,24 +13,7 @@
 
 namespace factories;
 
-
-use controllers\AuthenticateController;
 use controllers\Controller;
-use controllers\CurrentUserController;
-use controllers\facilities\BuildingController;
-use controllers\facilities\LocationController;
-use controllers\HistoryController;
-use controllers\itsm\ApplicationController;
-use controllers\itsm\AssetController;
-use controllers\itsm\CommodityController;
-use controllers\itsm\HostController;
-use controllers\itsm\RegistrarController;
-use controllers\itsm\VendorController;
-use controllers\itsm\VHostController;
-use controllers\itsm\WarehouseController;
-use controllers\PermissionController;
-use controllers\RoleController;
-use controllers\UserController;
 use exceptions\ControllerNotFoundException;
 use models\HTTPRequest;
 
@@ -43,6 +26,24 @@ use models\HTTPRequest;
  */
 class ControllerFactory
 {
+    private const CONTROLLERS = array(
+        'hosts' => 'controllers\itsm\HostController',
+        'commodities' => 'controllers\itsm\CommodityController',
+        'warehouses' => 'controllers\itsm\WarehouseController',
+        'assets' => 'controllers\itsm\AssetController',
+        'vhosts' => 'controllers\itsm\VHostController',
+        'registrars' => 'controllers\itsm\RegistrarController',
+        'applications' => 'controllers\itsm\ApplicationController',
+        'buildings' => 'controllers\facilities\BuildingController',
+        'locations' => 'controllers\facilities\LocationController',
+        'history' => 'controllers\HistoryController',
+        'users' => 'controllers\UserController',
+        'roles' => 'controllers\RoleController',
+        'permissions' => 'controllers\PermissionController',
+        'currentUser' => 'controllers\CurrentUserController',
+        'authenticate' => 'controllers\AuthenticateController'
+    );
+
     /**
      * @param HTTPRequest $request
      * @return Controller
@@ -51,42 +52,12 @@ class ControllerFactory
     public static function getController(HTTPRequest $request): Controller
     {
         $route = $request->next();
-        switch($route)
-        {
-            case "hosts":
-                return new HostController($request);
-            case "commodities":
-                return new CommodityController($request);
-            case "warehouses":
-                return new WarehouseController($request);
-            case "vendors":
-                return new VendorController($request);
-            case "assets":
-                return new AssetController($request);
-            case "vhosts":
-                return new VHostController($request);
-            case "registrars":
-                return new RegistrarController($request);
-            case "applications":
-                return new ApplicationController($request);
-            case "buildings":
-                return new BuildingController($request);
-            case "locations":
-                return new LocationController($request);
-            case "history":
-                return new HistoryController($request);
-            case "users":
-                return new UserController($request);
-            case "roles":
-                return new RoleController($request);
-            case "permissions":
-                return new PermissionController($request);
-            case "currentUser":
-                return new CurrentUserController($request);
-            case "authenticate":
-                return new AuthenticateController($request);
-            default:
-                throw new ControllerNotFoundException($route);
-        }
+
+        if(!in_array($route, array_keys(self::CONTROLLERS)))
+            throw new ControllerNotFoundException($route);
+
+        $controller = self::CONTROLLERS[$route];
+
+        return new $controller($request);
     }
 }

@@ -153,7 +153,7 @@ class VendorOperator extends Operator
      * @return array
      * @throws \exceptions\DatabaseException
      */
-    public static function validateSubmission(?string $code, ?string $name, ?string $streetAddress, ?string $city,
+    private static function validateSubmission(?string $code, ?string $name, ?string $streetAddress, ?string $city,
                                               ?string $state, ?string $zipCode, ?string $phone, ?string $fax,
                                               ?Vendor $vendor = NULL): array
     {

@@ -24,12 +24,14 @@ use models\HTTPResponse;
 class RegistrarController extends Controller
 {
     const SEARCH_FIELDS = array('code', 'name');
+    const FIELDS = array('code', 'name', 'url', 'phone');
 
     /**
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\EntryInUseException
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -54,7 +56,17 @@ class RegistrarController extends Controller
             {
                 case "search":
                     return $this->getSearchResult(TRUE);
+                default:
+                    return $this->createRegistrar();
             }
+        }
+        else if($this->request->method() == HTTPRequest::DELETE)
+        {
+            return $this->deleteRegistrar($param);
+        }
+        else if($this->request->method() == HTTPRequest::PUT)
+        {
+            return $this->updateRegistrar($param);
         }
 
         return NULL;
@@ -75,14 +87,71 @@ class RegistrarController extends Controller
             'code' => $registrar->getCode(),
             'name' => $registrar->getName(),
             'url' => $registrar->getUrl(),
-            'phone' => $registrar->getPhone(),
-            'createDate' => $registrar->getCreateDate(),
-            'createUser' => $registrar->getCreateUser(),
-            'lastModifyDate' => $registrar->getLastModifyDate(),
-            'lastModifyUser' => $registrar->getLastModifyUser()
+            'phone' => $registrar->getPhone()
         );
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function createRegistrar(): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_web-registrars-w'));
+
+        $args = $this->getFormattedBody(self::FIELDS, TRUE);
+
+        $errors = RegistrarOperator::createRegistrar($args['code'], $args['name'], $args['url'], $args['phone']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function updateRegistrar(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_web-registrars-w'));
+
+        $registrar = RegistrarOperator::getRegistrar((int) $param);
+
+        $args = $this->getFormattedBody(self::FIELDS, TRUE);
+
+        $errors = RegistrarOperator::updateRegistrar($registrar, $args['code'], $args['name'], $args['url'], $args['phone']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryInUseException
+     * @throws \exceptions\SecurityException
+     */
+    private function deleteRegistrar(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_web-registrars-w'));
+
+        $registrar = RegistrarOperator::getRegistrar((int) $param);
+        RegistrarOperator::deleteRegistrar($registrar);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**

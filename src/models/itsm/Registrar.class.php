@@ -14,19 +14,26 @@
 namespace models\itsm;
 
 
+use database\itsm\RegistrarDatabaseHandler;
+use exceptions\ValidationException;
 use models\Model;
+use utilities\Validator;
 
 class Registrar extends Model
 {
+    private const MESSAGES = array(
+        'CODE_LENGTH' => 'Code must be between 1 and 32 characters',
+        'CODE_INVALID' => 'Code must consist of letters, numbers, and - only',
+        'CODE_TAKEN' => 'Code is already taken',
+        'NAME_REQUIRED' => 'Name is required',
+        'PHONE_LENGTH' => 'Phone must be no greater than 20 characters'
+    );
+
     private $id;
     private $code;
     private $name;
     private $url;
     private $phone;
-    private $createDate;
-    private $createUser;
-    private $lastModifyDate;
-    private $lastModifyUser;
 
     /**
      * @return int
@@ -69,36 +76,64 @@ class Registrar extends Model
     }
 
     /**
-     * @return string
+     * @param string|null $code
+     * @return bool
+     * @throws ValidationException
+     * @throws \exceptions\DatabaseException
      */
-    public function getCreateDate(): string
+    public static function validateCode(?string $code): bool
     {
-        return $this->createDate;
+        // not null
+        if($code === NULL)
+            throw new ValidationException(self::MESSAGES['CODE_LENGTH'], ValidationException::VALUE_IS_NULL);
+
+        // not taken
+        if(RegistrarDatabaseHandler::codeInUse($code))
+            throw new ValidationException(self::MESSAGES['CODE_TAKEN'], ValidationException::VALUE_ALREADY_TAKEN);
+
+        // greater than 1 character
+        if(strlen($code) < 1)
+            throw new ValidationException(self::MESSAGES['CODE_LENGTH'], ValidationException::VALUE_TOO_SHORT);
+
+        // no greater than 32
+        if(strlen($code) > 32)
+            throw new ValidationException(self::MESSAGES['CODE_LENGTH'], ValidationException::VALUE_TOO_LONG);
+
+        // valid characters
+        if(!Validator::alnumDashOnly($code))
+            throw new ValidationException(self::MESSAGES['CODE_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
+
+        return TRUE;
     }
 
     /**
-     * @return int
+     * @param string|null $name
+     * @return bool
+     * @throws ValidationException
      */
-    public function getCreateUser(): int
+    public static function validateName(?string $name): bool
     {
-        return $this->createUser;
+        if($name === NULL)
+            throw new ValidationException(self::MESSAGES['NAME_REQUIRED'], ValidationException::VALUE_IS_NULL);
+
+        // at least 1 character
+        if(strlen($name) < 1)
+            throw new ValidationException(self::MESSAGES['NAME_REQUIRED'], ValidationException::VALUE_TOO_SHORT);
+
+        return TRUE;
     }
 
     /**
-     * @return string
+     * @param string|null $phone
+     * @return bool
+     * @throws ValidationException
      */
-    public function getLastModifyDate(): string
+    public static function validatePhone(?string $phone): bool
     {
-        return $this->lastModifyDate;
+        // If set, no greater than 20 characters
+        if($phone !== NULL AND strlen($phone) > 20)
+            throw new ValidationException(self::MESSAGES['PHONE_LENGTH'], ValidationException::VALUE_TOO_LONG);
+
+        return TRUE;
     }
-
-    /**
-     * @return int
-     */
-    public function getLastModifyUser(): int
-    {
-        return $this->lastModifyUser;
-    }
-
-
 }

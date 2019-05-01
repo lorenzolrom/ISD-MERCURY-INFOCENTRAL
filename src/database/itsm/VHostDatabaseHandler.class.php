@@ -114,4 +114,22 @@ class VHostDatabaseHandler extends DatabaseHandler
 
         return $select->getRowCount() === 1;
     }
+
+    /**
+     * @param int $registrarId
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function doVHostsReferenceRegistrar(int $registrarId): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $check = $handler->prepare('SELECT `id` FROM `ITSM_VHost` WHERE `registrar` = ? LIMIT 1');
+        $check->bindParam(1, $registrarId, DatabaseConnection::PARAM_INT);
+        $check->execute();
+
+        $handler->close();
+
+        return $check->getRowCount() === 1;
+    }
 }

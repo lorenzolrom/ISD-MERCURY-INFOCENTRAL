@@ -27,15 +27,27 @@ use models\HTTPRequest;
 class ControllerFactory
 {
     private const CONTROLLERS = array(
+        // Devices
         'hosts' => 'controllers\itsm\HostController',
+
+        // Inventory
         'commodities' => 'controllers\itsm\CommodityController',
         'warehouses' => 'controllers\itsm\WarehouseController',
+        'vendors' => 'controllers\itsm\VendorController',
         'assets' => 'controllers\itsm\AssetController',
+
+        // Web
         'vhosts' => 'controllers\itsm\VHostController',
         'registrars' => 'controllers\itsm\RegistrarController',
+
+        // AIT
         'applications' => 'controllers\itsm\ApplicationController',
+
+        // Facilities
         'buildings' => 'controllers\facilities\BuildingController',
         'locations' => 'controllers\facilities\LocationController',
+
+        // Core
         'history' => 'controllers\HistoryController',
         'users' => 'controllers\UserController',
         'roles' => 'controllers\RoleController',

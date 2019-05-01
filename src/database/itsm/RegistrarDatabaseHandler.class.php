@@ -73,4 +73,94 @@ class RegistrarDatabaseHandler extends DatabaseHandler
 
         return $results;
     }
+
+    /**
+     * @param string $code
+     * @param string $name
+     * @param string $url
+     * @param string $phone
+     * @return Registrar
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(string $code, string $name, string $url, string $phone): Registrar
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `ITSM_Registrar` (`code`, `name`, `url`, `phone`) VALUES (:code, :name, :url, :phone)');
+        $insert->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('url', $url, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('phone', $phone, DatabaseConnection::PARAM_STR);
+        $insert->execute();
+
+        $id = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @param string $code
+     * @param string $name
+     * @param string $url
+     * @param string $phone
+     * @return Registrar
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(int $id, string $code, string $name, string $url, string $phone): Registrar
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `ITSM_Registrar` SET `code` = :code, `name` = :name, `url` = :url, `phone` = :phone WHERE `id` = :id');
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $update->bindParam('url', $url, DatabaseConnection::PARAM_STR);
+        $update->bindParam('phone', $phone, DatabaseConnection::PARAM_STR);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function delete(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `ITSM_Registrar` WHERE `id` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param string $code
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function codeInUse(string $code): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_Registrar` WHERE `code` = ? LIMIT 1');
+        $select->bindParam(1, $code, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
 }

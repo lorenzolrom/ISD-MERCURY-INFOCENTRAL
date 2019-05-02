@@ -147,6 +147,18 @@ class HostOperator extends Operator
     }
 
     /**
+     * @param int $id
+     * @return string
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getDisplayNameById(int $id): string
+    {
+        $attributes = HostDatabaseHandler::selectIPAndNameById($id);
+
+        return $attributes['systemName'] . " ({$attributes['ipAddress']})";
+    }
+
+    /**
      * @param string|null $assetTag
      * @param string|null $ipAddress
      * @param string|null $macAddress

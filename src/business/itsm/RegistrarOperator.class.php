@@ -125,6 +125,16 @@ class RegistrarOperator extends Operator
     }
 
     /**
+     * @param int $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function nameFromId(int $id): ?string
+    {
+        return RegistrarDatabaseHandler::selectNameById($id);
+    }
+
+    /**
      * @param string|null $code
      * @param string|null $name
      * @param string|null $url

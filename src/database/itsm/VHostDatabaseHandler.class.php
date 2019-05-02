@@ -49,17 +49,17 @@ class VHostDatabaseHandler extends DatabaseHandler
      * @param string $domain
      * @param string $subdomain
      * @param string $name
-     * @param string $assetTag
+     * @param string $host
      * @param string $registrarCode
      * @param mixed $status
      * @return VHost[]
      * @throws \exceptions\DatabaseException
      */
-    public static function select(string $domain = "%", string $subdomain = "%", string $name = "%", string $assetTag = "%",
+    public static function select(string $domain = "%", string $subdomain = "%", string $name = "%", string $host = "%",
                                   string $registrarCode = "%", $status = array()): array
     {
         $query = "SELECT id FROM ITSM_VHost WHERE domain LIKE :domain AND subdomain LIKE :subdomain AND name LIKE :name 
-                            AND host IN (SELECT id FROM ITSM_Host WHERE asset IN (SELECT id FROM ITSM_Asset WHERE assetTag LIKE :assetTag) 
+                            AND (host IN (SELECT id FROM ITSM_Host WHERE asset IN (SELECT id FROM ITSM_Asset WHERE assetTag LIKE :host) OR host IN(SELECT `id` FROM `ITSM_Host` WHERE `ipAddress` LIKE :host)) 
                             AND registrar IN (SELECT id FROM ITSM_Registrar WHERE code LIKE :registrarCode))";
 
         // Add status filter, if it is supplied
@@ -78,7 +78,7 @@ class VHostDatabaseHandler extends DatabaseHandler
         $select->bindParam('subdomain', $subdomain, DatabaseConnection::PARAM_STR);
         $select->bindParam('name', $name, DatabaseConnection::PARAM_STR);
         $select->bindParam('registrarCode', $registrarCode, DatabaseConnection::PARAM_STR);
-        $select->bindParam('assetTag', $assetTag, DatabaseConnection::PARAM_STR);
+        $select->bindParam('host', $host, DatabaseConnection::PARAM_STR);
         $select->execute();
 
         $handler->close();
@@ -95,6 +95,108 @@ class VHostDatabaseHandler extends DatabaseHandler
         }
 
         return $vhosts;
+    }
+
+    /**
+     * @param string $domain
+     * @param string $subdomain
+     * @param string $name
+     * @param int $host
+     * @param int $registrar
+     * @param int $status
+     * @param float $renewCost
+     * @param string $notes
+     * @param string $registerDate
+     * @param string $expireDate
+     * @return VHost
+     * @throws \exceptions\DatabaseException
+     * @throws EntryNotFoundException
+     */
+    public static function insert(string $domain, string $subdomain, string $name, int $host, int $registrar,
+                                  int $status, float $renewCost, string $notes, string $registerDate,
+                                  ?string $expireDate): VHost
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `ITSM_VHost` (`domain`, `subdomain`, `name`, `host`, `registrar`, `status`, `renewCost`, `notes`, `registerDate`, `expireDate`) 
+                                            VALUES (:domain, :subdomain, :name, :host, :registrar, :status, :renewCost, :notes, :registerDate, :expireDate)');
+        $insert->bindParam('domain', $domain, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('subdomain', $subdomain, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('host', $host, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('registrar', $registrar, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('status', $status, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('renewCost', $renewCost, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('registerDate', $registerDate, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('expireDate', $expireDate, DatabaseConnection::PARAM_STR);
+
+        $id = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @param string $domain
+     * @param string $subdomain
+     * @param string $name
+     * @param int $host
+     * @param int $registrar
+     * @param int $status
+     * @param float $renewCost
+     * @param string $notes
+     * @param string $registerDate
+     * @param string|null $expireDate
+     * @return VHost
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(int $id, string $domain, string $subdomain, string $name, int $host, int $registrar,
+                                  int $status, float $renewCost, string $notes, string $registerDate,
+                                  ?string $expireDate): VHost
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `ITSM_VHost` SET `domain` = :domain, `subdomain` = :subdomain, 
+                        `name` = :name, `host` = :host, `registrar` = :registrar, `status` = :status, 
+                        `renewCost` = :renewCost, `notes` = :notes, `registerDate` = :registerDate, `expireDate` = :expireDate WHERE `id` = :id');
+        $update->bindParam('domain', $domain, DatabaseConnection::PARAM_STR);
+        $update->bindParam('subdomain', $subdomain, DatabaseConnection::PARAM_STR);
+        $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $update->bindParam('host', $host, DatabaseConnection::PARAM_INT);
+        $update->bindParam('registrar', $registrar, DatabaseConnection::PARAM_INT);
+        $update->bindParam('status', $status, DatabaseConnection::PARAM_INT);
+        $update->bindParam('renewCost', $renewCost, DatabaseConnection::PARAM_STR);
+        $update->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
+        $update->bindParam('registerDate', $registerDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('expireDate', $expireDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function delete(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `ITSM_VHost` WHERE `id` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
     }
 
     /**
@@ -126,6 +228,26 @@ class VHostDatabaseHandler extends DatabaseHandler
 
         $check = $handler->prepare('SELECT `id` FROM `ITSM_VHost` WHERE `registrar` = ? LIMIT 1');
         $check->bindParam(1, $registrarId, DatabaseConnection::PARAM_INT);
+        $check->execute();
+
+        $handler->close();
+
+        return $check->getRowCount() === 1;
+    }
+
+    /**
+     * @param string $domain
+     * @param string $subdomain
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function isSubdomainInUseOnDomain(string $domain, string $subdomain): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $check = $handler->prepare('SELECT `id` FROM `ITSM_VHost` WHERE `subdomain` = :subdomain AND `domain` = :domain LIMIT 1');
+        $check->bindParam('subdomain', $subdomain, DatabaseConnection::PARAM_STR);
+        $check->bindParam('domain', $domain, DatabaseConnection::PARAM_STR);
         $check->execute();
 
         $handler->close();

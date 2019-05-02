@@ -244,4 +244,26 @@ class AttributeDatabaseHandler
             throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE);
         }
     }
+
+    /**
+     * @param string $extension
+     * @param string $type
+     * @param string $code
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function isCodeValid(string $extension, string $type, string $code): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $check = $handler->prepare('SELECT `id` FROM `Attribute` WHERE `extension` = :extension AND `type` = :type AND `code` = :code LIMIT 1');
+        $check->bindParam('extension', $extension, DatabaseConnection::PARAM_STR);
+        $check->bindParam('type', $type, DatabaseConnection::PARAM_STR);
+        $check->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $check->execute();
+
+        $handler->close();
+
+        return $check->getRowCount() === 1;
+    }
 }

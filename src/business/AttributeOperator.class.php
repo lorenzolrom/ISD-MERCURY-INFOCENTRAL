@@ -133,7 +133,7 @@ class AttributeOperator extends Operator
      * @return array
      * @throws \exceptions\DatabaseException
      */
-    public static function validateSubmission(?string $extension, ?string $type, ?string $code, ?string $name, ?Attribute $attribute = NULL): array
+    private static function validateSubmission(?string $extension, ?string $type, ?string $code, ?string $name, ?Attribute $attribute = NULL): array
     {
         $errors = array();
 

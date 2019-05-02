@@ -14,6 +14,9 @@
 namespace controllers\itsm;
 
 
+use business\AttributeOperator;
+use business\itsm\HostOperator;
+use business\itsm\RegistrarOperator;
 use business\itsm\VHostOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
@@ -23,7 +26,8 @@ use models\HTTPResponse;
 
 class VHostController extends Controller
 {
-    private const SEARCH_FIELDS = array('domain', 'subdomain', 'name', 'assetTag', 'registrarCode', 'status');
+    private const SEARCH_FIELDS = array('domain', 'subdomain', 'name', 'host', 'registrarCode', 'status');
+    private const FIELDS = array('domain', 'subdomain', 'name', 'host', 'status', 'registrar', 'notes', 'registerDate', 'expireDate');
 
     /**
      * @return HTTPResponse|null
@@ -41,6 +45,8 @@ class VHostController extends Controller
         {
             switch ($param)
             {
+                case 'statuses':
+                    return $this->getStatuses();
                 case null:
                     return $this->getSearchResult();
                 default:
@@ -73,6 +79,7 @@ class VHostController extends Controller
             'id' => $vhost->getId(),
             'subdomain' => $vhost->getSubdomain(),
             'domain' => $vhost->getDomain(),
+            'name' => $vhost->getName(),
             'host' => $vhost->getHost(),
             'registrar' => $vhost->getRegistrar(),
             'status' => $vhost->getStatus(),
@@ -86,10 +93,33 @@ class VHostController extends Controller
     }
 
     /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     */
+    private function getStatuses(): HTTPResponse
+    {
+        $statuses = VHostOperator::getStatuses();
+
+        $data = array();
+
+        foreach($statuses as $status)
+        {
+            $data[] = array(
+                'id' => $status->getId(),
+                'code' => $status->getCode(),
+                'name' => $status->getName()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
      * @param bool $search Should this be performed as a search using the request body?
      * @param bool $strict Should the search match query params exactly, or use wildcards?
      * @return HTTPResponse
      * @throws \exceptions\DatabaseException
+     * @throws EntryNotFoundException
      */
     private function getSearchResult(bool $search = FALSE, bool $strict = FALSE): HTTPResponse
     {
@@ -97,7 +127,7 @@ class VHostController extends Controller
         {
             $args = $this->getFormattedBody(self::SEARCH_FIELDS, $strict);
 
-            $vhosts = VHostOperator::search($args['domain'], $args['subdomain'], $args['name'], $args['assetTag'], $args['registrarCode'], $args['status']);
+            $vhosts = VHostOperator::search($args['domain'], $args['subdomain'], $args['name'], $args['host'], $args['registrarCode'], $args['status']);
         }
         else
             $vhosts = VHostOperator::search();
@@ -112,8 +142,11 @@ class VHostController extends Controller
                 'domain' => $vhost->getDomain(),
                 'name' => $vhost->getName(),
                 'registrar' => $vhost->getRegistrar(),
+                'registrarName' => RegistrarOperator::nameFromId($vhost->getRegistrar()),
                 'status' => $vhost->getStatus(),
-                'host' => $vhost->getHost()
+                'statusName' => AttributeOperator::nameFromId($vhost->getStatus()),
+                'host' => $vhost->getHost(),
+                'hostName' => HostOperator::getDisplayNameById($vhost->getHost())
             );
         }
 

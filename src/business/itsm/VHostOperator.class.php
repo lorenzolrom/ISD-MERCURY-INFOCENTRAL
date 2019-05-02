@@ -15,7 +15,9 @@ namespace business\itsm;
 
 
 use business\Operator;
+use database\AttributeDatabaseHandler;
 use database\itsm\VHostDatabaseHandler;
+use models\Attribute;
 use models\itsm\VHost;
 
 class VHostOperator extends Operator
@@ -35,15 +37,24 @@ class VHostOperator extends Operator
      * @param string $domain
      * @param string $subdomain
      * @param string $name
-     * @param string $assetTag
+     * @param string $host
      * @param string $registrarCode
      * @param array $status
      * @return VHost[]
      * @throws \exceptions\DatabaseException
      */
-    public static function search(string $domain = "%", string $subdomain = "%", string $name = "%", string $assetTag = "%",
+    public static function search(string $domain = "%", string $subdomain = "%", string $name = "%", string $host = "%",
                                   string $registrarCode = "%", $status = array()): array
     {
-        return VHostDatabaseHandler::select($domain, $subdomain, $name, $assetTag, $registrarCode, $status);
+        return VHostDatabaseHandler::select($domain, $subdomain, $name, $host, $registrarCode, $status);
+    }
+
+    /**
+     * @return Attribute[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getStatuses(): array
+    {
+        return AttributeDatabaseHandler::select('itsm', VHost::STATUS_ATTRIBUTE_TYPE);
     }
 }

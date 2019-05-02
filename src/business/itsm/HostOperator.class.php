@@ -159,6 +159,16 @@ class HostOperator extends Operator
     }
 
     /**
+     * @param int $id
+     * @return string
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getIPAddressById(int $id): string
+    {
+        return HostDatabaseHandler::selectIPAndNameById($id)['ipAddress'];
+    }
+
+    /**
      * @param string|null $assetTag
      * @param string|null $ipAddress
      * @param string|null $macAddress

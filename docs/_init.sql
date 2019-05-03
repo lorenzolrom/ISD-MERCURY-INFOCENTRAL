@@ -145,3 +145,51 @@ CREATE TABLE `HistoryItem` (
   KEY `history` (`history`),
   CONSTRAINT `HistoryItem_ibfk_1` FOREIGN KEY (`history`) REFERENCES `History` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+--
+-- DEFAULT DATA
+--
+
+-- Permissions
+INSERT INTO `Permission` (`code`) VALUES
+  ('facilitiescore_facilities-r'),
+  ('facilitiescore_facilities-w'),
+  ('itsmmonitor'),
+  ('itsmmonitor-hosts-r'),
+  ('itsmmonitor-hosts-w'),
+  ('itsmmonitor-services-r'),
+  ('itsmmonitor-services-w'),
+  ('itsm_ait'),
+  ('itsm_ait-apps-r'),
+  ('itsm_ait-apps-w'),
+  ('itsm_devices'),
+  ('itsm_devices-hosts-r'),
+  ('itsm_devices-hosts-w'),
+  ('itsm_inventory'),
+  ('itsm_inventory-assets-r'),
+  ('itsm_inventory-assets-w'),
+  ('itsm_inventory-commodities-r'),
+  ('itsm_inventory-commodities-w'),
+  ('itsm_inventory-discards-r'),
+  ('itsm_inventory-purchaseorders-r'),
+  ('itsm_inventory-purchaseorders-w'),
+  ('itsm_inventory-returns-r'),
+  ('itsm_inventory-returns-w'),
+  ('itsm_inventory-settings-rw'),
+  ('itsm_inventory-vendors-r'),
+  ('itsm_inventory-vendors-w'),
+  ('itsm_inventory-warehouses-r'),
+  ('itsm_inventory-warehouses-w'),
+  ('itsm_web'),
+  ('itsm_web-aliases-rw'),
+  ('itsm_web-registrars-r'),
+  ('itsm_web-registrars-w'),
+  ('itsm_web-vhosts-r'),
+  ('itsm_web-vhosts-w'),
+  ('itsm_weblogs'),
+  ('servicenter'),
+  ('servicenter_admin'),
+  ('servicenter_desk-r'),
+  ('servicenter_desk-w'),
+  ('servicenter_requests'),
+  ('settings');

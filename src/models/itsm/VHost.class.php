@@ -206,7 +206,7 @@ class VHost extends Model
             throw new ValidationException(self::MESSAGES['SUBDOMAIN_REQUIRED'], ValidationException::VALUE_IS_NULL);
 
         // valid domain characters
-        if(!Validator::validDomainName($subdomain))
+        if(!Validator::validDomainName($subdomain) AND $subdomain != '@')
             throw new ValidationException(self::MESSAGES['SUBDOMAIN_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
 
         return TRUE;

@@ -76,6 +76,8 @@ class VHostOperator extends Operator
      * @param string|null $registerDate
      * @param string|null $expireDate
      * @param string|null $notes
+     * @param string|null $webRoot
+     * @param string|null $logPath
      * @return array
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
@@ -83,7 +85,7 @@ class VHostOperator extends Operator
      */
     public static function createVHost(?string $subdomain, ?string $domain, ?string $name, ?string $hostIP,
                                  ?string $registrarCode, ?string $statusCode, ?string $renewCost, ?string $registerDate,
-                                 ?string $expireDate, ?string $notes): array
+                                 ?string $expireDate, ?string $notes,  ?string $webRoot, ?string $logPath): array
     {
         $errors = self::validateSubmission($subdomain, $domain, $name, $hostIP, $registrarCode, $statusCode, $renewCost,
             $registerDate, $expireDate);
@@ -94,6 +96,12 @@ class VHostOperator extends Operator
         if(strlen($expireDate) === 0)
             $expireDate = NULL;
 
+        if(strlen($webRoot) === 0)
+            $webRoot = NULL;
+
+        if(strlen($logPath) === 0)
+            $logPath = NULL;
+
         // Status code
         $status = AttributeOperator::idFromCode('itsm', 'wdns', $statusCode);
 
@@ -103,7 +111,7 @@ class VHostOperator extends Operator
         // Registrar
         $registrar = RegistrarDatabaseHandler::selectIdByCode($registrarCode);
 
-        $vhost = VHostDatabaseHandler::insert($domain, $subdomain, $name, $host, $registrar, $status, (float)$renewCost, (string)$notes, $registerDate, $expireDate);
+        $vhost = VHostDatabaseHandler::insert($domain, $subdomain, $name, $host, $registrar, $status, (float)$renewCost, (string)$notes, $registerDate, $expireDate, $webRoot, $logPath);
 
         HistoryRecorder::writeHistory('ITSM_VHost', HistoryRecorder::CREATE, $vhost->getId(), $vhost, array(
             'domain' => $domain,
@@ -115,7 +123,9 @@ class VHostOperator extends Operator
             'renewCost' => (float)$renewCost,
             'notes' => (string)$notes,
             'registerDate' => $registerDate,
-            'expireDate' => $expireDate
+            'expireDate' => $expireDate,
+            'webRoot' => $webRoot,
+            'logPath' => $logPath
         ));
 
         return array('id' => $vhost->getId());
@@ -133,6 +143,8 @@ class VHostOperator extends Operator
      * @param string|null $registerDate
      * @param string|null $expireDate
      * @param string|null $notes
+     * @param string|null $webRoot
+     * @param string|null $logPath
      * @return array
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
@@ -140,7 +152,7 @@ class VHostOperator extends Operator
      */
     public static function updateVHost(VHost $vhost, ?string $subdomain, ?string $domain, ?string $name, ?string $hostIP,
                                         ?string $registrarCode, ?string $statusCode, ?string $renewCost, ?string $registerDate,
-                                        ?string $expireDate, ?string $notes): array
+                                        ?string $expireDate, ?string $notes, ?string $webRoot, ?string $logPath): array
     {
         $errors = self::validateSubmission($subdomain, $domain, $name, $hostIP, $registrarCode, $statusCode, $renewCost,
             $registerDate, $expireDate, $vhost);
@@ -150,6 +162,12 @@ class VHostOperator extends Operator
 
         if(strlen($expireDate) === 0)
             $expireDate = NULL;
+
+        if(strlen($webRoot) === 0)
+            $webRoot = NULL;
+
+        if(strlen($logPath) === 0)
+            $logPath = NULL;
 
         // Status code
         $status = AttributeOperator::idFromCode('itsm', 'wdns', $statusCode);
@@ -170,10 +188,12 @@ class VHostOperator extends Operator
             'renewCost' => (float)$renewCost,
             'notes' => (string)$notes,
             'registerDate' => $registerDate,
-            'expireDate' => $expireDate
+            'expireDate' => $expireDate,
+            'webRoot' => $webRoot,
+            'logPath' => $logPath
         ));
 
-        $vhost = VHostDatabaseHandler::update($vhost->getId(), $domain, $subdomain, $name, $host, $registrar, $status, (float)$renewCost, (string)$notes, $registerDate, $expireDate);
+        $vhost = VHostDatabaseHandler::update($vhost->getId(), $domain, $subdomain, $name, $host, $registrar, $status, (float)$renewCost, (string)$notes, $registerDate, $expireDate, $webRoot, $logPath);
 
         return array('id' => $vhost->getId());
     }

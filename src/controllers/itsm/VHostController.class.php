@@ -27,7 +27,8 @@ use models\HTTPResponse;
 class VHostController extends Controller
 {
     private const SEARCH_FIELDS = array('domain', 'subdomain', 'name', 'host', 'registrar', 'status');
-    private const FIELDS = array('domain', 'subdomain', 'name', 'host', 'status', 'registrar', 'renewCost', 'notes', 'registerDate', 'expireDate');
+    private const FIELDS = array('domain', 'subdomain', 'name', 'host', 'status', 'registrar', 'renewCost', 'notes',
+        'webRoot', 'logPath', 'registerDate', 'expireDate');
 
     /**
      * @return HTTPResponse|null
@@ -98,6 +99,8 @@ class VHostController extends Controller
             'registrarName' => RegistrarOperator::nameFromId($vhost->getRegistrar()),
             'status' => AttributeOperator::codeFromId($vhost->getStatus()),
             'renewCost' => $vhost->getRenewCost(),
+            'webRoot' => $vhost->getWebRoot(),
+            'logPath' => $vhost->getLogPath(),
             'notes' => $vhost->getNotes(),
             'registerDate' => $vhost->getRegisterDate(),
             'expireDate' => $vhost->getExpireDate()
@@ -181,7 +184,7 @@ class VHostController extends Controller
 
         $errors = VHostOperator::createVHost($args['subdomain'], $args['domain'], $args['name'], $args['host'],
             $args['registrar'], $args['status'], $args['renewCost'], $args['registerDate'], $args['expireDate'],
-            $args['notes']);
+            $args['notes'], $args['webRoot'], $args['logPath']);
 
         if(isset($errors['errors']))
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
@@ -206,7 +209,7 @@ class VHostController extends Controller
 
         $errors = VHostOperator::updateVHost($vhost, $args['subdomain'], $args['domain'], $args['name'], $args['host'],
             $args['registrar'], $args['status'], $args['renewCost'], $args['registerDate'], $args['expireDate'],
-            $args['notes']);
+            $args['notes'], $args['webRoot'], $args['logPath']);
 
         if(isset($errors['errors']))
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);

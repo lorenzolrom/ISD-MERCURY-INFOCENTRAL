@@ -42,7 +42,11 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
         'emailUsername' => 'email_username',
         'emailPassword' => 'email_password',
         'emailFromAddress' => 'some@email.com',
-        'emailFromName' => 'Some Name'
+        'emailFromName' => 'Some Name',
+
+        // Specify paths allowed for web roots and logs
+        'validWebRootPaths' => array(),
+        'validWebLogPaths' => array()
 
     );
 }

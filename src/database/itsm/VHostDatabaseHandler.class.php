@@ -33,7 +33,7 @@ class VHostDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare("SELECT `id`, `domain`, `subdomain`, `name`, `host`, `registrar`, `status`, `renewCost`, `notes`, `registerDate`, `expireDate` FROM `ITSM_VHost` WHERE `id` = ? LIMIT 1");
+        $select = $handler->prepare("SELECT `id`, `domain`, `subdomain`, `name`, `host`, `registrar`, `status`, `renewCost`, `webRoot`, `logPath`, `notes`, `registerDate`, `expireDate` FROM `ITSM_VHost` WHERE `id` = ? LIMIT 1");
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -108,18 +108,20 @@ class VHostDatabaseHandler extends DatabaseHandler
      * @param string $notes
      * @param string $registerDate
      * @param string $expireDate
+     * @param string|null $webRoot
+     * @param string|null $logPath
      * @return VHost
-     * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
      */
     public static function insert(string $domain, string $subdomain, string $name, int $host, int $registrar,
                                   int $status, float $renewCost, string $notes, string $registerDate,
-                                  ?string $expireDate): VHost
+                                  ?string $expireDate, ?string $webRoot, ?string $logPath): VHost
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare('INSERT INTO `ITSM_VHost` (`domain`, `subdomain`, `name`, `host`, `registrar`, `status`, `renewCost`, `notes`, `registerDate`, `expireDate`) 
-                                            VALUES (:domain, :subdomain, :name, :host, :registrar, :status, :renewCost, :notes, :registerDate, :expireDate)');
+        $insert = $handler->prepare('INSERT INTO `ITSM_VHost` (`domain`, `subdomain`, `name`, `host`, `registrar`, `status`, `renewCost`, `notes`, `registerDate`, `expireDate`, `webRoot`, `logPath`) 
+                                            VALUES (:domain, :subdomain, :name, :host, :registrar, :status, :renewCost, :notes, :registerDate, :expireDate, :webRoot, :logPath)');
         $insert->bindParam('domain', $domain, DatabaseConnection::PARAM_STR);
         $insert->bindParam('subdomain', $subdomain, DatabaseConnection::PARAM_STR);
         $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
@@ -130,6 +132,8 @@ class VHostDatabaseHandler extends DatabaseHandler
         $insert->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
         $insert->bindParam('registerDate', $registerDate, DatabaseConnection::PARAM_STR);
         $insert->bindParam('expireDate', $expireDate, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('webRoot', $webRoot, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('logPath', $logPath, DatabaseConnection::PARAM_STR);
         $insert->execute();
 
         $id = $handler->getLastInsertId();
@@ -151,19 +155,22 @@ class VHostDatabaseHandler extends DatabaseHandler
      * @param string $notes
      * @param string $registerDate
      * @param string|null $expireDate
+     * @param string|null $webRoot
+     * @param string|null $logPath
      * @return VHost
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
     public static function update(int $id, string $domain, string $subdomain, string $name, int $host, int $registrar,
                                   int $status, float $renewCost, string $notes, string $registerDate,
-                                  ?string $expireDate): VHost
+                                  ?string $expireDate, ?string $webRoot, ?string $logPath): VHost
     {
         $handler = new DatabaseConnection();
 
         $update = $handler->prepare('UPDATE `ITSM_VHost` SET `domain` = :domain, `subdomain` = :subdomain, 
                         `name` = :name, `host` = :host, `registrar` = :registrar, `status` = :status, 
-                        `renewCost` = :renewCost, `notes` = :notes, `registerDate` = :registerDate, `expireDate` = :expireDate WHERE `id` = :id');
+                        `renewCost` = :renewCost, `notes` = :notes, `registerDate` = :registerDate, 
+                        `expireDate` = :expireDate, `webRoot` = :webRoot, `logPath` = :logPath WHERE `id` = :id');
         $update->bindParam('domain', $domain, DatabaseConnection::PARAM_STR);
         $update->bindParam('subdomain', $subdomain, DatabaseConnection::PARAM_STR);
         $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
@@ -174,6 +181,8 @@ class VHostDatabaseHandler extends DatabaseHandler
         $update->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
         $update->bindParam('registerDate', $registerDate, DatabaseConnection::PARAM_STR);
         $update->bindParam('expireDate', $expireDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('webRoot', $webRoot, DatabaseConnection::PARAM_STR);
+        $update->bindParam('logPath', $logPath, DatabaseConnection::PARAM_STR);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->execute();
 

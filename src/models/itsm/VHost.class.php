@@ -53,6 +53,8 @@ class VHost extends Model
     private $notes;
     private $registerDate;
     private $expireDate;
+    private $webRoot;
+    private $logPath;
 
     /**
      * @return int
@@ -141,6 +143,24 @@ class VHost extends Model
     {
         return $this->expireDate;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getWebRoot()
+    {
+        return $this->webRoot;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLogPath()
+    {
+        return $this->logPath;
+    }
+
+
 
     /**
      * @param string|null $domain

@@ -130,6 +130,7 @@ class VHostDatabaseHandler extends DatabaseHandler
         $insert->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
         $insert->bindParam('registerDate', $registerDate, DatabaseConnection::PARAM_STR);
         $insert->bindParam('expireDate', $expireDate, DatabaseConnection::PARAM_STR);
+        $insert->execute();
 
         $id = $handler->getLastInsertId();
 

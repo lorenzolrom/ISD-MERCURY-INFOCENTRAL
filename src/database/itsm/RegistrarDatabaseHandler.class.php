@@ -199,4 +199,22 @@ class RegistrarDatabaseHandler extends DatabaseHandler
 
         return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
     }
+
+    /**
+     * @param string $code
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdByCode(string $code): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_Registrar` WHERE `code` = ? LIMIT 1');
+        $select->bindParam(1, $code, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
+    }
 }

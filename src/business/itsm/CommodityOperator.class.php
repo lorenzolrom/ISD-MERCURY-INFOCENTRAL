@@ -171,6 +171,16 @@ class CommodityOperator extends Operator
     }
 
     /**
+     * @param int|null $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function assetTypeNameFromId(?int $id): ?string
+    {
+        return CommodityDatabaseHandler::selectNameById((int) $id);
+    }
+
+    /**
      * @param string|null $code
      * @param string|null $name
      * @param string|null $commodityTypeCode
@@ -182,7 +192,7 @@ class CommodityOperator extends Operator
      * @return array
      * @throws \exceptions\DatabaseException
      */
-    public static function validateSubmission(?string $code, ?string $name, ?string $commodityTypeCode, ?string $assetTypeCode, ?string $manufacturer, ?string $model, ?float $unitCost, ?Commodity $commodity = NULL): array
+    private static function validateSubmission(?string $code, ?string $name, ?string $commodityTypeCode, ?string $assetTypeCode, ?string $manufacturer, ?string $model, ?float $unitCost, ?Commodity $commodity = NULL): array
     {
         $errors = array();
 
@@ -217,15 +227,5 @@ class CommodityOperator extends Operator
         catch(ValidationException $e){$errors[] = $e->getMessage();}
 
         return $errors;
-    }
-
-    /**
-     * @param int|null $id
-     * @return string|null
-     * @throws \exceptions\DatabaseException
-     */
-    public static function assetTypeNameFromId(?int $id): ?string
-    {
-        return CommodityDatabaseHandler::selectNameById((int) $id);
     }
 }

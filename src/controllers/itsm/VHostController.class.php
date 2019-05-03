@@ -26,14 +26,15 @@ use models\HTTPResponse;
 
 class VHostController extends Controller
 {
-    private const SEARCH_FIELDS = array('domain', 'subdomain', 'name', 'host', 'registrarCode', 'status');
-    private const FIELDS = array('domain', 'subdomain', 'name', 'host', 'status', 'registrar', 'notes', 'registerDate', 'expireDate');
+    private const SEARCH_FIELDS = array('domain', 'subdomain', 'name', 'host', 'registrar', 'status');
+    private const FIELDS = array('domain', 'subdomain', 'name', 'host', 'status', 'registrar', 'renewCost', 'notes', 'registerDate', 'expireDate');
 
     /**
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\EntryInUseException
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -59,7 +60,17 @@ class VHostController extends Controller
             {
                 case "search":
                     return $this->getSearchResult(TRUE);
+                case null:
+                    return $this->createVHost();
             }
+        }
+        else if($this->request->method() == HTTPRequest::PUT)
+        {
+            return $this->updateVHost($param);
+        }
+        else if($this->request->method() == HTTPRequest::DELETE)
+        {
+            return $this->deleteVHost($param);
         }
 
         return NULL;
@@ -130,7 +141,7 @@ class VHostController extends Controller
         {
             $args = $this->getFormattedBody(self::SEARCH_FIELDS, $strict);
 
-            $vhosts = VHostOperator::search($args['domain'], $args['subdomain'], $args['name'], $args['host'], $args['registrarCode'], $args['status']);
+            $vhosts = VHostOperator::search($args['domain'], $args['subdomain'], $args['name'], $args['host'], $args['registrar'], $args['status']);
         }
         else
             $vhosts = VHostOperator::search();
@@ -154,5 +165,71 @@ class VHostController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $results);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws EntryNotFoundException
+     */
+    private function createVHost(): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_web-vhosts-w'));
+
+        $args = $this->getFormattedBody(self::FIELDS, TRUE);
+
+        $errors = VHostOperator::createVHost($args['subdomain'], $args['domain'], $args['name'], $args['host'],
+            $args['registrar'], $args['status'], $args['renewCost'], $args['registerDate'], $args['expireDate'],
+            $args['notes']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function updateVHost(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_web-vhosts-w'));
+
+        $vhost = VHostOperator::getVHost((int) $param);
+
+        $args = $this->getFormattedBody(self::FIELDS, TRUE);
+
+        $errors = VHostOperator::updateVHost($vhost, $args['subdomain'], $args['domain'], $args['name'], $args['host'],
+            $args['registrar'], $args['status'], $args['renewCost'], $args['registerDate'], $args['expireDate'],
+            $args['notes']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryInUseException
+     * @throws \exceptions\SecurityException
+     */
+    private function deleteVHost(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_web-vhosts-w'));
+
+        $vhost = VHostOperator::getVHost((int) $param);
+
+        VHostOperator::deleteVHost($vhost);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

@@ -200,7 +200,7 @@ class HostDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $select = $handler->prepare('SELECT `id` FROM `ITSM_Host` WHERE `ipAddress` = ? LIMIT 1');
-        $select->bindParam(1, $ipAddress, DatabaseConnection::PARAM_INT);
+        $select->bindParam(1, $ipAddress, DatabaseConnection::PARAM_STR);
         $select->execute();
 
         $handler->close();

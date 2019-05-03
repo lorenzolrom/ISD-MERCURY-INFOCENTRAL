@@ -16,11 +16,13 @@ namespace models\itsm;
 
 use database\AttributeDatabaseHandler;
 use database\itsm\HostDatabaseHandler;
+use database\itsm\RegistrarDatabaseHandler;
 use database\itsm\VHostDatabaseHandler;
 use exceptions\ValidationException;
+use models\Model;
 use utilities\Validator;
 
-class VHost
+class VHost extends Model
 {
     private const MESSAGES = array(
         'DOMAIN_REQUIRED' => 'Domain required',
@@ -33,7 +35,7 @@ class VHost
         'HOST_INVALID' => 'Host I.P. address not found',
         'REGISTRAR_INVALID' => 'Registrar not found',
         'STATUS' => 'Status is not valid',
-        'RENEW COST' => 'Renew cost must be a positive number',
+        'RENEW COST' => 'Renew cost must be a non-negative number',
         'REGISTER_DATE' => 'Register date is not valid',
         'EXPIRE_DATE' => 'Expire date is not valid'
     );
@@ -231,6 +233,25 @@ class VHost
     }
 
     /**
+     * @param string|null $registrarCode
+     * @return bool
+     * @throws ValidationException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function validateRegistrarCode(?string $registrarCode): bool
+    {
+        // not null
+        if($registrarCode === NULL)
+            throw new ValidationException(self::MESSAGES['REGISTRAR_INVALID'], ValidationException::VALUE_IS_NULL);
+
+        // registrar exists
+        if(!RegistrarDatabaseHandler::codeInUse($registrarCode))
+            throw new ValidationException(self::MESSAGES['REGISTRAR_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
+
+        return TRUE;
+    }
+
+    /**
      * @param string|null $statusCode
      * @return bool
      * @throws ValidationException
@@ -257,7 +278,7 @@ class VHost
     public static function validateRenewCost(?string $renewCost): bool
     {
         // not null
-        if($renewCost=== NULL)
+        if($renewCost === NULL)
             throw new ValidationException(self::MESSAGES['RENEW COST'], ValidationException::VALUE_IS_NULL);
 
         if(!is_numeric($renewCost) OR $renewCost < 0)
@@ -291,7 +312,7 @@ class VHost
      */
     public static function validateExpireDate(?string $expireDate): bool
     {
-        if($expireDate !== NULL AND !Validator::validDate($expireDate))
+        if($expireDate !== NULL AND strlen($expireDate) !== 0 AND !Validator::validDate($expireDate))
             throw new ValidationException(self::MESSAGES['EXPIRE_DATE'], ValidationException::VALUE_IS_NOT_VALID);
 
         return TRUE;

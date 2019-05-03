@@ -57,7 +57,7 @@ class WebLogFileRetriever
 
         $file = fopen($path, 'r');
         while($line = fgets($file))
-            $logContents .= $line;
+            $logContents .= $line . "\n";
 
         fclose($file);
 

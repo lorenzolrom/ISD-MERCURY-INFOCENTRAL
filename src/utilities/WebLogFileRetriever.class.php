@@ -30,7 +30,7 @@ class WebLogFileRetriever
     {
         $logs = array('access' => array(), 'error' => array());
 
-        if(!self::validPath($path))
+        if(!self::validPath($path) OR !is_dir($path))
             return $logs;
 
         foreach(scandir($path . '/') as $log)

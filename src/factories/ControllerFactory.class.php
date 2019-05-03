@@ -39,6 +39,7 @@ class ControllerFactory
         // Web
         'vhosts' => 'controllers\itsm\VHostController',
         'registrars' => 'controllers\itsm\RegistrarController',
+        'urlaliases' => 'controllers\itsm\URLAliasController',
 
         // AIT
         'applications' => 'controllers\itsm\ApplicationController',

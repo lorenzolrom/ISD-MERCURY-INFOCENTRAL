@@ -31,7 +31,8 @@ class HistoryOperator extends Operator
         'ITSM_Vendor' => 'itsm_inventory-vendors-r',
         'ITSM_Warehouse' => 'itsm_inventory-warehouses-r',
         'ITSM_Registrar' => 'itsm_web-registrars-r',
-        'ITSM_VHost' => 'itsm_web-vhosts-r'
+        'ITSM_VHost' => 'itsm_web-vhosts-r',
+        'NIS_URLAlias' => 'itsm_web-aliases-rw'
     );
 
     /**

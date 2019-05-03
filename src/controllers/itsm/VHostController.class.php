@@ -23,6 +23,7 @@ use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
 use models\HTTPResponse;
+use utilities\WebLogFileRetriever;
 
 class VHostController extends Controller
 {
@@ -52,7 +53,18 @@ class VHostController extends Controller
                 case null:
                     return $this->getSearchResult();
                 default:
-                    return $this->getById($param);
+                    switch($this->request->next())
+                    {
+                        case 'logs':
+                            $logName = $this->request->next();
+
+                            if($logName !== NULL)
+                                return $this->getVHostLog($param, $logName);
+
+                            return $this->getVHostLogs($param);
+                        default:
+                            return $this->getById($param);
+                    }
             }
         }
         else if($this->request->method() == HTTPRequest::POST)
@@ -234,5 +246,43 @@ class VHostController extends Controller
         VHostOperator::deleteVHost($vhost);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function getVHostLogs(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_weblogs'));
+
+        $vhost = VHostOperator::getVHost((int) $param);
+
+        return new HTTPResponse(HTTPResponse::OK, VHostOperator::getLogFiles($vhost));
+    }
+
+    /**
+     * @param string|null $id
+     * @param string|null $logName
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function getVHostLog(?string $id, ?string $logName): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_weblogs'));
+
+        $vhost = VHostOperator::getVHost((int) $id);
+
+        $logContents = WebLogFileRetriever::getLogContents($vhost->getLogPath() . '/' . $logName);
+
+        if($logContents === NULL)
+            return new HTTPResponse(HTTPResponse::NOT_FOUND, array('errors' => array('Log not found')));
+
+        return new HTTPResponse(HTTPResponse::OK, array($logContents));
     }
 }

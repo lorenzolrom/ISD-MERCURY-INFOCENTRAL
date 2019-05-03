@@ -26,6 +26,7 @@ use exceptions\ValidationException;
 use models\Attribute;
 use models\itsm\VHost;
 use utilities\HistoryRecorder;
+use utilities\WebLogFileRetriever;
 
 class VHostOperator extends Operator
 {
@@ -214,6 +215,18 @@ class VHostOperator extends Operator
         HistoryRecorder::writeHistory('ITSM_VHost', HistoryRecorder::DELETE, $vhost->getId(), $vhost);
 
         return VHostDatabaseHandler::delete($vhost->getId());
+    }
+
+    /**
+     * @param VHost $vHost
+     * @return array
+     */
+    public static function getLogFiles(VHost $vHost): array
+    {
+        if($vHost->getLogPath() === NULL)
+            return array();
+
+        return WebLogFileRetriever::getLogFileList($vHost->getLogPath());
     }
 
     /**

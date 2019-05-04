@@ -15,9 +15,71 @@ namespace models\itsm;
 
 
 use models\Model;
+use utilities\Validator;
 
 class Application extends Model
 {
+    private const NAME_RULES = array(
+        'name' => 'Name',
+        'lower' => 1,
+        'upper' => 64
+    );
+
+    private const DESCRIPTION_RULES = array(
+        'name' => 'Description',
+        'lower' => 1
+    );
+
+    private const OWNER_RULES = array(
+        'name' => 'Owner',
+        'username' => true
+    );
+
+    private const TYPE_RULES = array(
+        'name' => 'Type',
+        'attribute' => true,
+        'attrExtension' => 'itsm',
+        'attrType' => 'aitt'
+    );
+
+    private const STATUS_RULES = array(
+        'name' => 'Status',
+        'attribute' => true,
+        'attrExtension' => 'itsm',
+        'attrType' => 'aits'
+    );
+
+    private const PUBLIC_RULES = array(
+        'name' => 'Public Facing',
+        'acceptable' => array(0, 1)
+    );
+
+    private const LIFE_RULES = array(
+        'name' => 'Life Expectancy',
+        'attribute' => true,
+        'attrExtension' => 'itsm',
+        'attrType' => 'aitl'
+    );
+
+    private const DATA_RULES = array(
+        'name' => 'Data Volume',
+        'attribute' => true,
+        'attrExtension' => 'itsm',
+        'attrType' => 'aitd'
+    );
+
+    private const AUTH_RULES = array(
+        'name' => 'Auth Type',
+        'attribute' => true,
+        'attrExtension' => 'itsm',
+        'attrType' => 'aita'
+    );
+
+    private const PORT_RULES = array(
+        'name' => 'Port',
+        'upper' => 5
+    );
+
     private $id;
     private $number;
     private $name;
@@ -127,4 +189,113 @@ class Application extends Model
         return $this->port;
     }
 
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateName(?string $val): bool
+    {
+        return Validator::validate(self::NAME_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateDescription(?string $val): bool
+    {
+        return Validator::validate(self::DESCRIPTION_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateOwner(?string $val): bool
+    {
+        return Validator::validate(self::OWNER_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateType(?string $val): bool
+    {
+        return Validator::validate(self::TYPE_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateStatus(?string $val): bool
+    {
+        return Validator::validate(self::STATUS_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validatePublicFacing(?string $val): bool
+    {
+        return Validator::validate(self::PUBLIC_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateLifeExpectancy(?string $val): bool
+    {
+        return Validator::validate(self::LIFE_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateDataVolume(?string $val): bool
+    {
+        return Validator::validate(self::DATA_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateAuthType(?string $val): bool
+    {
+        return Validator::validate(self::AUTH_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validatePort(?string $val): bool
+    {
+        return Validator::validate(self::PORT_RULES, $val);
+    }
 }

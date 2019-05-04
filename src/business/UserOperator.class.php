@@ -178,6 +178,16 @@ class UserOperator extends Operator
     }
 
     /**
+     * @param string $username
+     * @return int|null
+     * @throws DatabaseException
+     */
+    public static function idFromUsername(?string $username): ?int
+    {
+        return UserDatabaseHandler::selectIdFromUsername((string)$username);
+    }
+
+    /**
      * @param User $user
      * @param string $password
      * @return bool

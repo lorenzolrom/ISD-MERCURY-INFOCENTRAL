@@ -143,4 +143,25 @@ class UserDatabaseHandler extends DatabaseHandler
 
         return $select->fetchColumn();
     }
+
+    /**
+     * @param string $username
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdFromUsername(string $username): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `id` FROM `User` WHERE `username` = ? LIMIT 1");
+        $select->bindParam(1, $username, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() === 0)
+            return NULL;
+
+        return $select->fetchColumn();
+    }
 }

@@ -18,6 +18,8 @@ use database\DatabaseConnection;
 use database\DatabaseHandler;
 use exceptions\EntryNotFoundException;
 use models\itsm\Application;
+use models\itsm\Host;
+use models\itsm\VHost;
 
 class ApplicationDatabaseHandler extends DatabaseHandler
 {
@@ -299,5 +301,59 @@ class ApplicationDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @param string $type
+     * @return Host[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getHosts(int $id, string $type): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `host` FROM `ITSM_Application_Host` WHERE `application` = :application AND `relationship` = :relationship');
+        $select->bindParam('application', $id, DatabaseConnection::PARAM_INT);
+        $select->bindParam('relationship', $type, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        $hosts = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$hosts[] = HostDatabaseHandler::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $hosts;
+    }
+
+    /**
+     * @param int $id
+     * @return VHost[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getVHosts(int $id): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `vhost` FROM `ITSM_Application_VHost` WHERE `application` = ?');
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $vhosts = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$vhosts[] = VHostDatabaseHandler::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $vhosts;
     }
 }

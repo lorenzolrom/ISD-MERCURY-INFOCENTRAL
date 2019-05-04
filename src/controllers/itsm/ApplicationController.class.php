@@ -97,13 +97,62 @@ class ApplicationController extends Controller
             'description' => $application->getDescription(),
             'owner' => UserOperator::usernameFromId($application->getOwner()),
             'type' => AttributeOperator::codeFromId($application->getType()),
+            'typeName' => AttributeOperator::nameFromId($application->getType()),
             'status' => AttributeOperator::codeFromId($application->getStatus()),
+            'statusName' => AttributeOperator::nameFromId($application->getStatus()),
             'publicFacing' => $application->getPublicFacing(),
             'lifeExpectancy' => AttributeOperator::codeFromId($application->getLifeExpectancy()),
+            'lifeExpectancyName' => AttributeOperator::nameFromId($application->getLifeExpectancy()),
             'dataVolume' => AttributeOperator::codeFromId($application->getDataVolume()),
+            'dataVolumeName' => AttributeOperator::nameFromId($application->getDataVolume()),
             'authType' => AttributeOperator::codeFromId($application->getAuthType()),
-            'port' => $application->getPort()
+            'authTypeName' => AttributeOperator::nameFromId($application->getAuthType()),
+            'port' => $application->getPort(),
+            'appHosts' => array(),
+            'webHosts' => array(),
+            'dataHosts' => array(),
+            'vHosts' => array()
         );
+
+        // Get app hosts
+        foreach(ApplicationOperator::getAppHosts($application) as $host)
+        {
+            $data['appHosts'][] = array(
+                'id' => $host->getId(),
+                'systemName' => $host->getSystemName(),
+                'ipAddress' => $host->getIpAddress()
+            );
+        }
+
+        // Get web hosts
+        foreach(ApplicationOperator::getWebHosts($application) as $host)
+        {
+            $data['webHosts'][] = array(
+                'id' => $host->getId(),
+                'systemName' => $host->getSystemName(),
+                'ipAddress' => $host->getIpAddress()
+            );
+        }
+
+        // Get data hosts
+        foreach(ApplicationOperator::getDataHosts($application) as $host)
+        {
+            $data['dataHosts'][] = array(
+                'id' => $host->getId(),
+                'systemName' => $host->getSystemName(),
+                'ipAddress' => $host->getIpAddress()
+            );
+        }
+
+        // Get vhosts
+        foreach(ApplicationOperator::getVHosts($application) as $vhost)
+        {
+            $data['vHosts'][] = array(
+                'id' => $vhost->getId(),
+                'domain' => $vhost->getDomain(),
+                'subdomain' => $vhost->getSubdomain()
+            );
+        }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
     }

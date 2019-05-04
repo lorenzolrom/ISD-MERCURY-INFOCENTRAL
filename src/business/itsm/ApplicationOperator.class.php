@@ -21,6 +21,8 @@ use database\itsm\ApplicationUpdateDatabaseHandler;
 use models\Attribute;
 use models\itsm\Application;
 use models\itsm\ApplicationUpdate;
+use models\itsm\Host;
+use models\itsm\VHost;
 
 class ApplicationOperator extends Operator
 {
@@ -127,5 +129,45 @@ class ApplicationOperator extends Operator
     public static function getAuthTypes(): array
     {
         return AttributeDatabaseHandler::select('itsm', 'aita');
+    }
+
+    /**
+     * @param Application $application
+     * @return VHost[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getVHosts(Application $application): array
+    {
+        return ApplicationDatabaseHandler::getVHosts($application->getId());
+    }
+
+    /**
+     * @param Application $application
+     * @return Host[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getWebHosts(Application $application): array
+    {
+        return ApplicationDatabaseHandler::getHosts($application->getId(), 'webh');
+    }
+
+    /**
+     * @param Application $application
+     * @return Host[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getDataHosts(Application $application): array
+    {
+        return ApplicationDatabaseHandler::getHosts($application->getId(), 'data');
+    }
+
+    /**
+     * @param Application $application
+     * @return Host[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getAppHosts(Application $application): array
+    {
+        return ApplicationDatabaseHandler::getHosts($application->getId(), 'apph');
     }
 }

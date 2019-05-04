@@ -192,4 +192,5 @@ INSERT INTO `Permission` (`code`) VALUES
   ('servicenter_desk-r'),
   ('servicenter_desk-w'),
   ('servicenter_requests'),
-  ('settings');
+  ('settings'),
+  ('api-settings');

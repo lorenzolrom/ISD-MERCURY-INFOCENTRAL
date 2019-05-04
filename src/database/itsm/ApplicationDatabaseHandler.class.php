@@ -98,7 +98,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
 
         // Apply type filter
         if(is_array($type) AND !empty($type))
-            $query .= " AND `status` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'aitt' AND `code` IN (" . self::getAttributeCodeString($type) . "))";
+            $query .= " AND `type` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'aitt' AND `code` IN (" . self::getAttributeCodeString($type) . "))";
 
         // Apply public facing filter
         if(is_array($publicFacing) AND !empty($publicFacing))
@@ -189,5 +189,115 @@ class ApplicationDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $number
+     * @param string $name
+     * @param string $description
+     * @param int $owner
+     * @param int $type
+     * @param int $status
+     * @param int $publicFacing
+     * @param int $lifeExpectancy
+     * @param int $dataVolume
+     * @param int $authType
+     * @param string $port
+     * @return Application
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(int $number, string $name, string $description, int $owner, int $type, int $status,
+                                  int $publicFacing, int $lifeExpectancy, int $dataVolume, int $authType,
+                                  string $port): Application
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `ITSM_Application` (number, name, description, owner, type, 
+                                status, publicFacing, lifeExpectancy, dataVolume, authType, port) VALUES (:number, 
+                                :name, :description, :owner, :type, :status, :publicFacing, :lifeExpectancy, 
+                                :dateVolume, :authType, :port)');
+
+        $insert->bindParam('number', $number, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('description', $description, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('owner', $owner, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('type', $type, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('status', $status, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('publicFacing', $publicFacing, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('lifeExpectancy', $lifeExpectancy, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('dataVolume', $dataVolume, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('authType', $authType, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('port', $port, DatabaseConnection::PARAM_STR);
+        $insert->execute();
+
+        $id = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @param string $name
+     * @param string $description
+     * @param int $owner
+     * @param int $type
+     * @param int $status
+     * @param int $publicFacing
+     * @param int $lifeExpectancy
+     * @param int $dataVolume
+     * @param int $authType
+     * @param string $port
+     * @return Application
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(int $id, string $name, string $description, int $owner, int $type, int $status,
+                                  int $publicFacing, int $lifeExpectancy, int $dataVolume, int $authType,
+                                  string $port): Application
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `ITSM_Application` SET `name` = :name, `description` = :description, 
+                              `owner` = :owner, `type` = :type, `status` = :status, `publicFacing` = :publicFacing, 
+                              `lifeExpectancy` = :lifeExpectancy, `dataVolume` = :dataVolume, `authType` = :authType, 
+                              `port` = :port WHERE `id` = :id');
+
+        $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $update->bindParam('description', $description, DatabaseConnection::PARAM_STR);
+        $update->bindParam('owner', $owner, DatabaseConnection::PARAM_INT);
+        $update->bindParam('type', $type, DatabaseConnection::PARAM_INT);
+        $update->bindParam('status', $status, DatabaseConnection::PARAM_INT);
+        $update->bindParam('publicFacing', $publicFacing, DatabaseConnection::PARAM_INT);
+        $update->bindParam('lifeExpectancy', $lifeExpectancy, DatabaseConnection::PARAM_INT);
+        $update->bindParam('dataVolume', $dataVolume, DatabaseConnection::PARAM_INT);
+        $update->bindParam('authType', $authType, DatabaseConnection::PARAM_INT);
+        $update->bindParam('port', $port, DatabaseConnection::PARAM_STR);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function delete(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `ITSM_Application` WHERE `id` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
     }
 }

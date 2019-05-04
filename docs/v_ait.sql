@@ -1,10 +1,68 @@
--- Application TODO
+-- Application
+CREATE TABLE `ITSM_Application` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `number` int(11) NOT NULL,
+  `name` varchar(64) NOT NULL,
+  `description` text NOT NULL,
+  `owner` int(11) NOT NULL,
+  `type` int(11) NOT NULL,
+  `status` int(11) NOT NULL,
+  `publicFacing` tinyint(1) NOT NULL DEFAULT '0',
+  `lifeExpectancy` int(11) NOT NULL,
+  `dataVolume` int(11) NOT NULL,
+  `authType` int(11) NOT NULL,
+  `port` varchar(5) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `number` (`number`),
+  KEY `owner` (`owner`),
+  KEY `lifeExpectancy` (`lifeExpectancy`),
+  KEY `dataVolume` (`dataVolume`),
+  KEY `authType` (`authType`),
+  KEY `type` (`type`),
+  KEY `status` (`status`),
+  CONSTRAINT `ITSM_Application_ibfk_1` FOREIGN KEY (`owner`) REFERENCES `User` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_Application_ibfk_2` FOREIGN KEY (`lifeExpectancy`) REFERENCES `Attribute` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_Application_ibfk_3` FOREIGN KEY (`dataVolume`) REFERENCES `Attribute` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_Application_ibfk_4` FOREIGN KEY (`authType`) REFERENCES `Attribute` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_Application_ibfk_5` FOREIGN KEY (`type`) REFERENCES `Attribute` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_Application_ibfk_6` FOREIGN KEY (`status`) REFERENCES `Attribute` (`id`) ON UPDATE CASCADE
+);
 
--- App - VHOST TODO
+-- App - VHOST
+CREATE TABLE `ITSM_Application_VHost` (
+  `application` int(11) NOT NULL,
+  `vhost` int(11) NOT NULL,
+  PRIMARY KEY (`application`,`vhost`),
+  KEY `vhost` (`vhost`),
+  CONSTRAINT `ITSM_Application_VHost_ibfk_1` FOREIGN KEY (`application`) REFERENCES `ITSM_Application` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_Application_VHost_ibfk_2` FOREIGN KEY (`vhost`) REFERENCES `ITSM_VHost` (`id`) ON UPDATE CASCADE
+);
 
--- App - Host TODO
+-- App - Host
+CREATE TABLE `ITSM_Application_Host` (
+  `application` int(11) NOT NULL,
+  `host` int(11) NOT NULL,
+  `relationship` char(4) NOT NULL,
+  PRIMARY KEY (`application`,`host`,`relationship`),
+  KEY `host` (`host`),
+  CONSTRAINT `ITSM_Application_Host_ibfk_1` FOREIGN KEY (`application`) REFERENCES `ITSM_Application` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_Application_Host_ibfk_2` FOREIGN KEY (`host`) REFERENCES `ITSM_Host` (`id`) ON UPDATE CASCADE
+);
 
--- App Dev Update TODO
+-- App Dev Update
+CREATE TABLE `ITSM_ApplicationUpdate` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `application` int(11) NOT NULL,
+  `status` int(11) NOT NULL,
+  `time` datetime NOT NULL,
+  `user` int(11) NOT NULL,
+  `description` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `application` (`application`),
+  KEY `user` (`user`),
+  CONSTRAINT `ITSM_ApplicationUpdate_ibfk_1` FOREIGN KEY (`application`) REFERENCES `ITSM_Application` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_ApplicationUpdate_ibfk_2` FOREIGN KEY (`user`) REFERENCES `User` (`id`) ON UPDATE CASCADE
+);
 
 --
 -- DEFAULT DATA

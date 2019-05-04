@@ -29,7 +29,7 @@ abstract class DatabaseHandler
 
         foreach($codes as $code)
         {
-            if(ctype_alpha($code) AND strlen($code) == 4)
+            if(ctype_alnum($code) AND strlen($code) == 4)
                 $array[] = $code;
         }
 

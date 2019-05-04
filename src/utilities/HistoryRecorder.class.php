@@ -40,6 +40,7 @@ class HistoryRecorder
         $rawOldValues = (array)$currentState;
         $oldValues = array();
 
+        // Format name of old variables
         foreach(array_keys($rawOldValues) as $varName)
         {
             $parts =  explode(str_split($varName)[0], $varName);
@@ -48,15 +49,43 @@ class HistoryRecorder
             $oldValues[$shortVarName] = $rawOldValues[$varName];
         }
 
+        // Create record for entry
         $record = HistoryDatabaseHandler::insert($tableName, $action, $index, CurrentUserController::currentUser()->getUsername(), date('Y-m-d H:i:s'));
 
-        foreach(array_keys($newValues) as $varName)
+        foreach(array_keys($oldValues) as $varName)
         {
-            if(!isset($oldValues[$varName]))
-                $oldValues[$varName] = NULL;
+            if(!isset($newValues[$varName]))
+                $newValues[$varName] = $oldValues[$varName]; // ignore unchanged items
 
             if($newValues[$varName] != $oldValues[$varName] OR $action === self::CREATE)
                 HistoryDatabaseHandler::insertHistoryItem($record->getId(), $varName, $oldValues[$varName], $newValues[$varName]);
+        }
+
+        return;
+    }
+
+    /**
+     * @param string $tableName
+     * @param string $action
+     * @param string $index
+     * @param array $vals
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    public static function writeAssocHistory(string $tableName, string $action, string $index, array $vals = array()): void
+    {
+        $record = HistoryDatabaseHandler::insert($tableName, $action, $index, CurrentUserController::currentUser()->getUsername(), date('Y-m-d H:i:s'));
+
+        foreach(array_keys($vals) as $param)
+        {
+            if(!is_array($vals[$param]))
+                continue;
+
+            foreach($vals[$param] as $val)
+            {
+                HistoryDatabaseHandler::insertHistoryItem($record->getId(), $param, '', $val);
+            }
         }
 
         return;

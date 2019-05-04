@@ -14,7 +14,9 @@
 namespace business\itsm;
 
 
+use business\AttributeOperator;
 use business\Operator;
+use business\UserOperator;
 use database\AttributeDatabaseHandler;
 use database\itsm\ApplicationDatabaseHandler;
 use database\itsm\ApplicationUpdateDatabaseHandler;
@@ -23,6 +25,7 @@ use models\itsm\Application;
 use models\itsm\ApplicationUpdate;
 use models\itsm\Host;
 use models\itsm\VHost;
+use utilities\HistoryRecorder;
 
 class ApplicationOperator extends Operator
 {
@@ -169,5 +172,124 @@ class ApplicationOperator extends Operator
     public static function getAppHosts(Application $application): array
     {
         return ApplicationDatabaseHandler::getHosts($application->getId(), 'apph');
+    }
+
+    /**
+     * @param array $vals
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    public static function createApplication(array $vals): array
+    {
+        $errors = self::validate('models\itsm\Application', $vals);
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        $vals['owner'] = UserOperator::idFromUsername($vals['owner']);
+        $vals['type'] = AttributeOperator::idFromCode('itsm', 'aitt', $vals['type']);
+        $vals['lifeExpectancy'] = AttributeOperator::idFromCode('itsm', 'aitl', $vals['lifeExpectancy']);
+        $vals['dataVolume'] = AttributeOperator::idFromCode('itsm', 'aitd', $vals['dataVolume']);
+        $vals['authType'] = AttributeOperator::idFromCode('itsm', 'aita', $vals['authType']);
+        $vals['status'] = AttributeOperator::idFromCode('itsm', 'aits', $vals['status']);
+        $vals['publicFacing'] = (int)$vals['publicFacing'];
+
+        $application = ApplicationDatabaseHandler::insert(ApplicationDatabaseHandler::nextNumber(), $vals['name'],
+            $vals['description'], $vals['owner'], $vals['type'], $vals['status'], $vals['publicFacing'],
+            $vals['lifeExpectancy'], $vals['dataVolume'], $vals['authType'], $vals['port']);
+
+        if($vals['dataHosts'] === NULL)
+            $vals['dataHosts'] = array();
+        if($vals['webHosts'] === NULL)
+            $vals['webHosts'] = array();
+        if($vals['appHosts'] === NULL)
+            $vals['appHosts'] = array();
+        if($vals['vHosts'] === NULL)
+            $vals['vHosts'] = array();
+
+        ApplicationDatabaseHandler::setVHosts($application->getId(), $vals['vHosts']);
+        ApplicationDatabaseHandler::setHosts($application->getId(), 'webh', $vals['webHosts']);
+        ApplicationDatabaseHandler::setHosts($application->getId(), 'data', $vals['dataHosts']);
+        ApplicationDatabaseHandler::setHosts($application->getId(), 'apph', $vals['appHosts']);
+
+        HistoryRecorder::writeHistory('ITSM_Application', HistoryRecorder::CREATE, $application->getId(), $application);
+
+        $newHosts = array(
+            'webHosts' => $vals['webHosts'],
+            'appHosts' => $vals['appHosts'],
+            'dataHosts' => $vals['dataHosts'],
+            'vHosts' => $vals['vHosts']
+        );
+
+        HistoryRecorder::writeAssocHistory('ITSM_Application', HistoryRecorder::CREATE, $application->getId(), $newHosts);
+
+        return array('id' => $application->getNumber());
+    }
+
+    /**
+     * @param Application $application
+     * @param array $vals
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    public static function updateApplication(Application $application, array $vals): array
+    {
+        $errors = self::validate('models\itsm\Application', $vals);
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        $vals['owner'] = UserOperator::idFromUsername($vals['owner']);
+        $vals['type'] = AttributeOperator::idFromCode('itsm', 'aitt', $vals['type']);
+        $vals['lifeExpectancy'] = AttributeOperator::idFromCode('itsm', 'aitl', $vals['lifeExpectancy']);
+        $vals['dataVolume'] = AttributeOperator::idFromCode('itsm', 'aitd', $vals['dataVolume']);
+        $vals['authType'] = AttributeOperator::idFromCode('itsm', 'aita', $vals['authType']);
+        $vals['status'] = AttributeOperator::idFromCode('itsm', 'aits', $vals['status']);
+        $vals['publicFacing'] = (int)$vals['publicFacing'];
+
+        HistoryRecorder::writeHistory('ITSM_Application', HistoryRecorder::MODIFY, $application->getId(), $application, $vals);
+
+        if($vals['dataHosts'] === NULL)
+            $vals['dataHosts'] = array();
+        if($vals['webHosts'] === NULL)
+            $vals['webHosts'] = array();
+        if($vals['appHosts'] === NULL)
+            $vals['appHosts'] = array();
+        if($vals['vHosts'] === NULL)
+            $vals['vHosts'] = array();
+
+        $newHosts = array(
+            'webHosts' => $vals['webHosts'],
+            'appHosts' => $vals['appHosts'],
+            'dataHosts' => $vals['dataHosts'],
+            'vHosts' => $vals['vHosts']
+        );
+
+        HistoryRecorder::writeAssocHistory('ITSM_Application', HistoryRecorder::MODIFY, $application->getId(), $newHosts);
+
+        ApplicationDatabaseHandler::update($application->getId(), $vals['name'],
+            $vals['description'], $vals['owner'], $vals['type'], $vals['status'], $vals['publicFacing'],
+            $vals['lifeExpectancy'], $vals['dataVolume'], $vals['authType'], $vals['port']);
+
+        ApplicationDatabaseHandler::setVHosts($application->getId(), $vals['vHosts']);
+        ApplicationDatabaseHandler::setHosts($application->getId(), 'webh', $vals['webHosts']);
+        ApplicationDatabaseHandler::setHosts($application->getId(), 'data', $vals['dataHosts']);
+        ApplicationDatabaseHandler::setHosts($application->getId(), 'apph', $vals['appHosts']);
+
+        return array('id' => $application->getNumber());
+    }
+
+    /**
+     * @param int $number
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function idFromNumber(int $number): ?int
+    {
+        return ApplicationDatabaseHandler::selectIdByNumber($number);
     }
 }

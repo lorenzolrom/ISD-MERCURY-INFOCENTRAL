@@ -19,7 +19,6 @@ use business\itsm\ApplicationOperator;
 use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
-use database\itsm\ApplicationDatabaseHandler;
 use database\itsm\ApplicationUpdateDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
@@ -27,7 +26,8 @@ use models\HTTPResponse;
 
 class ApplicationController extends Controller
 {
-    const SEARCH_FIELDS = array('number', 'name', 'description', 'owner', 'type', 'publicFacing', 'lifeExpectancy', 'dataVolume', 'authType', 'port', 'host', 'vhost', 'status');
+    const FIELDS = array('number', 'name', 'description', 'owner', 'type', 'publicFacing', 'lifeExpectancy',
+        'dataVolume', 'authType', 'port', 'host', 'vhost', 'status', 'webHosts', 'appHosts', 'dataHosts', 'vHosts');
 
     /**
      * @return HTTPResponse|null
@@ -75,8 +75,12 @@ class ApplicationController extends Controller
             {
                 case "search":
                     return $this->getSearchResult(TRUE);
+                default:
+                    return $this->createApplication();
             }
         }
+        else if($this->request->method() === HTTPRequest::PUT)
+            return $this->updateApplication($param);
 
         return NULL;
     }
@@ -168,7 +172,7 @@ class ApplicationController extends Controller
     {
         if($search)
         {
-            $args = $this->getFormattedBody(self::SEARCH_FIELDS, $strict);
+            $args = $this->getFormattedBody(self::FIELDS, $strict);
 
             $apps = ApplicationOperator::search($args['number'], $args['name'], $args['description'], $args['owner'], $args['type'], $args['publicFacing'],
                                                         $args['lifeExpectancy'], $args['dataVolume'], $args['authType'], $args['port'], $args['host'], $args['vhost'], $args['status']);
@@ -200,7 +204,7 @@ class ApplicationController extends Controller
      */
     private function getUpdates(?string $param): HTTPResponse
     {
-        $app = ApplicationDatabaseHandler::selectByNumber((int) $param);
+        $app = ApplicationOperator::getApplication((int) $param, TRUE);
 
         $data = array();
 
@@ -225,7 +229,7 @@ class ApplicationController extends Controller
      */
     private function getLastUpdate(?string $param): HTTPResponse
     {
-        $app = ApplicationDatabaseHandler::selectByNumber((int) $param);
+        $app = ApplicationOperator::getApplication((int) $param, TRUE);
 
         $update = ApplicationUpdateDatabaseHandler::selectByApplication($app->getId(), 1)[0];
 
@@ -335,5 +339,44 @@ class ApplicationController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function createApplication(): HTTPResponse
+    {
+        $args = self::getFormattedBody(self::FIELDS);
+
+        $errors = ApplicationOperator::createApplication($args);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function updateApplication(?string $param): HTTPResponse
+    {
+        $app = ApplicationOperator::getApplication((int) $param, TRUE);
+
+        $args = self::getFormattedBody(self::FIELDS);
+
+        $errors = ApplicationOperator::updateApplication($app, $args);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

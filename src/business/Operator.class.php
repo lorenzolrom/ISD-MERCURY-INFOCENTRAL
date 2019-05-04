@@ -13,6 +13,8 @@
 
 namespace business;
 
+use exceptions\ValidationException;
+
 /**
  * Class BusinessHandler
  *
@@ -22,5 +24,24 @@ namespace business;
  */
 abstract class Operator
 {
+    /**
+     * @param string $class
+     * @param array $vals
+     * @return array
+     */
+    protected static function validate(string $class, array $vals): array
+    {
+        $errors = array();
 
+        foreach(array_keys($vals) as $val)
+        {
+            $func = 'validate' . ucfirst($val);
+
+            try{$class::$func($vals[$val]);}
+            catch(ValidationException $e){$errors[] = $e->getMessage();}
+            catch(\Error $e){} // Catch function not defined
+        }
+
+        return $errors;
+    }
 }

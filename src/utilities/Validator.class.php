@@ -97,8 +97,6 @@ class Validator
         if((!isset($rules['null']) OR !$rules['null'])AND $value === NULL)
             throw new ValidationException($rules['name'] . ' is required', ValidationException::VALUE_IS_NULL);
 
-        // Attribute
-
         // Username
         if(isset($rules['username']))
         {
@@ -131,15 +129,15 @@ class Validator
             throw new ValidationException("{$rules['name']} is not valid", ValidationException::VALUE_IS_NOT_VALID);
 
         // exact
-        if(isset($rules['exact']) AND strlen($value) !== (int)$rules['exact'])
+        if(isset($rules['exact']) AND strlen($value) !== $rules['exact'])
             throw new ValidationException("{$rules['name']} must be exactly {$rules['exact']} characters", ValidationException::VALUE_IS_NOT_VALID);
 
         // lower
-        if(isset($rules['lower']) AND strlen($value) < (int) $rules['exact'])
+        if(isset($rules['lower']) AND strlen($value) < $rules['lower'])
             throw new ValidationException("{$rules['name']} must be at least {$rules['lower']} characters", ValidationException::VALUE_TOO_SHORT);
 
         // upper
-        if(isset($rules['upper']) AND strlen($value) > (int) $rules['upper'])
+        if(isset($rules['upper']) AND strlen($value) > $rules['upper'])
             throw new ValidationException("{$rules['name']} must be no greater than {$rules['upper']} characters", ValidationException::VALUE_TOO_LONG);
 
         return TRUE;

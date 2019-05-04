@@ -16,6 +16,7 @@ namespace database\itsm;
 
 use database\DatabaseConnection;
 use database\DatabaseHandler;
+use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use models\itsm\Application;
 use models\itsm\Host;
@@ -23,6 +24,10 @@ use models\itsm\VHost;
 
 class ApplicationDatabaseHandler extends DatabaseHandler
 {
+    private const APP = 'apph';
+    private const WEB = 'webh';
+    private const DATA = 'data';
+
     /**
      * @param int $id
      * @return Application
@@ -65,6 +70,24 @@ class ApplicationDatabaseHandler extends DatabaseHandler
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
 
         return self::selectById($select->fetchColumn());
+    }
+
+    /**
+     * @param int $number
+     * @return int|null
+     * @throws DatabaseException
+     */
+    public static function selectIdByNumber(int $number): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `id` FROM `ITSM_Application` WHERE `number` = ? LIMIT 1");
+        $select->bindParam(1, $number, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
     }
 
     /**
@@ -215,8 +238,8 @@ class ApplicationDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare('INSERT INTO `ITSM_Application` (number, name, description, owner, type, 
-                                status, publicFacing, lifeExpectancy, dataVolume, authType, port) VALUES (:number, 
+        $insert = $handler->prepare('INSERT INTO `ITSM_Application` (`number`, `name`, `description`, `owner`, `type`, 
+                                `status`, `publicFacing`, `lifeExpectancy`, `dataVolume`, `authType`, `port`) VALUES (:number, 
                                 :name, :description, :owner, :type, :status, :publicFacing, :lifeExpectancy, 
                                 :dateVolume, :authType, :port)');
 
@@ -228,7 +251,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
         $insert->bindParam('status', $status, DatabaseConnection::PARAM_INT);
         $insert->bindParam('publicFacing', $publicFacing, DatabaseConnection::PARAM_INT);
         $insert->bindParam('lifeExpectancy', $lifeExpectancy, DatabaseConnection::PARAM_INT);
-        $insert->bindParam('dataVolume', $dataVolume, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('dateVolume', $dataVolume, DatabaseConnection::PARAM_INT);
         $insert->bindParam('authType', $authType, DatabaseConnection::PARAM_INT);
         $insert->bindParam('port', $port, DatabaseConnection::PARAM_STR);
         $insert->execute();
@@ -355,5 +378,106 @@ class ApplicationDatabaseHandler extends DatabaseHandler
         }
 
         return $vhosts;
+    }
+
+    /**
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    public static function nextNumber(): int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `number` FROM `ITSM_Application` ORDER BY `number` DESC LIMIT 1');
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchColumn() + 1;
+    }
+
+    /**
+     * @param int $id
+     * @param string $type
+     * @param array $hostIds
+     * @return int
+     * @throws DatabaseException
+     */
+    public static function setHosts(int $id, string $type, array $hostIds): int
+    {
+        $handler = new DatabaseConnection();
+
+        // Remove existing hosts
+        $delete = $handler->prepare('DELETE FROM `ITSM_Application_Host` WHERE `application` = :application AND `relationship` = :type');
+        $delete->bindParam('application', $id, DatabaseConnection::PARAM_INT);
+        $delete->bindParam('type', $type, DatabaseConnection::PARAM_STR);
+        $delete->execute();
+
+        $insert = $handler->prepare('INSERT INTO `ITSM_Application_Host` (application, host, relationship) VALUES (:application, :host, :relationship)');
+        $insert->bindParam('application', $id, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('relationship', $type, DatabaseConnection::PARAM_STR);
+
+        // Add all hosts
+        $added = 0;
+
+        foreach($hostIds as $hostId)
+        {
+            // Validate id is the right format
+            if(!ctype_digit($hostId))
+                continue;
+
+            try
+            {
+                $insert->bindParam('host', $hostId, DatabaseConnection::PARAM_INT);
+                $insert->execute();
+
+                $added += 1;
+            }
+            catch(DatabaseException $e){} // ignore invalid hosts
+        }
+
+        $handler->close();
+
+        return $added;
+    }
+
+    /**
+     * @param int $id
+     * @param array $vhostIds
+     * @return int
+     * @throws DatabaseException
+     */
+    public static function setVHosts(int $id, array $vhostIds): int
+    {
+        $handler = new DatabaseConnection();
+
+        // Remove vhosts
+        $delete = $handler->prepare('DELETE FROM `ITSM_Application_VHost` WHERE `application` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        // Add vhosts
+        $added = 0;
+
+        $insert = $handler->prepare('INSERT INTO `ITSM_Application_VHost` (application, vhost) VALUES (:application, :vhost)');
+        $insert->bindParam('application', $id, DatabaseConnection::PARAM_INT);
+
+        foreach($vhostIds as $vhostId)
+        {
+            if(!ctype_digit($vhostId))
+                continue;
+
+            try
+            {
+                $insert->bindParam('vhost', $vhostId, DatabaseConnection::PARAM_INT);
+                $insert->execute();
+                $added += 1;
+            }
+            catch(DatabaseException $e){}
+        }
+
+        $handler->close();
+
+        return $added;
     }
 }

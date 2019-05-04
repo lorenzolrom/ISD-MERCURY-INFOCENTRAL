@@ -14,6 +14,7 @@
 namespace business;
 
 
+use business\itsm\ApplicationOperator;
 use business\itsm\AssetOperator;
 use controllers\CurrentUserController;
 use database\HistoryDatabaseHandler;
@@ -32,7 +33,8 @@ class HistoryOperator extends Operator
         'ITSM_Warehouse' => 'itsm_inventory-warehouses-r',
         'ITSM_Registrar' => 'itsm_web-registrars-r',
         'ITSM_VHost' => 'itsm_web-vhosts-r',
-        'NIS_URLAlias' => 'itsm_web-aliases-rw'
+        'NIS_URLAlias' => 'itsm_web-aliases-rw',
+        'ITSM_Application' => 'itsm_ait-apps-r'
     );
 
     /**
@@ -55,6 +57,8 @@ class HistoryOperator extends Operator
         // Assets use their asset tags as 'primary' keys
         if($tableName == 'ITSM_Asset')
             $index = (string)AssetOperator::idFromAssetTag($index);
+        if($tableName == 'ITSM_Application')
+            $index = (string)ApplicationOperator::idFromNumber($index);
 
         return HistoryDatabaseHandler::select($tableName, $index, $action, $username);
     }

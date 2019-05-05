@@ -90,7 +90,7 @@ class NotificationOperator extends Operator
 
 
         if(!isset($vals['roles']) OR !is_array($vals['roles']) OR empty($vals['roles']))
-            return array('errors' => 'Roles not defined');
+            return array('errors' => array('Roles not defined'));
 
         $email = FALSE;
 

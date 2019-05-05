@@ -15,6 +15,7 @@ namespace controllers;
 
 
 use business\PermissionOperator;
+use business\UserOperator;
 use models\HTTPRequest;
 use models\HTTPResponse;
 
@@ -26,6 +27,7 @@ class PermissionController extends Controller
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\EntryNotFoundException
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -41,7 +43,15 @@ class PermissionController extends Controller
         }
         else if($this->request->method() === HTTPRequest::POST AND $this->request->next() == 'audit')
         {
-            return $this->getUsersWithPermission();
+            $param = $this->request->next();
+
+            switch($param)
+            {
+                case null:
+                    return $this->getUsersWithPermission();
+                default:
+                    return $this->getUserRolesWithPermission($param);
+            }
         }
 
         return NULL;
@@ -79,26 +89,45 @@ class PermissionController extends Controller
 
         foreach($users as $user)
         {
-            $roles = PermissionOperator::getRolesByUserAndPermission($user, $args['permission']);
-
-            $roleList = array();
-
-            foreach($roles as $role)
-            {
-                $roleList[] = array(
-                    'id' => $role->getId(),
-                    'name' => $role->getName()
-                );
-            }
-
             $data[] = array(
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
-                'name' => $user->getFirstName() . ' ' . $user->getLastName(),
-                'roles' => $roleList
+                'name' => $user->getFirstName() . ' ' . $user->getLastName()
             );
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function getUserRolesWithPermission(?string $param): HTTPResponse
+    {
+        $args = self::getFormattedBody(self::FIELDS);
+
+        $user = UserOperator::getUser((int) $param);
+
+        $roles = PermissionOperator::getRolesByUserAndPermission($user, $args['permission']);
+
+        $data = array();
+
+        foreach($roles as $role)
+        {
+            $data[] = array(
+                'id' => $role->getId(),
+                'name' => $role->getName()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, array(
+            'id' => $user->getId(),
+            'username' => $user->getUsername(),
+            'name' => $user->getFirstName() . ' ' . $user->getLastName(),
+            'roles' => $data
+        ));
     }
 }

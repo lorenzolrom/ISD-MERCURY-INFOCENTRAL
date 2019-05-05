@@ -36,7 +36,8 @@ class HistoryOperator extends Operator
         'NIS_URLAlias' => 'itsm_web-aliases-rw',
         'ITSM_Application' => 'itsm_ait-apps-r',
         'Bulletin' => 'settings',
-        'Role' => 'settings'
+        'Role' => 'settings',
+        'Secret' => 'api-settings'
     );
 
     /**

@@ -15,6 +15,7 @@ namespace models;
 
 
 use business\PermissionOperator;
+use business\UserOperator;
 use database\RoleDatabaseHandler;
 use exceptions\ValidationException;
 use utilities\Validator;
@@ -55,6 +56,15 @@ class Role extends Model
     public function getPermissions(): array
     {
         return PermissionOperator::getRolePermissions($this);
+    }
+
+    /**
+     * @return User[]
+     * @throws \exceptions\DatabaseException
+     */
+    public function getUsers(): array
+    {
+        return UserOperator::getByRole($this);
     }
 
     /**

@@ -13,6 +13,7 @@
 
 namespace utilities;
 
+require_once('mail.php');
 
 use models\User;
 
@@ -87,7 +88,8 @@ class Mailer
     {
         // Build e-mail message
         $headers = array(
-            'From' => \Config::OPTIONS['emailFromName'] . ' <' . \Config::OPTIONS['emailFromAddress'] . '>'
+            'From' => \Config::OPTIONS['emailFromName'] . ' <' . \Config::OPTIONS['emailFromAddress'] . '>',
+            'Subject' => $this->subject
         );
 
         /** @noinspection PhpUndefinedClassInspection */

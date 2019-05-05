@@ -13,8 +13,13 @@
 spl_autoload_register(
     function($className)
     {
-        /** @noinspection PhpIncludeInspection */
-        require_once('../' . str_replace("\\", "/", $className) . ".class.php");
+        $class = '../' . str_replace("\\", "/", $className) . ".class.php";
+
+        if(file_exists($class))
+        {
+            /** @noinspection PhpIncludeInspection */
+            require_once($class);
+        }
     }
 );
 

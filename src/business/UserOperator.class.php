@@ -22,6 +22,7 @@ use exceptions\EntryNotFoundException;
 use exceptions\LDAPException;
 use exceptions\SecurityException;
 use exceptions\ValidationException;
+use models\Role;
 use models\Token;
 use models\User;
 use utilities\HistoryRecorder;
@@ -51,6 +52,16 @@ class UserOperator extends Operator
     public static function search(string $username = "%", string $firstName = "%", string $lastName = "%", $disabled = array()): array
     {
         return UserDatabaseHandler::select($username, $firstName, $lastName, $disabled);
+    }
+
+    /**
+     * @param Role $role
+     * @return array|User[]
+     * @throws DatabaseException
+     */
+    public static function getByRole(Role $role)
+    {
+        return UserDatabaseHandler::selectByRole($role->getId());
     }
 
     /**

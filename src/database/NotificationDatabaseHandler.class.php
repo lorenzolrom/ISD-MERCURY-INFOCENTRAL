@@ -130,4 +130,29 @@ class NotificationDatabaseHandler extends DatabaseHandler
 
         return self::selectById($id);
     }
+
+    /**
+     * @param int $user
+     * @param int $title
+     * @param int $data
+     * @param int $important
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(int $user, string $title, string$data, int $important): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `Notification` (`user`, `title`, `data`, `important`, `time`) 
+                  VALUES (:user, :title, :data, :important, NOW())');
+        $insert->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('title', $title, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('data', $data, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('important', $important, DatabaseConnection::PARAM_INT);
+        $insert->execute();
+
+        $handler->close();
+
+        return $insert->getRowCount() === 1;
+    }
 }

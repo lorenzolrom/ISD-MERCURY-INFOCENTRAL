@@ -15,8 +15,11 @@ namespace business;
 
 
 use database\NotificationDatabaseHandler;
+use exceptions\EntryNotFoundException;
 use models\Notification;
+use models\Role;
 use models\User;
+use utilities\Mailer;
 
 class NotificationOperator extends Operator
 {
@@ -72,5 +75,81 @@ class NotificationOperator extends Operator
     public static function getUserNotifications(User $user, $read = array(), $deleted = array(), $important = array()): array
     {
         return NotificationDatabaseHandler::selectByUser((int)$user->getId(), $read, $deleted, $important);
+    }
+
+    /**
+     * @param array $vals
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function bulkSendToRoles(array $vals): array
+    {
+        $errors = self::validate('models\Notification', $vals);
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+
+        if(!isset($vals['roles']) OR !is_array($vals['roles']) OR empty($vals['roles']))
+            return array('errors' => 'Roles not defined');
+
+        $email = FALSE;
+
+        if(isset($vals['email']) AND ($vals['email'] == TRUE OR $vals['email'] == 1))
+            $email = TRUE;
+
+        $users = array();
+        $userIds = array();
+
+        foreach($vals['roles'] as $roleId)
+        {
+            try
+            {
+                $role = RoleOperator::getRole($roleId);
+
+                foreach($role->getUsers() as $user)
+                {
+                    if(!in_array($user->getId(), $userIds))
+                    {
+                        $userIds[] = $user->getId();
+                        $users[] = $user;
+                    }
+                }
+            }
+            catch(EntryNotFoundException $e){}
+        }
+
+        return array('count' => self::bulkSendToUsers($vals['title'], $vals['data'], $vals['important'], $email, $users));
+    }
+
+    /**
+     * @param string $title
+     * @param string $message
+     * @param int $important
+     * @param bool $email
+     * @param User[] $users
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    private static function bulkSendToUsers(string $title, string $message, int $important, bool $email, array $users): int
+    {
+        if(empty($users))
+            return 0;
+
+        $sendCount = 0;
+
+        // Send email?
+        if($email)
+        {
+            $mailer = new Mailer($title, $message, $users);
+            $mailer->send();
+        }
+
+        foreach($users as $user)
+        {
+            NotificationDatabaseHandler::insert($user->getId(), $title, $message, $important);
+            $sendCount++;
+        }
+
+        return $sendCount;
     }
 }

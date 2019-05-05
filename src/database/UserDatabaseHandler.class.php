@@ -288,4 +288,33 @@ class UserDatabaseHandler extends DatabaseHandler
 
         return $count;
     }
+
+    /**
+     * @param int $role
+     * @return User[]
+     * @throws DatabaseException
+     */
+    public static function selectByRole(int $role): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `user` FROM `User_Role` WHERE `role` = ?');
+        $select->bindParam(1, $role, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $users = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try
+            {
+                $users[] = self::selectById($id);
+            }
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $users;
+    }
 }

@@ -21,6 +21,7 @@ use models\HTTPResponse;
 
 class RoleController extends Controller
 {
+    private const FIELDS = array('name', 'permissions');
 
     /**
      * @return HTTPResponse|null
@@ -46,6 +47,24 @@ class RoleController extends Controller
                     return $this->getById($param);
             }
         }
+        else if($this->request->method() === HTTPRequest::POST)
+        {
+            switch($param)
+            {
+                case 'search':
+                    return $this->getSearchResult(TRUE);
+                default:
+                    return $this->createRole();
+            }
+        }
+        else if($this->request->method() === HTTPRequest::PUT)
+        {
+            return $this->updateRole($param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            return $this->deleteRole($param);
+        }
 
         return NULL;
     }
@@ -69,14 +88,25 @@ class RoleController extends Controller
     }
 
     /**
+     * @param bool $search
      * @return HTTPResponse
      * @throws \exceptions\DatabaseException
      */
-    private function getSearchResult(): HTTPResponse
+    private function getSearchResult(bool $search = FALSE): HTTPResponse
     {
         $data = array();
 
-        foreach(RoleOperator::search() as $role)
+        if($search)
+        {
+            $args = self::getFormattedBody(self::FIELDS, FALSE);
+            $roles = RoleOperator::search($args['name']);
+        }
+        else
+        {
+            $roles = RoleOperator::search();
+        }
+
+        foreach($roles as $role)
         {
             $data[] = array(
                 'id' => $role->getId(),
@@ -106,5 +136,55 @@ class RoleController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function createRole(): HTTPResponse
+    {
+        $errors = RoleOperator::createRole(self::getFormattedBody(self::FIELDS));
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function updateRole(?string $param): HTTPResponse
+    {
+        $role = RoleOperator::getRole((int) $param);
+
+        $errors = RoleOperator::updateRole($role, self::getFormattedBody(self::FIELDS));
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function deleteRole(?string $param): HTTPResponse
+    {
+        $role = RoleOperator::getRole((int) $param);
+
+        RoleOperator::deleteRole($role);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

@@ -14,6 +14,9 @@
 namespace models;
 
 use business\PermissionOperator;
+use database\SecretDatabaseHandler;
+use exceptions\ValidationException;
+use utilities\Validator;
 
 /**
  * Class Secret
@@ -22,8 +25,14 @@ use business\PermissionOperator;
  *
  * @package models
  */
-class Secret
+class Secret extends Model
 {
+    private const NAME_RULES = array(
+        'name' => 'Name',
+        'lower' => 1,
+        'upper' => 64
+    );
+
     private $id;
     private $secret;
     private $name;
@@ -67,5 +76,21 @@ class Secret
         }
 
         return $permissions;
+    }
+
+    /**
+     * @param string|null $name
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateName(?string $name): bool
+    {
+        Validator::validate(self::NAME_RULES, $name);
+
+        if(SecretDatabaseHandler::selectIdFromName($name) !== NULL)
+            throw new ValidationException('Name already in use', ValidationException::VALUE_ALREADY_TAKEN);
+
+        return TRUE;
     }
 }

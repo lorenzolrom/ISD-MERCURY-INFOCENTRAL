@@ -128,7 +128,7 @@ class RoleOperator extends Operator
     {
         $errors = array();
 
-        if($role === NULL)
+        if($role === NULL OR $role->getName() != $vals['name'])
         {
             $errors = parent::validate('models\Role', $vals);
         }

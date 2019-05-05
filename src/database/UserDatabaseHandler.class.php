@@ -14,6 +14,7 @@
 namespace database;
 
 
+use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use models\User;
 
@@ -104,12 +105,12 @@ class UserDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $id
-     * @param string $password
+     * @param string|null $password
      * @return User
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function updatePassword(int $id, string $password): User
+    public static function updatePassword(int $id, ?string $password): User
     {
         $handler = new DatabaseConnection();
 
@@ -163,5 +164,128 @@ class UserDatabaseHandler extends DatabaseHandler
             return NULL;
 
         return $select->fetchColumn();
+    }
+
+    /**
+     * @param string $username
+     * @param string $firstName
+     * @param string $lastName
+     * @param string $email
+     * @param string|null $password
+     * @param int $disabled
+     * @param string $authType
+     * @return User
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(string $username, string $firstName, string $lastName, string $email,
+                                  ?string $password, int $disabled, string $authType): User
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `User` (`username`, `firstName`, `lastName`, `email`, `password`, 
+                    `disabled`, `authType`) VALUES (:username, :firstName, :lastName, :email, :password, :disabled, 
+                                                    :authType)');
+        $insert->bindParam('username', $username, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('firstName', $firstName, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('lastName', $lastName, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('email', $email, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('password', $password, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('disabled', $disabled, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('authType', $authType, DatabaseConnection::PARAM_STR);
+        $insert->execute();
+
+        $id = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @param string $username
+     * @param string $firstName
+     * @param string $lastName
+     * @param string $email
+     * @param string|null $password
+     * @param int $disabled
+     * @param string $authType
+     * @return User
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(int $id, string $username, string $firstName, string $lastName, string $email,
+                                  int $disabled, string $authType): User
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `User` SET `username` = :username, `firstName` = :firstName, 
+                  `lastName` = :lastName, `email` = :email, `disabled` = :disabled, 
+                  `authType` = :authType WHERE `id` = :id');
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->bindParam('username', $username, DatabaseConnection::PARAM_STR);
+        $update->bindParam('firstName', $firstName, DatabaseConnection::PARAM_STR);
+        $update->bindParam('lastName', $lastName, DatabaseConnection::PARAM_STR);
+        $update->bindParam('email', $email, DatabaseConnection::PARAM_STR);
+        $update->bindParam('disabled', $disabled, DatabaseConnection::PARAM_INT);
+        $update->bindParam('authType', $authType, DatabaseConnection::PARAM_STR);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function delete(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `User` WHERE `id` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @param array $roles
+     * @return int
+     * @throws DatabaseException
+     */
+    public static function setRoles(int $id, array $roles): int
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `User_Role` WHERE `user` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $insert = $handler->prepare('INSERT INTO `User_Role` (`user`, `role`) VALUES (:user, :role)');
+        $insert->bindParam('user', $id, DatabaseConnection::PARAM_INT);
+        $count = 0;
+
+        foreach($roles as $role)
+        {
+            try
+            {
+                $insert->bindParam('role', $role, DatabaseConnection::PARAM_INT);
+                $insert->execute();
+                $count++;
+            }
+            catch(DatabaseException $e){}
+        }
+
+        $handler->close();
+
+        return $count;
     }
 }

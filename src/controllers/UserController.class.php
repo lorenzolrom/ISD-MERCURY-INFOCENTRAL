@@ -21,11 +21,14 @@ use models\HTTPResponse;
 class UserController extends Controller
 {
     const SEARCH_FIELDS = array('username', 'firstName', 'lastName', 'disabled');
+    private const FIELDS = array('username', 'firstName', 'lastName', 'email', 'password', 'disabled', 'authType', 'roles');
 
     /**
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryInUseException
      * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\LDAPException
      * @throws \exceptions\SecurityException
      */
     public function getResponse(): ?HTTPResponse
@@ -58,7 +61,17 @@ class UserController extends Controller
             {
                 case 'search':
                     return $this->getSearchResult(TRUE);
+                default:
+                    return $this->create();
             }
+        }
+        else if($this->request->method() === HTTPRequest::PUT)
+        {
+            return $this->update($param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            return $this->delete($param);
         }
 
         return NULL;
@@ -163,5 +176,63 @@ class UserController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $results);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryInUseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    private function delete(?string $param): HTTPResponse
+    {
+        $user = UserOperator::getUser((int) $param);
+
+        UserOperator::deleteUser($user);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\LDAPException
+     * @throws \exceptions\SecurityException
+     */
+    private function create(): HTTPResponse
+    {
+        $args = self::getFormattedBody(self::FIELDS);
+
+        $errors = UserOperator::createUser($args);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\LDAPException
+     * @throws \exceptions\SecurityException
+     */
+    private function update(?string $param): HTTPResponse
+    {
+        $user = UserOperator::getUser((int) $param);
+
+        $args = self::getFormattedBody(self::FIELDS);
+
+        $errors = UserOperator::updateUser($user, $args);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

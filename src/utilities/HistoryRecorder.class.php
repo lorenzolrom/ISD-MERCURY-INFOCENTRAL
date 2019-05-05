@@ -54,6 +54,9 @@ class HistoryRecorder
 
         foreach(array_keys($oldValues) as $varName)
         {
+            if($varName === 'password') // do not write password to history
+                continue;
+
             if(!isset($newValues[$varName]))
                 $newValues[$varName] = $oldValues[$varName]; // ignore unchanged items
 

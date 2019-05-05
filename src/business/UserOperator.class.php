@@ -17,11 +17,14 @@ namespace business;
 use database\TokenDatabaseHandler;
 use database\UserDatabaseHandler;
 use exceptions\DatabaseException;
+use exceptions\EntryInUseException;
 use exceptions\EntryNotFoundException;
 use exceptions\LDAPException;
 use exceptions\SecurityException;
+use exceptions\ValidationException;
 use models\Token;
 use models\User;
+use utilities\HistoryRecorder;
 use utilities\LDAPConnection;
 
 class UserOperator extends Operator
@@ -48,6 +51,186 @@ class UserOperator extends Operator
     public static function search(string $username = "%", string $firstName = "%", string $lastName = "%", $disabled = array()): array
     {
         return UserDatabaseHandler::select($username, $firstName, $lastName, $disabled);
+    }
+
+    /**
+     * @param array $vals
+     * @return array
+     * @throws LDAPException
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     */
+    public static function createUser(array $vals): array
+    {
+        $errors = array();
+
+        // Validate username format and that it is unique
+        try{User::_validateUsername($vals['username']);}
+        catch(ValidationException $e){$errors[] = $e->getMessage();}
+
+        try{User::_validateUsernameUnique($vals['username']);}
+        catch(ValidationException $e){$errors[] = $e->getMessage();}
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        if(isset($vals['authType']) AND $vals['authType'] == 'ldap') // LDAP user
+        {
+            $ldap = new LDAPConnection();
+            $ldap->bind();
+
+            // Verify LDAP username
+            $results = $ldap->searchByUsername($vals['username'], array('givenname', 'sn', 'mail'));
+
+            if($results['count'] !== 1)
+            {
+                return array('errors' => array('Username not found in directory'));
+            }
+
+            // Get name + email from LDAP
+            $vals['firstName'] = isset($results['givenname'][0]) ? $results['givenname'][0] : '';
+            $vals['lastName'] = isset($results['sn'][0]) ? $results['sn'][0] : '';
+            $vals['email'] = isset($results['mail'][0]) ? $results['mail'][0] : '';
+            $vals['password'] = NULL;
+            $vals['disabled'] = 0; // User must be disabled through directory
+        }
+        else // Fallback - Local user
+        {
+            // Generic validation
+            $errors = self::validate('models\User', $vals);
+
+            // Password must exist for new local user
+            try{User::_validatePassword($vals['password'], 'loca');}
+            catch(ValidationException $e){$errors[] = $e->getMessage();}
+
+            if(!empty($errors))
+                return array('errors' => $errors);
+
+            // Hash password
+            $vals['password'] = User::hashPassword($vals['password']);
+        }
+
+        $user = UserDatabaseHandler::insert($vals['username'], $vals['firstName'], $vals['lastName'], $vals['email'], $vals['password'], $vals['disabled'], $vals['authType']);
+        $history = HistoryRecorder::writeHistory('User', HistoryRecorder::CREATE, $user->getId(), $user);
+
+        if(is_array($vals['roles']))
+        {
+            HistoryRecorder::writeAssocHistory($history, array('roles' => $vals['roles']));
+            UserDatabaseHandler::setRoles($user->getId(), $vals['roles']);
+        }
+
+        return array('id' => $user->getId());
+    }
+
+    /**
+     * @param User $user
+     * @param array $vals
+     * @return array
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     * @throws LDAPException
+     * @throws SecurityException
+     */
+    public static function updateUser(User $user, array $vals): array
+    {
+        $errors = array();
+
+        // Validate username format and that it is unique
+        try{User::_validateUsername($vals['username']);}
+        catch(ValidationException $e){$errors[] = $e->getMessage();}
+
+        // Check username if it hasn't been changed
+        if(empty($errors) AND $user->getUsername() !== $vals['username'])
+        {
+            try{User::_validateUsernameUnique($vals['username']);}
+            catch(ValidationException $e){$errors[] = $e->getMessage();}
+        }
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        if(isset($vals['authType']) AND $vals['authType'] == 'ldap') // LDAP user
+        {
+            $ldap = new LDAPConnection();
+            $ldap->bind();
+
+            // Verify LDAP username
+            $results = $ldap->searchByUsername($vals['username'], array('givenname', 'sn', 'mail'));
+
+            if($results['count'] !== 1)
+            {
+                return array('errors' => array('Username not found in directory'));
+            }
+
+            $results = $results[0];
+
+            // Get name + email from LDAP
+            $vals['firstName'] = isset($results['givenname'][0]) ? $results['givenname'][0] : '';
+            $vals['lastName'] = isset($results['sn'][0]) ? $results['sn'][0] : '';
+            $vals['email'] = isset($results['mail'][0]) ? $results['mail'][0] : '';
+            $vals['password'] = NULL;
+            $vals['disabled'] = 0; // User must be disabled through directory
+        }
+        else // Fallback - Local user
+        {
+            // Generic validation
+            $errors = self::validate('models\User', $vals);
+
+            // Change password if it's been supplied
+            if(isset($vals['password']) AND strlen($vals['password']) !== 0)
+            {
+                try{User::_validatePassword($vals['password'], 'loca');}
+                catch(ValidationException $e){$errors[] = $e->getMessage();}
+
+                // Hash password
+                UserDatabaseHandler::updatePassword($user->getId(), User::hashPassword($vals['password']));
+            }
+
+            if((!isset($vals['password']) OR strlen($vals['password']) === 0) AND ($user->getPassword() === NULL OR strlen($user->getPassword()) === 0))
+                $errors[] = 'Password has not been set';
+
+            if(!empty($errors))
+                return array('errors' => $errors);
+        }
+
+        $history = HistoryRecorder::writeHistory('User', HistoryRecorder::MODIFY, $user->getId(), $user, $vals);
+        $user = UserDatabaseHandler::update($user->getId(), $vals['username'], $vals['firstName'], $vals['lastName'], $vals['email'], $vals['disabled'], $vals['authType']);
+
+        // Wipe password if user is LDAP
+        if($vals['authType'] === 'ldap')
+            UserDatabaseHandler::updatePassword($user->getId(), NULL);
+
+        if(is_array($vals['roles']))
+        {
+            HistoryRecorder::writeAssocHistory($history, array('roles' => $vals['roles']));
+            UserDatabaseHandler::setRoles($user->getId(), $vals['roles']);
+        }
+
+        return array('id' => $user->getId());
+    }
+
+    /**
+     * @param User $user
+     * @return bool
+     * @throws DatabaseException
+     * @throws EntryInUseException
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     */
+    public static function deleteUser(User $user): bool
+    {
+        try
+        {
+            UserDatabaseHandler::delete($user->getId());
+        }
+        catch(DatabaseException $e)
+        {
+            throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE);
+        }
+
+        HistoryRecorder::writeHistory('User', HistoryRecorder::DELETE, $user->getId(), $user);
+        return TRUE;
     }
 
     /**
@@ -194,10 +377,7 @@ class UserOperator extends Operator
      */
     private static function authenticateLocalUser(User $user, string $password): bool
     {
-        if(User::hashPassword($password) == $user->getPassword())
-            return TRUE;
-
-        return FALSE;
+        return password_verify(\Config::OPTIONS['salt'] . $password, $user->getPassword());
     }
 
     /**

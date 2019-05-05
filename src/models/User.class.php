@@ -16,9 +16,51 @@ namespace models;
 
 use business\NotificationOperator;
 use business\RoleOperator;
+use business\UserOperator;
+use exceptions\ValidationException;
+use utilities\Validator;
 
 class User extends Model
 {
+    private const USERNAME_RULES = array(
+        'name' => 'Username',
+        'lower' => 1,
+        'upper' => 64
+    );
+
+    private const FIRST_NAME_RULES = array(
+        'name' => 'First name',
+        'lower' => 1,
+        'upper' => 30
+    );
+
+    private const LAST_NAME_RULES = array(
+        'name' => 'Last name',
+        'lower' => 1,
+        'upper' => 30
+    );
+
+    private const EMAIL_RULES = array(
+        'name' => 'Email',
+        'type' => 'email',
+        'empty' => TRUE
+    );
+
+    private const DISABLED_RULES = array(
+        'name' => 'Disabled',
+        'acceptable' => array(0, 1)
+    );
+
+    private const AUTH_TYPE_RULES = array(
+        'name' => 'Auth Type',
+        'acceptable' => array('loca', 'ldap')
+    );
+
+    private const PASSWORD_RULES = array(
+        'name' => 'Password',
+        'lower' => 8
+    );
+
     private $id;
     private $username;
     private $firstName;
@@ -136,7 +178,115 @@ class User extends Model
      */
     public static function hashPassword(string $password): string
     {
-        // TODO: replace with ARGON2 ID salt once account management is migrated to MERLOT app
-        return hash('SHA512', $password);
+        return password_hash(\Config::OPTIONS['salt'] . $password, PASSWORD_ARGON2ID);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function _validateUsername(?string $val): bool
+    {
+        return Validator::validate(self::USERNAME_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateFirstName(?string $val): bool
+    {
+        return Validator::validate(self::FIRST_NAME_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateLastName(?string $val): bool
+    {
+        return Validator::validate(self::LAST_NAME_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateEmail(?string $val): bool
+    {
+        return Validator::validate(self::EMAIL_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateDisabled(?string $val): bool
+    {
+        return Validator::validate(self::DISABLED_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateAuthType(?string $val): bool
+    {
+        return Validator::validate(self::AUTH_TYPE_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws ValidationException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function _validateUsernameUnique(?string $val): bool
+    {
+        if(UserOperator::idFromUsername($val) !== NULL)
+            throw new ValidationException('Username already in use', ValidationException::VALUE_ALREADY_TAKEN);
+
+        return TRUE;
+    }
+
+    /**
+     * Determine if the input for password is accurate.
+     * Password NOT required if authType is 'ldap'
+     * Password required if authType is 'loca', must check when switching between LDAP and local accounts
+     *
+     * Underscore is to prevent automatic validation
+     *
+     * @param string|null $password
+     * @param string|null $authType
+     * @param User|null $user
+     * @return bool
+     * @throws ValidationException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function _validatePassword(?string $password, ?string $authType = NULL, ?User $user = NULL): bool
+    {
+        if($authType === 'ldap') // auth type for new user is ldap
+            return TRUE;
+
+        if($user !== NULL AND $user->getAuthType() === 'ldap') // existing user is ldap
+            return TRUE;
+
+        if($user !== NULL AND $user->getAuthType() === 'loca' AND ($user->getPassword() === NULL OR strlen($user->getPassword()) === 0))
+            throw new ValidationException('Password has not been set', ValidationException::VALUE_IS_NOT_VALID);
+
+        // Default to Validator (is set and greater than 8 characters)
+        return Validator::validate(self::PASSWORD_RULES, $password);
     }
 }

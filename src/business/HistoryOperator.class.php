@@ -37,7 +37,8 @@ class HistoryOperator extends Operator
         'ITSM_Application' => 'itsm_ait-apps-r',
         'Bulletin' => 'settings',
         'Role' => 'settings',
-        'Secret' => 'api-settings'
+        'Secret' => 'api-settings',
+        'User' => 'settings'
     );
 
     /**

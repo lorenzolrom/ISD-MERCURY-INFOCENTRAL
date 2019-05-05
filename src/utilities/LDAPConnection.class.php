@@ -65,7 +65,7 @@ class LDAPConnection
      * @param string $password
      * @return bool
      */
-    public function bind(string $username, string $password): bool
+    public function bind(string $username = \Config::OPTIONS['ldapUsername'], string $password = \Config::OPTIONS['ldapPassword']): bool
     {
         set_error_handler(function(){}); // Prevents incorrect LDAP login from throwing a warning
 

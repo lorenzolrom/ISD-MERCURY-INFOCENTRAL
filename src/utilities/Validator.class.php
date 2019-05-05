@@ -97,18 +97,22 @@ class Validator
         if((!isset($rules['null']) OR !$rules['null'])AND $value === NULL)
             throw new ValidationException($rules['name'] . ' is required', ValidationException::VALUE_IS_NULL);
 
+        // skip validation if empty string allowed, and string is empty
+        if(isset($rules['empty']) AND $rules['empty'] AND strlen($value) === 0)
+            return true;
+
         // Username
         if(isset($rules['username']))
         {
             if(UserOperator::idFromUsername($value) === NULL)
-                throw new ValidationException("{$rules['name']} not found");
+                throw new ValidationException("{$rules['name']} not found", ValidationException::VALUE_IS_NOT_VALID);
         }
 
         // Attribute
         if(isset($rules['attribute']) AND isset($rules['attrExtension']) AND isset($rules['attrType']))
         {
             if(!AttributeOperator::idFromCode($rules['attrExtension'], $rules['attrType'], (string)$value))
-                throw new ValidationException("{$rules['name']} is not valid");
+                throw new ValidationException("{$rules['name']} is not valid", ValidationException::VALUE_IS_NOT_VALID);
         }
 
         // Validate type
@@ -116,11 +120,14 @@ class Validator
         {
             // Valid date
             if($rules['type'] === 'date' AND !self::validDate($value))
-                throw new ValidationException("{$rules['name']} must be a valid date");
+                throw new ValidationException("{$rules['name']} must be a valid date", ValidationException::VALUE_IS_NOT_VALID);
+
+            if($rules['type'] === 'email' AND !filter_var($value, FILTER_VALIDATE_EMAIL))
+                throw new ValidationException("{$rules['name']} must be a valid email address", ValidationException::VALUE_IS_NOT_VALID);
 
             // Positive number
             if(isset($rules['positive']) AND $rules['positive'] AND in_array($rules['type'], array('int', 'float')) AND $value < 0)
-                throw new ValidationException("{$rules['name']} must be positive");
+                throw new ValidationException("{$rules['name']} must be positive",ValidationException::VALUE_IS_NOT_VALID);
 
         }
 

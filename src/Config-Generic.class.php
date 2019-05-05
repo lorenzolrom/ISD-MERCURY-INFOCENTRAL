@@ -25,6 +25,7 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
         'databaseUser' => 'your_user',
         'databasePassword' => 'your_password',
 
+        'salt' => 'your_salt_here',
         'allowMultipleSessions' => FALSE,
 
         'ldapEnabled' => FALSE,

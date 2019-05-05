@@ -67,12 +67,12 @@ class RoleOperator extends Operator
             return array('errors' => $errors);
 
         $role = RoleDatabaseHandler::insert($vals['name']);
-        HistoryRecorder::writeHistory('Role', HistoryRecorder::CREATE, $role->getId(), $role);
+        $history = HistoryRecorder::writeHistory('Role', HistoryRecorder::CREATE, $role->getId(), $role);
 
         if(is_array($vals['permissions']))
         {
             RoleDatabaseHandler::setPermissions($role->getId(), $vals['permissions']);
-            HistoryRecorder::writeAssocHistory('Role', HistoryRecorder::CREATE, $role->getId(), array('permissions' => $vals['permissions']));
+            HistoryRecorder::writeAssocHistory($history, array('permissions' => $vals['permissions']));
         }
 
         return array('id' => $role->getId());
@@ -93,11 +93,11 @@ class RoleOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        HistoryRecorder::writeHistory('Role', HistoryRecorder::MODIFY, $role->getId(), $role, $vals);
+        $history = HistoryRecorder::writeHistory('Role', HistoryRecorder::MODIFY, $role->getId(), $role, $vals);
 
         if(is_array($vals['permissions']))
         {
-            HistoryRecorder::writeAssocHistory('Role', HistoryRecorder::MODIFY, $role->getId(), array('permissions' => $vals['permissions']));
+            HistoryRecorder::writeAssocHistory($history, array('permissions' => $vals['permissions']));
             RoleDatabaseHandler::setPermissions($role->getId(), $vals['permissions']);
         }
 

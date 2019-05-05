@@ -35,7 +35,8 @@ class HistoryOperator extends Operator
         'ITSM_VHost' => 'itsm_web-vhosts-r',
         'NIS_URLAlias' => 'itsm_web-aliases-rw',
         'ITSM_Application' => 'itsm_ait-apps-r',
-        'Bulletin' => 'settings'
+        'Bulletin' => 'settings',
+        'Role' => 'settings'
     );
 
     /**

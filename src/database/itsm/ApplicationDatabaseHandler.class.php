@@ -24,10 +24,6 @@ use models\itsm\VHost;
 
 class ApplicationDatabaseHandler extends DatabaseHandler
 {
-    private const APP = 'apph';
-    private const WEB = 'webh';
-    private const DATA = 'data';
-
     /**
      * @param int $id
      * @return Application

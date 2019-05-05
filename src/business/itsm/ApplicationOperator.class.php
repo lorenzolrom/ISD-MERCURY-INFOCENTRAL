@@ -214,7 +214,7 @@ class ApplicationOperator extends Operator
         ApplicationDatabaseHandler::setHosts($application->getId(), 'data', $vals['dataHosts']);
         ApplicationDatabaseHandler::setHosts($application->getId(), 'apph', $vals['appHosts']);
 
-        HistoryRecorder::writeHistory('ITSM_Application', HistoryRecorder::CREATE, $application->getId(), $application);
+        $history = HistoryRecorder::writeHistory('ITSM_Application', HistoryRecorder::CREATE, $application->getId(), $application);
 
         $newHosts = array(
             'webHosts' => $vals['webHosts'],
@@ -223,7 +223,7 @@ class ApplicationOperator extends Operator
             'vHosts' => $vals['vHosts']
         );
 
-        HistoryRecorder::writeAssocHistory('ITSM_Application', HistoryRecorder::CREATE, $application->getId(), $newHosts);
+        HistoryRecorder::writeAssocHistory($history, $newHosts);
 
         return array('id' => $application->getNumber());
     }
@@ -251,7 +251,7 @@ class ApplicationOperator extends Operator
         $vals['status'] = AttributeOperator::idFromCode('itsm', 'aits', $vals['status']);
         $vals['publicFacing'] = (int)$vals['publicFacing'];
 
-        HistoryRecorder::writeHistory('ITSM_Application', HistoryRecorder::MODIFY, $application->getId(), $application, $vals);
+        $history = HistoryRecorder::writeHistory('ITSM_Application', HistoryRecorder::MODIFY, $application->getId(), $application, $vals);
 
         if($vals['dataHosts'] === NULL)
             $vals['dataHosts'] = array();
@@ -269,7 +269,7 @@ class ApplicationOperator extends Operator
             'vHosts' => $vals['vHosts']
         );
 
-        HistoryRecorder::writeAssocHistory('ITSM_Application', HistoryRecorder::MODIFY, $application->getId(), $newHosts);
+        HistoryRecorder::writeAssocHistory($history, $newHosts);
 
         ApplicationDatabaseHandler::update($application->getId(), $vals['name'],
             $vals['description'], $vals['owner'], $vals['type'], $vals['status'], $vals['publicFacing'],

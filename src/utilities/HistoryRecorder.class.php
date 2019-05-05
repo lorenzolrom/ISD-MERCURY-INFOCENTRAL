@@ -30,12 +30,12 @@ class HistoryRecorder
      * @param string $index
      * @param Model $currentState
      * @param array $newValues
-     * @return void
+     * @return int
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public static function writeHistory(string $tableName, string $action, string $index, Model $currentState, array $newValues = array()): void
+    public static function writeHistory(string $tableName, string $action, string $index, Model $currentState, array $newValues = array()): int
     {
         $rawOldValues = (array)$currentState;
         $oldValues = array();
@@ -61,22 +61,16 @@ class HistoryRecorder
                 HistoryDatabaseHandler::insertHistoryItem($record->getId(), $varName, $oldValues[$varName], $newValues[$varName]);
         }
 
-        return;
+        return $record->getId();
     }
 
     /**
-     * @param string $tableName
-     * @param string $action
-     * @param string $index
+     * @param int $history
      * @param array $vals
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
      */
-    public static function writeAssocHistory(string $tableName, string $action, string $index, array $vals = array()): void
+    public static function writeAssocHistory(int $history, array $vals = array()): void
     {
-        $record = HistoryDatabaseHandler::insert($tableName, $action, $index, CurrentUserController::currentUser()->getUsername(), date('Y-m-d H:i:s'));
-
         foreach(array_keys($vals) as $param)
         {
             if(!is_array($vals[$param]))
@@ -84,7 +78,7 @@ class HistoryRecorder
 
             foreach($vals[$param] as $val)
             {
-                HistoryDatabaseHandler::insertHistoryItem($record->getId(), $param, '', $val);
+                HistoryDatabaseHandler::insertHistoryItem($history, $param, '', $val);
             }
         }
 

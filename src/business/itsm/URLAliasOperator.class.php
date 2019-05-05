@@ -35,7 +35,7 @@ class URLAliasOperator extends Operator
     }
 
     /**
-     * @param string|null $param
+     * @param int $param
      * @return URLAlias
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException

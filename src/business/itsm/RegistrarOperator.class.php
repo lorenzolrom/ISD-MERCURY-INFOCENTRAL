@@ -58,7 +58,7 @@ class RegistrarOperator extends Operator
      */
     public static function createRegistrar(?string $code, ?string $name, ?string $url, ?string $phone): array
     {
-        $errors = self::validateSubmission($code, $name, $url, $phone);
+        $errors = self::validateSubmission($code, $name, $phone);
 
         if(!empty($errors))
             return array('errors' => $errors);
@@ -88,7 +88,7 @@ class RegistrarOperator extends Operator
      */
     public static function updateRegistrar(Registrar $registrar, ?string $code, ?string $name, ?string $url, ?string $phone): array
     {
-        $errors = self::validateSubmission($code, $name, $url, $phone);
+        $errors = self::validateSubmission($code, $name, $phone);
 
         if(!empty($errors))
             return array('errors' => $errors);
@@ -147,13 +147,12 @@ class RegistrarOperator extends Operator
     /**
      * @param string|null $code
      * @param string|null $name
-     * @param string|null $url
      * @param string|null $phone
      * @param Registrar|null $registrar
      * @return array
      * @throws \exceptions\DatabaseException
      */
-    private static function validateSubmission(?string $code, ?string $name, ?string $url, ?string $phone, ?Registrar $registrar = NULL): array
+    private static function validateSubmission(?string $code, ?string $name, ?string $phone, ?Registrar $registrar = NULL): array
     {
         $errors = array();
 

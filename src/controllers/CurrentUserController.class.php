@@ -142,7 +142,6 @@ class CurrentUserController extends Controller
         {
             switch($this->request->next())
             {
-                case 'validateSession': return $this->validateSession();
                 case "roles": return $this->getCurrentUserRoles();
                 case "permissions": return $this->getCurrentUserPermissions();
                 case "unreadNotificationCount": return $this->getUnreadNotificationCount();

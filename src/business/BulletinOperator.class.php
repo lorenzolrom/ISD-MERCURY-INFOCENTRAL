@@ -107,13 +107,13 @@ class BulletinOperator extends Operator
 
         $bulletin = BulletinDatabaseHandler::insert($vals['startDate'], $vals['endDate'], $vals['title'], $vals['message'], $vals['inactive'], $vals['type']);
 
+        $history = HistoryRecorder::writeHistory('Bulletin', HistoryRecorder::CREATE, $bulletin->getId(), $bulletin);
+
         if(is_array($vals['roles']))
         {
             BulletinDatabaseHandler::setRoles($bulletin->getId(), $vals['roles']);
-            HistoryRecorder::writeAssocHistory('Bulletin', HistoryRecorder::CREATE, $bulletin->getId(), array('roles' => $vals['roles']));
+            HistoryRecorder::writeAssocHistory($history, array('roles' => $vals['roles']));
         }
-
-        HistoryRecorder::writeHistory('Bulletin', HistoryRecorder::CREATE, $bulletin->getId(), $bulletin);
 
         return array('id' => $bulletin->getId());
     }
@@ -138,12 +138,12 @@ class BulletinOperator extends Operator
         if($vals['endDate'] === NULL OR strlen($vals['endDate']) === 0)
             $vals['endDate'] = '9999-12-31';
 
-        HistoryRecorder::writeHistory('Bulletin', HistoryRecorder::MODIFY, $bulletin->getId(), $bulletin, $vals);
+        $history = HistoryRecorder::writeHistory('Bulletin', HistoryRecorder::MODIFY, $bulletin->getId(), $bulletin, $vals);
 
         if(is_array($vals['roles']))
         {
             BulletinDatabaseHandler::setRoles($bulletin->getId(), $vals['roles']);
-            HistoryRecorder::writeAssocHistory('Bulletin', HistoryRecorder::MODIFY, $bulletin->getId(), array('roles' => $vals['roles']));
+            HistoryRecorder::writeAssocHistory($history, array('roles' => $vals['roles']));
         }
 
         $bulletin = BulletinDatabaseHandler::update($bulletin->getId(), $vals['startDate'], $vals['endDate'], $vals['title'], $vals['message'], $vals['inactive'], $vals['type']);

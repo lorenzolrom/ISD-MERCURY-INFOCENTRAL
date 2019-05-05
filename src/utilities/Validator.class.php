@@ -112,7 +112,7 @@ class Validator
         }
 
         // Validate type
-        if(isset($rules['type']))
+        if(isset($rules['type']) AND !(isset($rules['null']) AND $rules['null']))
         {
             // Valid date
             if($rules['type'] === 'date' AND !self::validDate($value))

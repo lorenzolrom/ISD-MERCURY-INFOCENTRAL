@@ -54,7 +54,8 @@ class ControllerFactory
         'roles' => 'controllers\RoleController',
         'permissions' => 'controllers\PermissionController',
         'currentUser' => 'controllers\CurrentUserController',
-        'authenticate' => 'controllers\AuthenticateController'
+        'authenticate' => 'controllers\AuthenticateController',
+        'bulletins' => 'controllers\BulletinController'
     );
 
     /**

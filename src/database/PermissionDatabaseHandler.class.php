@@ -14,8 +14,12 @@
 namespace database;
 
 
+use business\RoleOperator;
+use business\UserOperator;
 use exceptions\EntryNotFoundException;
 use models\Permission;
+use models\Role;
+use models\User;
 
 class PermissionDatabaseHandler extends DatabaseHandler
 {
@@ -124,5 +128,70 @@ class PermissionDatabaseHandler extends DatabaseHandler
         }
 
         return $permissions;
+    }
+
+    /**
+     * Select all users with permission
+     * @param string $permission
+     * @return User[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectUsersByPermission(string $permission): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `User` WHERE `id` IN 
+                              (SELECT `user` FROM `User_Role` WHERE `role` IN 
+                              (SELECT `role` FROM `Role_Permission` WHERE `permission` = :permission))');
+        $select->bindParam('permission', $permission, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        $users = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try
+            {
+                $users[] = UserOperator::getUser($id);
+            }
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $users;
+    }
+
+    /**
+     * @param string $permission
+     * @param int $user
+     * @return Role[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectRolesByUserAndPermission(string $permission, int $user): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Role` WHERE `id` IN 
+                              (SELECT `role` FROM `Role_Permission` WHERE `permission` = :permission) 
+                          AND `id` IN (SELECT `role` FROM `User_Role` WHERE `user` = :user)');
+        $select->bindParam('permission', $permission, DatabaseConnection::PARAM_STR);
+        $select->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $roles = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try
+            {
+                $roles[] = RoleOperator::getRole($id);
+            }
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $roles;
     }
 }

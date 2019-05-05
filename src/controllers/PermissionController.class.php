@@ -20,6 +20,7 @@ use models\HTTPResponse;
 
 class PermissionController extends Controller
 {
+    private const FIELDS = array('permission');
 
     /**
      * @return HTTPResponse|null
@@ -38,6 +39,10 @@ class PermissionController extends Controller
                     return $this->getList();
             }
         }
+        else if($this->request->method() === HTTPRequest::POST AND $this->request->next() == 'audit')
+        {
+            return $this->getUsersWithPermission();
+        }
 
         return NULL;
     }
@@ -54,6 +59,43 @@ class PermissionController extends Controller
         {
             $data[] = array(
                 'code' => $permission->getCode()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     */
+    private function getUsersWithPermission(): HTTPResponse
+    {
+        $args = self::getFormattedBody(self::FIELDS);
+
+        $users = PermissionOperator::getUsersWithPermission((string) $args['permission']);
+
+        $data = array();
+
+        foreach($users as $user)
+        {
+            $roles = PermissionOperator::getRolesByUserAndPermission($user, $args['permission']);
+
+            $roleList = array();
+
+            foreach($roles as $role)
+            {
+                $roleList[] = array(
+                    'id' => $role->getId(),
+                    'name' => $role->getName()
+                );
+            }
+
+            $data[] = array(
+                'id' => $user->getId(),
+                'username' => $user->getUsername(),
+                'name' => $user->getFirstName() . ' ' . $user->getLastName(),
+                'roles' => $roleList
             );
         }
 

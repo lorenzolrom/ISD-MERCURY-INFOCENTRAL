@@ -18,6 +18,7 @@ use database\PermissionDatabaseHandler;
 use models\Permission;
 use models\Role;
 use models\Secret;
+use models\User;
 
 class PermissionOperator extends Operator
 {
@@ -59,5 +60,26 @@ class PermissionOperator extends Operator
     public static function search(): array
     {
         return PermissionDatabaseHandler::select();
+    }
+
+    /**
+     * @param string $permission
+     * @return User[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getUsersWithPermission(string $permission): array
+    {
+        return PermissionDatabaseHandler::selectUsersByPermission($permission);
+    }
+
+    /**
+     * @param User $user
+     * @param string $permission
+     * @return Role[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getRolesByUserAndPermission(User $user, string $permission): array
+    {
+        return PermissionDatabaseHandler::selectRolesByUserAndPermission($permission, $user->getId());
     }
 }

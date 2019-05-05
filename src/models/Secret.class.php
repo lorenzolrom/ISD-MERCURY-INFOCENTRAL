@@ -24,8 +24,17 @@ use business\PermissionOperator;
  */
 class Secret
 {
+    private $id;
     private $secret;
     private $name;
+
+    /**
+     * @return mixed
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
     /**
      * @return string

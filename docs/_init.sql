@@ -26,9 +26,11 @@ CREATE TABLE `Token` (
 );
 
 CREATE TABLE `Secret` (
+  `id` int(11) NOT NULL auto_increment,
   `secret` char(128) NOT NULL,
   `name` varchar(64) NOT NULL,
-  PRIMARY KEY (`secret`),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `secret` (`secret`),
   UNIQUE KEY `name` (`name`)
 );
 

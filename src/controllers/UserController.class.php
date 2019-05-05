@@ -86,6 +86,17 @@ class UserController extends Controller
     private function getById(?string $param): HTTPResponse
     {
         $user = UserOperator::getUser((int)$param);
+        $roles = $user->getRoles();
+
+        $roleList = array();
+
+        foreach($roles as $role)
+        {
+            $roleList[] = array(
+                'id' => $role->getId(),
+                'name' => $role->getName()
+            );
+        }
 
         $data = array(
             'id' => $user->getId(),
@@ -94,7 +105,8 @@ class UserController extends Controller
             'lastName' => $user->getLastName(),
             'email' => $user->getEmail(),
             'disabled' => $user->getDisabled(),
-            'authType' => $user->getAuthType()
+            'authType' => $user->getAuthType(),
+            'roles' => $roleList
         );
 
         return new HTTPResponse(HTTPResponse::OK, $data);

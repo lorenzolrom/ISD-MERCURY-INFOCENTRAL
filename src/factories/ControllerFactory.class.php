@@ -56,7 +56,8 @@ class ControllerFactory
         'currentUser' => 'controllers\CurrentUserController',
         'authenticate' => 'controllers\AuthenticateController',
         'bulletins' => 'controllers\BulletinController',
-        'secrets' => 'controllers\SecretController'
+        'secrets' => 'controllers\SecretController',
+        'tokens' => 'controllers\TokenController'
     );
 
     /**

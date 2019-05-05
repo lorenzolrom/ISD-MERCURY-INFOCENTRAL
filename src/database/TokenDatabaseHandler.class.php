@@ -110,4 +110,40 @@ class TokenDatabaseHandler extends DatabaseHandler
 
         return $update->getRowCount() !== 0;
     }
+
+    /**
+     * @param string|null $username
+     * @param string|null $ipAddress
+     * @param string|null $startTime
+     * @param string|null $endTime
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function select(?string $username = '%', ?string $ipAddress = '%',
+                                  ?string $startTime = '1000-01-01 00:00:00 ',
+                                  ?string $endTime = '9999-12-31 23:59:59'): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `token` FROM `Token` WHERE `user` IN (SELECT `id` FROM `User` WHERE `username` 
+                 LIKE :username) AND `ipAddress` LIKE :ipAddress AND `issueTime` BETWEEN :startTime AND :endTime ORDER BY `issueTime` DESC');
+
+        $select->bindParam('username', $username, DatabaseConnection::PARAM_STR);
+        $select->bindParam('ipAddress', $ipAddress, DatabaseConnection::PARAM_STR);
+        $select->bindParam('startTime', $startTime, DatabaseConnection::PARAM_STR);
+        $select->bindParam('endTime', $endTime, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        $tokens = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $token)
+        {
+            try{$tokens[] = self::selectByToken($token);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $tokens;
+    }
 }

@@ -18,6 +18,7 @@ use database\TokenDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use exceptions\SecurityException;
 use models\Token;
+use utilities\Validator;
 
 class TokenOperator extends Operator
 {
@@ -98,6 +99,27 @@ class TokenOperator extends Operator
         catch(EntryNotFoundException $e){}
 
         return FALSE;
+    }
+
+    /**
+     * @param string|null $username
+     * @param string|null $ipAddress
+     * @param string|null $startDate
+     * @param string|null $endDate
+     * @return Token[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function search(?string $username = '%', ?string $ipAddress = '%', ?string $startDate = '1000-01-01', ?string $endDate = '9999-12-31'): array
+    {
+        if(!Validator::validDate($startDate))
+            $startDate = '1000-01-01';
+        if(!Validator::validDate($endDate))
+            $endDate = '9999-12-31';
+
+        $startDate .= ' 00:00:00';
+        $endDate .= ' 23:59:59';
+
+        return TokenDatabaseHandler::select($username, $ipAddress, $startDate, $endDate);
     }
 
     /**

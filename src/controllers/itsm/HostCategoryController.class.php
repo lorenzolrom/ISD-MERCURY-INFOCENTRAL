@@ -102,7 +102,12 @@ class HostCategoryController extends Controller
     {
         $category = HostCategoryOperator::getCategory((int) $param);
 
-        $data = array();
+        $data = array(
+            'id' => $category->getId(),
+            'name' => $category->getName(),
+            'displayed' => $category->getDisplayed(),
+            'hosts' => array()
+        );
 
         foreach($category->getHosts() as $host)
         {
@@ -117,7 +122,7 @@ class HostCategoryController extends Controller
                 $hostInfo['status'] = $host->isOnline() ? 'online' : 'offline';
             }
 
-            $data[] = $hostInfo;
+            $data['hosts'][] = $hostInfo;
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);

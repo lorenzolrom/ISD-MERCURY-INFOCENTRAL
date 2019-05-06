@@ -94,16 +94,13 @@ CREATE TABLE `Notification` (
 -- BULLETIN
 CREATE TABLE `Bulletin` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user` int(11) DEFAULT NULL,
   `startDate` date NOT NULL,
   `endDate` date NOT NULL,
   `title` text NOT NULL,
   `message` text NOT NULL,
   `inactive` tinyint(1) NOT NULL DEFAULT '0',
   `type` enum('i','a') NOT NULL DEFAULT 'i',
-  PRIMARY KEY (`id`),
-  KEY `user` (`user`),
-  CONSTRAINT `Bulletin_ibfk_1` FOREIGN KEY (`user`) REFERENCES `User` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `Role_Bulletin` (

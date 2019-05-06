@@ -389,7 +389,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
 
         $handler->close();
 
-        return $select->fetchColumn() + 1;
+        return $select->getRowCount() === 0 ? 1 : $select->fetchColumn() + 1;
     }
 
     /**

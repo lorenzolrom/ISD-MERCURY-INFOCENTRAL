@@ -14,10 +14,19 @@
 namespace models\itsm;
 
 
+use business\itsm\VendorOperator;
+use business\itsm\WarehouseOperator;
+use exceptions\ValidationException;
 use models\Model;
+use utilities\Validator;
 
 class PurchaseOrder extends Model
 {
+    private const ORDER_DATE = array(
+        'name' => 'Order Date',
+        'type' => 'date'
+    );
+
     private $id;
     private $number;
     private $orderDate;
@@ -136,5 +145,42 @@ class PurchaseOrder extends Model
         return $this->canceled;
     }
 
+    /**
+     * @param string|null $orderDate
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateOrderDate(?string $orderDate): bool
+    {
+        return Validator::validate(self::ORDER_DATE, $orderDate);
+    }
 
+    /**
+     * @param string|null $warehouse
+     * @return bool
+     * @throws ValidationException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function validateWarehouse(?string $warehouse): bool
+    {
+        if(!WarehouseOperator::codeInUse((string) $warehouse))
+            throw new ValidationException('Warehouse not found', ValidationException::VALUE_IS_NOT_VALID);
+
+        return TRUE;
+    }
+
+    /**
+     * @param string|null $vendor
+     * @return bool
+     * @throws ValidationException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function validateVendor(?string $vendor): bool
+    {
+        if(!VendorOperator::codeInUse((string) $vendor))
+            throw new ValidationException('Vendor not found', ValidationException::VALUE_IS_NOT_VALID);
+
+        return TRUE;
+    }
 }

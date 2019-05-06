@@ -23,6 +23,7 @@ use models\HTTPResponse;
 
 class HostCategoryController extends Controller
 {
+    private const FIELDS = array('name', 'displayed', 'hosts');
 
     /**
      * @return HTTPResponse|null
@@ -54,6 +55,12 @@ class HostCategoryController extends Controller
                     }
             }
         }
+        else if($this->request->method() === HTTPRequest::POST)
+            return $this->create();
+        else if($this->request->method() === HTTPRequest::PUT)
+            return $this->update($param);
+        else if($this->request->method() === HTTPRequest::DELETE)
+            return $this->delete($param);
 
         return NULL;
     }
@@ -114,5 +121,61 @@ class HostCategoryController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPRequest
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function create(): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsmmonitor-hosts-w');
+
+        $errors = HostCategoryOperator::create(self::getFormattedBody(self::FIELDS));
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function update(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsmmonitor-hosts-w');
+
+        $category = HostCategoryOperator::getCategory((int) $param);
+
+        $errors = HostCategoryOperator::update($category, self::getFormattedBody(self::FIELDS));
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function delete(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsmmonitor-hosts-w');
+
+        $category = HostCategoryOperator::getCategory((int) $param);
+        HostCategoryOperator::delete($category);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

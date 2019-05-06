@@ -141,6 +141,16 @@ class VendorOperator extends Operator
     }
 
     /**
+     * @param string $code
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function codeInUse(string $code): bool
+    {
+        return VendorDatabaseHandler::selectIdFromCode($code) !== NULL;
+    }
+
+    /**
      * @param string|null $code
      * @param string|null $name
      * @param string|null $streetAddress

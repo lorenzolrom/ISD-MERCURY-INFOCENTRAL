@@ -40,7 +40,7 @@ class VHostController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('itsm_web-vhosts-r');
+        CurrentUserController::validatePermission(array('itsm_web-vhosts-r', 'itsm_ait-apps-w'));
 
         $param = $this->request->next();
 

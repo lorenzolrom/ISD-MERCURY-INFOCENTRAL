@@ -29,6 +29,7 @@ class ControllerFactory
     private const CONTROLLERS = array(
         // Devices
         'hosts' => 'controllers\itsm\HostController',
+        'hostCategories' => 'controllers\itsm\HostCategoryController',
 
         // Inventory
         'commodities' => 'controllers\itsm\CommodityController',

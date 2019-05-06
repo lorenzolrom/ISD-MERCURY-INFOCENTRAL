@@ -18,6 +18,7 @@ use database\itsm\AssetDatabaseHandler;
 use database\itsm\HostDatabaseHandler;
 use exceptions\ValidationException;
 use models\Model;
+use utilities\Pinger;
 use utilities\Validator;
 
 class Host extends Model
@@ -117,6 +118,14 @@ class Host extends Model
     public function getSystemDomain(): string
     {
         return $this->systemDomain;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOnline(): bool
+    {
+        return Pinger::ping($this->ipAddress);
     }
 
     /**

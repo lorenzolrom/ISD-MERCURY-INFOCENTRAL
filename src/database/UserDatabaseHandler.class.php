@@ -208,12 +208,11 @@ class UserDatabaseHandler extends DatabaseHandler
      * @param string $firstName
      * @param string $lastName
      * @param string $email
-     * @param string|null $password
      * @param int $disabled
      * @param string $authType
      * @return User
+     * @throws DatabaseException
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
      */
     public static function update(int $id, string $username, string $firstName, string $lastName, string $email,
                                   int $disabled, string $authType): User

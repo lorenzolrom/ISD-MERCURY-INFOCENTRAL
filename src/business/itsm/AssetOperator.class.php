@@ -154,6 +154,8 @@ class AssetOperator extends Operator
 
         AssetDatabaseHandler::updateVerified($asset->getId(), 1, date('Y-m-d'), CurrentUserController::currentUser()->getId());
 
+        // TODO: history
+
         return $errors;
     }
 
@@ -171,6 +173,8 @@ class AssetOperator extends Operator
             return array('errors' => $errors);
 
         AssetDatabaseHandler::updateVerified($asset->getId(), 0, NULL, NULL);
+
+        // TODO: history
 
         return array('errors' => $errors);
     }
@@ -199,5 +203,33 @@ class AssetOperator extends Operator
             $errors[] = 'Asset is discarded';
 
         return $errors;
+    }
+
+    /**
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    public static function nextAssetTag(): int
+    {
+        return AssetDatabaseHandler::nextAssetTag();
+    }
+
+    /**
+     * @param int $commodity
+     * @param int $warehouse
+     * @param int $assetTag
+     * @param int $purchaseOrder
+     * @return Asset
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    public static function createAsset(int $commodity, int $warehouse, int $assetTag, int $purchaseOrder): Asset
+    {
+        $asset = AssetDatabaseHandler::insert($commodity, $warehouse, $assetTag, $purchaseOrder);
+
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::CREATE, $asset->getId(), $asset);
+
+        return $asset;
     }
 }

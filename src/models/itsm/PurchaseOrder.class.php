@@ -16,6 +16,7 @@ namespace models\itsm;
 
 use business\itsm\VendorOperator;
 use business\itsm\WarehouseOperator;
+use database\itsm\PurchaseOrderDatabaseHandler;
 use exceptions\ValidationException;
 use models\Model;
 use utilities\Validator;
@@ -143,6 +144,24 @@ class PurchaseOrder extends Model
     public function getCanceled(): int
     {
         return $this->canceled;
+    }
+
+    /**
+     * @return PurchaseOrderCommodity[]
+     * @throws \exceptions\DatabaseException
+     */
+    public function getCommodities(): array
+    {
+        return PurchaseOrderDatabaseHandler::selectPOCommodities($this->id);
+    }
+
+    /**
+     * @return PurchaseOrderCostItem[]
+     * @throws \exceptions\DatabaseException
+     */
+    public function getCostItems(): array
+    {
+        return PurchaseOrderDatabaseHandler::selectPOCostItems($this->id);
     }
 
     /**

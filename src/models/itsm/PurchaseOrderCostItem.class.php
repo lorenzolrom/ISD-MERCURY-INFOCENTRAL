@@ -15,9 +15,16 @@ namespace models\itsm;
 
 
 use models\Model;
+use utilities\Validator;
 
 class PurchaseOrderCostItem extends Model
 {
+    private const COST = array(
+        'name' => 'Cost',
+        'type' => 'float',
+        'positive' => TRUE
+    );
+
     private $id;
     private $purchaseOrder;
     private $cost;
@@ -55,5 +62,14 @@ class PurchaseOrderCostItem extends Model
         return $this->notes;
     }
 
-
+    /**
+     * @param string|null $cost
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateCost(?string $cost): bool
+    {
+        return Validator::validate(self::COST, $cost);
+    }
 }

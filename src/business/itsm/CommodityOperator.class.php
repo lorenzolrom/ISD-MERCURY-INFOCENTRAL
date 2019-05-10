@@ -40,6 +40,17 @@ class CommodityOperator extends Operator
 
     /**
      * @param string $code
+     * @return Commodity
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function getCommodityByCode(string $code): Commodity
+    {
+        return CommodityDatabaseHandler::selectByCode($code);
+    }
+
+    /**
+     * @param string $code
      * @param string $name
      * @param array $type
      * @param array $assetType

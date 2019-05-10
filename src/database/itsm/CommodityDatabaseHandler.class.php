@@ -47,6 +47,28 @@ class CommodityDatabaseHandler extends DatabaseHandler
 
     /**
      * @param string $code
+     * @return Commodity
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectByCode(string $code): Commodity
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_Commodity` WHERE `code` = ? LIMIT 1');
+        $select->bindParam(1, $code, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+
+        return self::selectById($select->fetchColumn());
+    }
+
+    /**
+     * @param string $code
      * @param string $name
      * @param array $type
      * @param array $assetType

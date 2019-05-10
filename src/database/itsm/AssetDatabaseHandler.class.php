@@ -376,4 +376,50 @@ class AssetDatabaseHandler extends DatabaseHandler
 
         return $update->getRowCount() === 1;
     }
+
+    /**
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    public static function nextAssetTag(): int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `assetTag` FROM `ITSM_Asset` ORDER BY `assetTag` DESC LIMIT 1');
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() === 0)
+            return 1;
+        else
+            return $select->getRowCount() + 1;
+    }
+
+    /**
+     * @param int $commodity
+     * @param int $warehouse
+     * @param int $assetTag
+     * @param int $purchaseOrder
+     * @return Asset
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(int $commodity, int $warehouse, int $assetTag, int $purchaseOrder): Asset
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `ITSM_Asset` (`commodity`, `warehouse`, `assetTag`, `purchaseOrder`) VALUES (:commodity, :warehouse, :assetTag, :purchaseOrder)');
+        $insert->bindParam('commodity', $commodity, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('warehouse', $warehouse, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('assetTag', $assetTag, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('purchaseOrder', $purchaseOrder, DatabaseConnection::PARAM_INT);
+        $insert->execute();
+
+        $id = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return self::selectByAssetTag($assetTag);
+    }
 }

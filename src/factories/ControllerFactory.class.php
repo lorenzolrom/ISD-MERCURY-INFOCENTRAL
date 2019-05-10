@@ -36,6 +36,7 @@ class ControllerFactory
         'warehouses' => 'controllers\itsm\WarehouseController',
         'vendors' => 'controllers\itsm\VendorController',
         'assets' => 'controllers\itsm\AssetController',
+        'purchaseorders' => 'controllers\itsm\PurchaseOrderController',
 
         // Web
         'vhosts' => 'controllers\itsm\VHostController',

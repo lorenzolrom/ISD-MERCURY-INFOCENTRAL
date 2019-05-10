@@ -386,6 +386,7 @@ class PurchaseOrderOperator extends Operator
     }
 
     /**
+     * Get PO status codes
      * @return Attribute[]
      * @throws \exceptions\DatabaseException
      */

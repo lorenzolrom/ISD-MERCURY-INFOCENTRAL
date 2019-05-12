@@ -84,7 +84,7 @@ class PurchaseOrderOperator extends Operator
 
         HistoryRecorder::writeHistory('ITSM_PurchaseOrder', HistoryRecorder::CREATE, $po->getId(), $po);
 
-        return array('id' => $po->getId());
+        return array('id' => $po->getNumber());
     }
 
     /**
@@ -105,15 +105,18 @@ class PurchaseOrderOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
+        $vals['warehouse'] = WarehouseDatabaseHandler::selectIdFromCode($vals['warehouse']);
+        $vals['vendor'] = VendorDatabaseHandler::selectIdFromCode($vals['vendor']);
+
         HistoryRecorder::writeHistory('ITSM_PurchaseOrder', HistoryRecorder::MODIFY, $po->getId(), $po, $vals);
 
         $po = PurchaseOrderDatabaseHandler::update($po->getId(), $vals['orderDate'],
-            WarehouseDatabaseHandler::selectIdFromCode($vals['warehouse']),
-            VendorDatabaseHandler::selectIdFromCode($vals['vendor']),
+            $vals['warehouse'],
+            $vals['vendor'],
             $po->getStatus(), (string)$vals['notes'], $po->getSent(), $po->getSendDate(), $po->getReceived(),
             $po->getReceiveDate(), $po->getCanceled(), $po->getCancelDate());
 
-        return array('id' => $po->getId());
+        return array('id' => $po->getNumber());
     }
 
     /**
@@ -393,5 +396,15 @@ class PurchaseOrderOperator extends Operator
     public static function getStatuses(): array
     {
         return AttributeDatabaseHandler::select('itsm', 'post');
+    }
+
+    /**
+     * @param int $number
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function idFromNumber(string $number):?int
+    {
+        return PurchaseOrderDatabaseHandler::selectIdByNumber((int)$number);
     }
 }

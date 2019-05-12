@@ -17,6 +17,7 @@ namespace business\itsm;
 use business\Operator;
 use controllers\CurrentUserController;
 use database\itsm\AssetDatabaseHandler;
+use exceptions\EntryNotFoundException;
 use exceptions\ValidationException;
 use models\itsm\Asset;
 use utilities\HistoryRecorder;
@@ -152,9 +153,17 @@ class AssetOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
-        AssetDatabaseHandler::updateVerified($asset->getId(), 1, date('Y-m-d'), CurrentUserController::currentUser()->getId());
+        $verifyDate = date('Y-m-d');
 
-        // TODO: history
+        $vals = array(
+            'verified' => 1,
+            'verifyUser' => CurrentUserController::currentUser()->getId(),
+            'verifyDate' => $verifyDate
+        );
+
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals);
+
+        AssetDatabaseHandler::updateVerified($asset->getId(), 1, $verifyDate, CurrentUserController::currentUser()->getId());
 
         return $errors;
     }
@@ -164,6 +173,7 @@ class AssetOperator extends Operator
      * @return array
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     public static function unVerifyAsset(Asset $asset): array
     {
@@ -172,20 +182,74 @@ class AssetOperator extends Operator
         if(!empty($errors))
             return array('errors' => $errors);
 
+        $vals = array(
+            'verified' => 0,
+            'verifyUser' => NULL,
+            'verifyDate' => NULL
+        );
+
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals);
+
         AssetDatabaseHandler::updateVerified($asset->getId(), 0, NULL, NULL);
 
-        // TODO: history
-
-        return array('errors' => $errors);
+        return $errors;
     }
 
-    public static function linkToParent(Asset $asset, ?string $parentAssetTag): array
+    /**
+     * @param Asset $asset
+     * @param int $parentAssetTag
+     * @return array
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function linkToParent(Asset $asset, int $parentAssetTag): array
     {
+        $errors = self::assetCanBeModified($asset);
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        try
+        {
+            $parentAsset = AssetOperator::getAsset($parentAssetTag);
+
+            if($asset->getId() === $parentAsset->getId())
+                return array('errors' => array('Asset cannot be linked to itself'));
+
+            if($parentAsset->getParent() === $asset->getId())
+                return array('errors' => array('Parent Asset cannot be a child of this asset'));
+
+            HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, array('parent' => $parentAsset->getId()));
+
+            AssetDatabaseHandler::updateParent($asset->getId(), $parentAsset->getId());
+        }
+        catch(EntryNotFoundException $e)
+        {
+            return array('errors' => array('Parent Asset not found'));
+        }
+
         return array();
     }
 
+    /**
+     * @param Asset $asset
+     * @return array
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
     public static function unlinkFromParent(Asset $asset): array
     {
+        $errors = self::assetCanBeModified($asset);
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, array('parent' => NULL), array('parent'));
+
+        AssetDatabaseHandler::updateParent($asset->getId(), NULL);
+
         return array();
     }
 

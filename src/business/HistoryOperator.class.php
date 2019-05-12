@@ -16,6 +16,7 @@ namespace business;
 
 use business\itsm\ApplicationOperator;
 use business\itsm\AssetOperator;
+use business\itsm\PurchaseOrderOperator;
 use controllers\CurrentUserController;
 use database\HistoryDatabaseHandler;
 use exceptions\SecurityException;
@@ -36,6 +37,7 @@ class HistoryOperator extends Operator
         'NIS_URLAlias' => 'itsm_web-aliases-rw',
         'ITSM_Application' => 'itsm_ait-apps-r',
         'ITSM_HostCategory' => 'itsmmonitor-hosts-w',
+        'ITSM_PurchaseOrder' => 'itsm_inventory-purchaseorders-r',
         'Bulletin' => 'settings',
         'Role' => 'settings',
         'Secret' => 'api-settings',
@@ -64,6 +66,8 @@ class HistoryOperator extends Operator
             $index = (string)AssetOperator::idFromAssetTag($index);
         if($tableName == 'ITSM_Application')
             $index = (string)ApplicationOperator::idFromNumber($index);
+        if($tableName == 'ITSM_PurchaseOrder')
+            $index = (string)PurchaseOrderOperator::idFromNumber($index);
 
         return HistoryDatabaseHandler::select($tableName, $index, $action, $username);
     }

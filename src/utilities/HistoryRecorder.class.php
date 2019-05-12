@@ -30,12 +30,13 @@ class HistoryRecorder
      * @param string $index
      * @param Model $currentState
      * @param array $newValues
+     * @param array|null $nullVars
      * @return int
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public static function writeHistory(string $tableName, string $action, string $index, Model $currentState, array $newValues = array()): int
+    public static function writeHistory(string $tableName, string $action, string $index, Model $currentState, array $newValues = array(), array $nullVars = array()): int
     {
         $rawOldValues = (array)$currentState;
         $oldValues = array();
@@ -57,7 +58,7 @@ class HistoryRecorder
             if($varName === 'password') // do not write password to history
                 continue;
 
-            if(!isset($newValues[$varName]))
+            if(!isset($newValues[$varName]) AND !in_array($varName, $nullVars))
                 $newValues[$varName] = $oldValues[$varName]; // ignore unchanged items
 
             if($newValues[$varName] != $oldValues[$varName] OR $action === self::CREATE)

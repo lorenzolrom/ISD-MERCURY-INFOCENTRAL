@@ -335,6 +335,55 @@ class AssetDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $id
+     * @param int|null $warehouse
+     * @param string $assetTag
+     * @param int|null $parent
+     * @param int|null $location
+     * @param string|null $serialNumber
+     * @param string|null $manufactureDate
+     * @param string|null $notes
+     * @param int $discarded
+     * @param string|null $discardDate
+     * @param int $verified
+     * @param string|null $verifyDate
+     * @param int|null $verifyUser
+     * @return Asset
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function fullUpdate(int $id, ?int $warehouse, string $assetTag, ?int $parent, ?int $location,
+                                      ?string $serialNumber, ?string $manufactureDate, ?string $notes, int $discarded,
+                                      ?string $discardDate, int $verified, ?string $verifyDate, ?int $verifyUser): Asset
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `ITSM_Asset` SET `warehouse` = :warehouse, `assetTag` = :assetTag, 
+                        `parent` = :parent, `location` = :location, `serialNumber` = :serialNumber, 
+                        `manufactureDate` = :manufactureDate, `notes` = :notes, `discarded` = :discarded, 
+                        `discardDate` = :discardDate, `verified` = :verified, `verifyDate` = :verifyDate, 
+                        `verifyUser` = :verifyUser WHERE `id` = :id');
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->bindParam('warehouse', $warehouse, DatabaseConnection::PARAM_INT);
+        $update->bindParam('assetTag', $assetTag, DatabaseConnection::PARAM_STR);
+        $update->bindParam('parent', $parent, DatabaseConnection::PARAM_INT);
+        $update->bindParam('location', $location, DatabaseConnection::PARAM_INT);
+        $update->bindParam('serialNumber', $serialNumber, DatabaseConnection::PARAM_STR);
+        $update->bindParam('manufactureDate', $manufactureDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
+        $update->bindParam('discarded', $discarded, DatabaseConnection::PARAM_INT);
+        $update->bindParam('discardDate', $discardDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('verified', $verified, DatabaseConnection::PARAM_INT);
+        $update->bindParam('verifyDate', $verifyDate, DatabaseConnection::PARAM_STR);
+        $update->bindParam('verifyUser', $verifyUser, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectByAssetTag(self::selectAssetTagById($id));
+    }
+
+    /**
+     * @param int $id
      * @param int $verified
      * @param string|null $verifyDate
      * @param int|null $verifyUser

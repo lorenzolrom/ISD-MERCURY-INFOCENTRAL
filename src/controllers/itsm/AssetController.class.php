@@ -60,15 +60,24 @@ class AssetController extends Controller
         }
         else if($this->request->method() === HTTPRequest::POST)
         {
-            switch($param)
-            {
-                case "search":
-                    return $this->getSearchResult(TRUE);
-            }
+            $action = $this->request->next();
+
+            if($param === 'search')
+                return $this->getSearchResult(TRUE);
+
+            if($param !== NULL AND $action == 'parent')
+                return $this->linkToParent($param);
         }
         else if($this->request->method() === HTTPRequest::PUT)
         {
             return $this->updateAsset($param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            $action = $this->request->next();
+
+            if($param !== NULL AND $action == 'parent')
+                return $this->unlinkFromParent($param);
         }
 
         return NULL;
@@ -216,11 +225,55 @@ class AssetController extends Controller
     {
         CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
 
-        $asset = AssetOperator::getAsset((int) $assetTag);
+        $asset = AssetOperator::getAsset((int)$assetTag);
 
         $args = $this->getFormattedBody(self::SEARCH_FIELDS, TRUE);
 
         $errors = AssetOperator::updateAsset($asset, $args['assetTag'], $args['serialNumber'], $args['notes']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $tag
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function linkToParent(?string $tag): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
+        $asset = AssetOperator::getAsset((int)$tag);
+
+        $args = $this->getFormattedBody(array('parentAssetTag'));
+
+        $errors = AssetOperator::linkToParent($asset, (int)$args['parentAssetTag']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $tag
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function unlinkFromParent(?string $tag): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
+        $asset = AssetOperator::getAsset((int)$tag);
+
+        $errors = AssetOperator::unlinkFromParent($asset);
 
         if(isset($errors['errors']))
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);

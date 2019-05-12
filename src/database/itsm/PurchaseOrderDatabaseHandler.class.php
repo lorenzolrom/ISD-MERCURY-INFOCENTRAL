@@ -128,6 +128,27 @@ class PurchaseOrderDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $number
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdByNumber(int $number): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_PurchaseOrder` WHERE `number` = ? LIMIT 1');
+        $select->bindParam(1, $number, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return NULL;
+
+        return $select->fetchColumn();
+    }
+
+    /**
      * @param string $number
      * @param string $vendor
      * @param string $warehouse
@@ -145,6 +166,9 @@ class PurchaseOrderDatabaseHandler extends DatabaseHandler
               AND `warehouse` IN (SELECT `id` FROM `ITSM_Warehouse` WHERE `code` LIKE :warehouse)';
 
         // Date
+        $orderStart = trim($orderStart, '%');
+        $orderEnd = trim($orderEnd, '%');
+
         if(!Validator::validDate($orderStart))
             $orderStart = '1000-01-01';
         if(!Validator::validDate($orderEnd))

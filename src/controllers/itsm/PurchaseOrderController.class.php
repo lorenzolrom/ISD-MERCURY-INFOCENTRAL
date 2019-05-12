@@ -15,10 +15,12 @@ namespace controllers\itsm;
 
 
 use business\AttributeOperator;
+use business\itsm\CommodityOperator;
 use business\itsm\PurchaseOrderOperator;
 use business\itsm\VendorOperator;
 use business\itsm\WarehouseOperator;
 use controllers\Controller;
+use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
 use models\HTTPResponse;
@@ -27,29 +29,67 @@ class PurchaseOrderController extends Controller
 {
     private const FIELDS = array('orderDate', 'warehouse', 'vendor', 'notes');
     private const SEARCH_FIELDS = array('number', 'vendor', 'warehouse', 'orderStart', 'orderEnd', 'status');
+    private const COMMODITY_FIELDS = array('commodity', 'quantity', 'unitCost');
+    private const COST_FIELDS = array('cost', 'notes');
 
     /**
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     public function getResponse(): ?HTTPResponse
     {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-r');
+
         $param = $this->request->next();
 
         if($this->request->method() === HTTPRequest::GET)
         {
             if($param === 'statuses')
                 return $this->getStatuses();
-            if($param === NULL)
-                return $this->search();
 
-            return $this->getPO($param);
+            if($param === NULL)
+            {
+                return $this->search();
+            }
+
+            switch($this->request->next())
+            {
+                case 'commodities':
+                    return $this->getCommodities($param);
+                case 'costitems':
+                    return $this->getCostItems($param);
+                default:
+                    return $this->getPO($param);
+            }
         }
         else if($this->request->method() === HTTPRequest::POST)
         {
             if($param === 'search')
                 return $this->search(TRUE);
+            else if($param === NULL)
+                return $this->create();
+
+            switch($this->request->next())
+            {
+                case 'commodities':
+                    return $this->addCommodity($param);
+                case 'costitems':
+                    return $this->addCostItem($param);
+            }
+        }
+        else if($this->request->method() === HTTPRequest::PUT)
+            return $this->update($param);
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            switch($this->request->next())
+            {
+                case 'commodities':
+                    return $this->removeCommodity($param, $this->request->next());
+                case 'costitems':
+                    return $this->removeCostItem($param, $this->request->next());
+            }
         }
 
         return NULL;
@@ -148,5 +188,190 @@ class PurchaseOrderController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function create(): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+
+        $args = self::getFormattedBody(self::FIELDS);
+
+        $errors = PurchaseOrderOperator::create($args);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function update(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+
+        $po = PurchaseOrderOperator::getPO((int)$param);
+        $args = self::getFormattedBody(self::FIELDS);
+
+        $errors = PurchaseOrderOperator::update($po, $args);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getCommodities(?string $param): HTTPResponse
+    {
+        $po = PurchaseOrderOperator::getPO((int) $param);
+
+        $data = array();
+
+        foreach($po->getCommodities() as $commodityItem)
+        {
+            $commodity = CommodityOperator::getCommodity($commodityItem->getCommodity());
+
+            $data[] = array(
+                'id' => $commodityItem->getId(),
+                'commodity' => $commodityItem->getCommodity(),
+                'commodityCode' => $commodity->getCode(),
+                'commodityName' => $commodity->getName(),
+                'quantity' => $commodityItem->getQuantity(),
+                'unitCost' => $commodityItem->getUnitCost()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getCostItems(?string $param): HTTPResponse
+    {
+        $po = PurchaseOrderOperator::getPO((int) $param);
+
+        $data = array();
+
+        foreach($po->getCostItems() as $cost)
+        {
+            $data[] = array(
+                'id' => $cost->getId(),
+                'cost' => $cost->getCost(),
+                'notes' => $cost->getNotes()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param string $po
+     * @param string $commodity
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function removeCommodity(string $po, string $commodity): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+
+        $po = PurchaseOrderOperator::getPO((int) $po);
+
+        $errors = PurchaseOrderOperator::removeCommodity($po, (int)$commodity);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string $po
+     * @param string $cost
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function removeCostItem(string $po, string $cost): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+
+        $po = PurchaseOrderOperator::getPO((int) $po);
+
+        $errors = PurchaseOrderOperator::removeCost($po, (int)$cost);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string $po
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function addCommodity(string $po): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+
+        $po = PurchaseOrderOperator::getPO((int) $po);
+
+        $args = self::getFormattedBody(self::COMMODITY_FIELDS);
+
+        $errors = PurchaseOrderOperator::addCommodity($po, (string)$args['commodity'], (int)$args['quantity'], (float)$args['unitCost']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string $po
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function addCostItem(string $po): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+
+        $po = PurchaseOrderOperator::getPO((int) $po);
+
+        $args = self::getFormattedBody(self::COST_FIELDS);
+
+        $errors = PurchaseOrderOperator::addCost($po, (float)$args['cost'], (string)$args['notes']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
     }
 }

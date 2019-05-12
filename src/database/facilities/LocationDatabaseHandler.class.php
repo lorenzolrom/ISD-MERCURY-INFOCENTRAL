@@ -75,6 +75,30 @@ class LocationDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param string $buildingCode
+     * @param string $locationCode
+     * @return Location
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     */
+    public static function selectByCode(string $buildingCode, string $locationCode): Location
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `FacilitiesCore_Location` WHERE `code` = :locationCode AND `building` IN (SELECT `id` FROM `FacilitiesCore_Building` WHERE FacilitiesCore_Building.`code` = :buildingCode) LIMIT 1');
+        $select->bindParam('locationCode', $locationCode, DatabaseConnection::PARAM_STR);
+        $select->bindParam('buildingCode', $buildingCode, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() === 0)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+
+        return self::selectById($select->fetchColumn());
+    }
+
+    /**
      * @param int $building
      * @param string $code
      * @param string $name

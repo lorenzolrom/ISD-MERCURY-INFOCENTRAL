@@ -142,6 +142,16 @@ class WarehouseOperator extends Operator
 
     /**
      * @param string|null $code
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function idFromCode(?string $code): ?int
+    {
+        return WarehouseDatabaseHandler::selectIdFromCode((string)$code);
+    }
+
+    /**
+     * @param string|null $code
      * @param string|null $name
      * @param Warehouse|null $warehouse
      * @return array

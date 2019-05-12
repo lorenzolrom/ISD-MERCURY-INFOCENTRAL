@@ -24,7 +24,6 @@ use business\itsm\WarehouseOperator;
 use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
-use database\itsm\AssetWorksheetDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
 use models\HTTPResponse;
@@ -47,16 +46,18 @@ class AssetController extends Controller
 
         $param = $this->request->next();
 
+        if($param == 'worksheet')
+        {
+            $worksheet = new AssetWorksheetController($this->request);
+            return $worksheet->getResponse();
+        }
+
         if($this->request->method() === HTTPRequest::GET)
         {
             switch($param)
             {
                 case null:
                     return $this->getSearchResult();
-                case 'worksheet':
-                    if($this->request->next() === 'count')
-                        return $this->getWorksheetCount();
-                    return $this->getWorksheet();
                 default:
                     if($this->request->next() == 'children')
                         return $this->getChildren($param);
@@ -69,35 +70,28 @@ class AssetController extends Controller
 
             if($param === 'search')
                 return $this->getSearchResult(TRUE);
-            else if($param === 'worksheet')
-                return $this->addToWorksheet();
-
-            if($param !== NULL AND $action == 'parent')
+            else if($param !== NULL AND $action == 'parent')
                 return $this->linkToParent($param);
         }
         else if($this->request->method() === HTTPRequest::PUT)
         {
             $action = $this->request->next();
 
-            if($param !== NULL AND $action == 'verify')
+            if($param === NULL)
+                return $this->updateAsset($param);
+
+            if($action == 'verify')
                 return $this->verifyAsset($param);
-
-            if($param !== NULL AND $action == 'unverify')
+            else if($action == 'unverify')
                 return $this->unVerifyAsset($param);
-
-            return $this->updateAsset($param);
+            else if($action == 'location')
+                return $this->setLocation($param);
+            else if($action == 'warehouse')
+                return $this->setWarehouse($param);
         }
         else if($this->request->method() === HTTPRequest::DELETE)
         {
             $action = $this->request->next();
-
-            if($param === 'worksheet')
-            {
-                if($action !== NULL)
-                    return $this->removeFromWorksheet($action);
-                else
-                    return $this->clearWorksheet();
-            }
 
             if($param !== NULL AND $action == 'parent')
                 return $this->unlinkFromParent($param);
@@ -348,38 +342,19 @@ class AssetController extends Controller
     }
 
     /**
-     * @return HTTPResponse
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
-     */
-    private function addToWorksheet(): HTTPResponse
-    {
-        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
-
-        $vars = self::getFormattedBody(array('assets'));
-
-        $errors = AssetOperator::addToWorksheet($vars['assets']);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
-    }
-
-    /**
-     * @param string|null $tag
+     * @param string|null $param
      * @return HTTPResponse
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    private function removeFromWorksheet(?string $tag): HTTPResponse
+    private function setLocation(?string $param): HTTPResponse
     {
-        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+        $asset = AssetOperator::getAsset((string)$param);
 
-        $asset = AssetOperator::getAsset((int)$tag);
+        $args = self::getFormattedBody(array('buildingCode', 'locationCode'));
 
-        $errors = AssetOperator::removeFromWorksheet($asset);
+        $errors = AssetOperator::setLocation($asset, (string)$args['buildingCode'], (string)$args['locationCode']);
 
         if(isset($errors['errors']))
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
@@ -388,51 +363,23 @@ class AssetController extends Controller
     }
 
     /**
+     * @param string|null $param
      * @return HTTPResponse
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
-     */
-    private function getWorksheet(): HTTPResponse
-    {
-        $data = array();
-
-        foreach(AssetOperator::getWorksheet() as $asset)
-        {
-            $commodity = CommodityOperator::getCommodity($asset->getCommodity());
-
-            $data[] = array(
-                'assetTag' => $asset->getAssetTag(),
-                'commodityCode' => $commodity->getCode(),
-                'commodityName' => $commodity->getName(),
-                'assetType' => AttributeOperator::nameFromId($commodity->getAssetType()),
-                'serialNumber' => $asset->getSerialNumber(),
-                'location' => LocationOperator::getFullLocationCode($asset->getLocation()),
-                'warehouse' => WarehouseOperator::codeFromId($asset->getWarehouse()),
-                'verified' => $asset->getVerified()
-            );
-        }
-
-        return new HTTPResponse(HTTPResponse::OK, $data);
-    }
-
-    /**
-     * @return HTTPResponse
-     * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    private function clearWorksheet(): HTTPResponse
+    private function setWarehouse(?string $param): HTTPResponse
     {
-        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+        $asset = AssetOperator::getAsset((string) $param);
 
-        return new HTTPResponse(HTTPResponse::OK, array('removed' => AssetWorksheetDatabaseHandler::clearWorksheet()));
-    }
+        $args = self::getFormattedBody(array('warehouseCode'));
 
-    /**
-     * @return HTTPResponse
-     * @throws \exceptions\DatabaseException
-     */
-    private function getWorksheetCount(): HTTPResponse
-    {
-        return new HTTPResponse(HTTPResponse::OK, array('count' => AssetOperator::getWorksheetCount()));
+        $errors = AssetOperator::setWarehouse($asset, (string)$args['warehouseCode']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

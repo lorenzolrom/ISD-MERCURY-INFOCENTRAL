@@ -34,7 +34,7 @@ class BuildingController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission(array('facilitiescore_facilities-r'));
+        CurrentUserController::validatePermission(array('facilitiescore_facilities-r', 'itsm_inventory-assets-w'));
 
         $param = $this->request->next();
 

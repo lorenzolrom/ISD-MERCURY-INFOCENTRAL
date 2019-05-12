@@ -36,6 +36,18 @@ class LocationOperator extends Operator
     }
 
     /**
+     * @param string $buildingCode
+     * @param string $locationCode
+     * @return Location
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function getLocationByCode(string $buildingCode, string $locationCode): Location
+    {
+        return LocationDatabaseHandler::selectByCode($buildingCode, $locationCode);
+    }
+
+    /**
      * @param Building $building
      * @return Location[]
      * @throws \exceptions\DatabaseException

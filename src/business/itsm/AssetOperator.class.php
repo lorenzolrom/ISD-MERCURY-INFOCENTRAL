@@ -13,7 +13,7 @@
 
 namespace business\itsm;
 
-
+use business\facilities\LocationOperator;
 use business\Operator;
 use controllers\CurrentUserController;
 use database\itsm\AssetDatabaseHandler;
@@ -252,6 +252,81 @@ class AssetOperator extends Operator
         HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, array('parent' => NULL), array('parent'));
 
         AssetDatabaseHandler::updateParent($asset->getId(), NULL);
+
+        return array();
+    }
+
+    /**
+     * @param Asset $asset
+     * @param string $buildingCode
+     * @param string $locationCode
+     * @return array
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function setLocation(Asset $asset, string $buildingCode, string $locationCode): array
+    {
+        $errors = self::assetCanBeModified($asset);
+        $location = NULL;
+
+        try
+        {
+            $location = LocationOperator::getLocationByCode($buildingCode, $locationCode);
+        }
+        catch(EntryNotFoundException $e)
+        {
+            $errors[] = 'Location not found';
+        }
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        $vals = array(
+            'location' => $location->getId(),
+            'warehouse' => NULL
+        );
+
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals, array('warehouse'));
+
+        AssetDatabaseHandler::fullUpdate($asset->getId(), NULL, $asset->getAssetTag(), $asset->getParent(),
+            $location->getId(), $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(),
+            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate(),
+            $asset->getVerifyUser());
+
+        return array();
+    }
+
+    /**
+     * @param Asset $asset
+     * @param string $warehouseCode
+     * @return array
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function setWarehouse(Asset $asset, string $warehouseCode): array
+    {
+        $errors = self::assetCanBeModified($asset);
+        $warehouse = WarehouseOperator::idFromCode($warehouseCode);
+
+        if($warehouse === NULL)
+            $errors[] = 'Warehouse not found';
+
+        if(!empty($errors))
+            return array('errors' => $errors);
+
+        $vals = array(
+            'warehouse' => $warehouse,
+            'location' => NULL
+        );
+
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals, array('location'));
+
+        AssetDatabaseHandler::fullUpdate($asset->getId(), $warehouse, $asset->getAssetTag(), $asset->getParent(),
+            NULL, $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(),
+            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate(),
+            $asset->getVerifyUser());
 
         return array();
     }

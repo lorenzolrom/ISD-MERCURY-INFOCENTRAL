@@ -465,8 +465,6 @@ class AssetDatabaseHandler extends DatabaseHandler
         $insert->bindParam('purchaseOrder', $purchaseOrder, DatabaseConnection::PARAM_INT);
         $insert->execute();
 
-        $id = $handler->getLastInsertId();
-
         $handler->close();
 
         return self::selectByAssetTag($assetTag);

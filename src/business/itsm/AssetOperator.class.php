@@ -17,6 +17,7 @@ namespace business\itsm;
 use business\Operator;
 use controllers\CurrentUserController;
 use database\itsm\AssetDatabaseHandler;
+use database\itsm\AssetWorksheetDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationException;
 use models\itsm\Asset;
@@ -199,7 +200,6 @@ class AssetOperator extends Operator
      * @param Asset $asset
      * @param int $parentAssetTag
      * @return array
-     * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
@@ -259,14 +259,12 @@ class AssetOperator extends Operator
     /**
      * @param Asset $asset
      * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
      */
     private static function assetCanBeModified(Asset $asset): array
     {
         $errors = array();
 
-        if(AssetDatabaseHandler::isAssetDiscarded($asset->getAssetTag()))
+        if($asset->getDiscarded() == 1)
             $errors[] = 'Asset is discarded';
 
         return $errors;
@@ -298,5 +296,90 @@ class AssetOperator extends Operator
         HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::CREATE, $asset->getId(), $asset);
 
         return $asset;
+    }
+
+    /**
+     * @param mixed $assets
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function addToWorksheet($assets): array
+    {
+        if(is_array($assets))
+        {
+            $assetIds = array();
+
+            foreach($assets as $asset)
+            {
+                if(is_array($asset))
+                    return array('errors' => array('One or more assets invalid'));
+
+                $id = AssetOperator::idFromAssetTag($asset);
+
+                if(AssetWorksheetDatabaseHandler::isAssetInWorksheet($id))
+                    continue;
+
+                if($id === NULL)
+                    return array('errors' => array('One or more assets not found'));
+
+                $assetIds[] = $id;
+            }
+
+            $count = AssetWorksheetDatabaseHandler::bulkAddToWorksheet($assetIds);
+        }
+        else
+        {
+            $id = AssetOperator::idFromAssetTag((int)$assets);
+            if($id === NULL)
+                return array('errors' => array('Asset not found'));
+            else if(AssetWorksheetDatabaseHandler::isAssetInWorksheet((int)$id))
+                return array('errors' => array('Asset already in worksheet'));
+
+            $count = AssetWorksheetDatabaseHandler::addToWorksheet($assets);
+        }
+
+        return array('count' => $count);
+    }
+
+    /**
+     * @param Asset $asset
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function removeFromWorksheet(Asset $asset): array
+    {
+        AssetWorksheetDatabaseHandler::removeFromWorksheet($asset->getId());
+
+        return array();
+    }
+
+    /**
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function clearWorksheet(): array
+    {
+        AssetWorksheetDatabaseHandler::clearWorksheet();
+
+        return array();
+    }
+
+    /**
+     * @return Asset[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getWorksheet(): array
+    {
+        return AssetWorksheetDatabaseHandler::getWorksheetAssets();
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function isAssetInWorksheet(int $id): bool
+    {
+        return AssetWorksheetDatabaseHandler::isAssetInWorksheet($id);
     }
 }

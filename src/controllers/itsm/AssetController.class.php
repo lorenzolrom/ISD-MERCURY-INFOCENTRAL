@@ -24,6 +24,7 @@ use business\itsm\WarehouseOperator;
 use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
+use database\itsm\AssetWorksheetDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
 use models\HTTPResponse;
@@ -52,6 +53,8 @@ class AssetController extends Controller
             {
                 case null:
                     return $this->getSearchResult();
+                case 'worksheet':
+                    return $this->getWorksheet();
                 default:
                     if($this->request->next() == 'children')
                         return $this->getChildren($param);
@@ -64,6 +67,8 @@ class AssetController extends Controller
 
             if($param === 'search')
                 return $this->getSearchResult(TRUE);
+            else if($param === 'worksheet')
+                return $this->addToWorksheet();
 
             if($param !== NULL AND $action == 'parent')
                 return $this->linkToParent($param);
@@ -83,6 +88,14 @@ class AssetController extends Controller
         else if($this->request->method() === HTTPRequest::DELETE)
         {
             $action = $this->request->next();
+
+            if($param === 'worksheet')
+            {
+                if($action !== NULL)
+                    return $this->removeFromWorksheet($action);
+                else
+                    return $this->clearWorksheet();
+            }
 
             if($param !== NULL AND $action == 'parent')
                 return $this->unlinkFromParent($param);
@@ -122,6 +135,7 @@ class AssetController extends Controller
 
         return new HTTPResponse(HTTPResponse::OK, array(
             'assetTag' => $asset->getAssetTag(),
+            'inWorksheet' => AssetOperator::isAssetInWorksheet($asset->getId()),
             'commodity' => $asset->getCommodity(),
             'commodityCode' => $commodity->getCode(),
             'commodityName' => $commodity->getName(),
@@ -181,7 +195,7 @@ class AssetController extends Controller
             $commodity = CommodityOperator::getCommodity($asset->getCommodity());
 
             $data[] = array(
-                'inWorksheet' => '', // TODO: check if asset is in worksheet
+                'inWorksheet' => AssetOperator::isAssetInWorksheet($asset->getId()),
                 'assetTag' => $asset->getAssetTag(),
                 'commodityCode' => $commodity->getCode(),
                 'commodityName' => $commodity->getName(),
@@ -329,5 +343,80 @@ class AssetController extends Controller
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function addToWorksheet(): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
+        $vars = self::getFormattedBody(array('assets'));
+
+        $errors = AssetOperator::addToWorksheet($vars['assets']);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+    }
+
+    /**
+     * @param string|null $tag
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function removeFromWorksheet(?string $tag): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
+        $asset = AssetOperator::getAsset((int)$tag);
+
+        $errors = AssetOperator::removeFromWorksheet($asset);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getWorksheet(): HTTPResponse
+    {
+        $data = array();
+
+        foreach(AssetOperator::getWorksheet() as $asset)
+        {
+            $commodity = CommodityOperator::getCommodity($asset->getCommodity());
+
+            $data[] = array(
+                'assetTag' => $asset->getAssetTag(),
+                'commodityCode' => $commodity->getCode(),
+                'commodityName' => $commodity->getName()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function clearWorksheet(): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
+        return new HTTPResponse(HTTPResponse::OK, array('removed' => AssetWorksheetDatabaseHandler::clearWorksheet()));
     }
 }

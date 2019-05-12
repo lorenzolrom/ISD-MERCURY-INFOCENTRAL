@@ -403,7 +403,12 @@ class AssetController extends Controller
             $data[] = array(
                 'assetTag' => $asset->getAssetTag(),
                 'commodityCode' => $commodity->getCode(),
-                'commodityName' => $commodity->getName()
+                'commodityName' => $commodity->getName(),
+                'assetType' => AttributeOperator::nameFromId($commodity->getAssetType()),
+                'serialNumber' => $asset->getSerialNumber(),
+                'location' => LocationOperator::getFullLocationCode($asset->getLocation()),
+                'warehouse' => WarehouseOperator::codeFromId($asset->getWarehouse()),
+                'verified' => $asset->getVerified()
             );
         }
 

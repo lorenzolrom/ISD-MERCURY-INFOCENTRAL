@@ -54,6 +54,8 @@ class AssetController extends Controller
                 case null:
                     return $this->getSearchResult();
                 case 'worksheet':
+                    if($this->request->next() === 'count')
+                        return $this->getWorksheetCount();
                     return $this->getWorksheet();
                 default:
                     if($this->request->next() == 'children')
@@ -418,5 +420,14 @@ class AssetController extends Controller
         CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
 
         return new HTTPResponse(HTTPResponse::OK, array('removed' => AssetWorksheetDatabaseHandler::clearWorksheet()));
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     */
+    private function getWorksheetCount(): HTTPResponse
+    {
+        return new HTTPResponse(HTTPResponse::OK, array('count' => AssetOperator::getWorksheetCount()));
     }
 }

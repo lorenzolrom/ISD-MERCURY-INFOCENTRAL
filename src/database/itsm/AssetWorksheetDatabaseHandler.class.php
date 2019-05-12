@@ -138,4 +138,20 @@ class AssetWorksheetDatabaseHandler extends DatabaseHandler
 
         return $select->getRowCount() === 1;
     }
+
+    /**
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getWorksheetCount(): int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `asset` FROM `ITSM_Asset_Worksheet`');
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount();
+    }
 }

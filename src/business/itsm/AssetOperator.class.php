@@ -382,4 +382,13 @@ class AssetOperator extends Operator
     {
         return AssetWorksheetDatabaseHandler::isAssetInWorksheet($id);
     }
+
+    /**
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getWorksheetCount(): int
+    {
+        return AssetWorksheetDatabaseHandler::getWorksheetCount();
+    }
 }

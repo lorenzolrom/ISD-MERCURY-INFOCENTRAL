@@ -188,7 +188,7 @@ class AssetOperator extends Operator
             'verifyDate' => NULL
         );
 
-        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals);
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals, array('verifyUser','verifyDate'));
 
         AssetDatabaseHandler::updateVerified($asset->getId(), 0, NULL, NULL);
 
@@ -219,6 +219,9 @@ class AssetOperator extends Operator
 
             if($parentAsset->getParent() === $asset->getId())
                 return array('errors' => array('Parent Asset cannot be a child of this asset'));
+
+            if($asset->getParent() !== NULL)
+                return array('errors' => array('Asset already linked to parent'));
 
             HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, array('parent' => $parentAsset->getId()));
 

@@ -70,6 +70,14 @@ class AssetController extends Controller
         }
         else if($this->request->method() === HTTPRequest::PUT)
         {
+            $action = $this->request->next();
+
+            if($param !== NULL AND $action == 'verify')
+                return $this->verifyAsset($param);
+
+            if($param !== NULL AND $action == 'unverify')
+                return $this->unVerifyAsset($param);
+
             return $this->updateAsset($param);
         }
         else if($this->request->method() === HTTPRequest::DELETE)
@@ -274,6 +282,48 @@ class AssetController extends Controller
         $asset = AssetOperator::getAsset((int)$tag);
 
         $errors = AssetOperator::unlinkFromParent($asset);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $tag
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function verifyAsset(?string $tag): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
+        $asset = AssetOperator::getAsset((int)$tag);
+
+        $errors = AssetOperator::verifyAsset($asset);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $tag
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function unVerifyAsset(?string $tag): HTTPResponse
+    {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
+        $asset = AssetOperator::getAsset((int)$tag);
+
+        $errors = AssetOperator::unVerifyAsset($asset);
 
         if(isset($errors['errors']))
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);

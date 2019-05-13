@@ -294,6 +294,12 @@ class AssetOperator extends Operator
             $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate(),
             $asset->getVerifyUser());
 
+        // Also move children
+        foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)
+        {
+            AssetOperator::setLocation($child, $buildingCode, $locationCode);
+        }
+
         return array();
     }
 
@@ -327,6 +333,12 @@ class AssetOperator extends Operator
             NULL, $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(),
             $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate(),
             $asset->getVerifyUser());
+
+        // Also move children
+        foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)
+        {
+            AssetOperator::setWarehouse($child, $warehouseCode);
+        }
 
         return array();
     }

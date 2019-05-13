@@ -33,6 +33,15 @@ CREATE TABLE `ITSM_VHost` (
   CONSTRAINT `ITSM_VHost_ibfk_3` FOREIGN KEY (`status`) REFERENCES `Attribute` (`id`) ON UPDATE CASCADE
 );
 
+-- VHOST Manager
+CREATE TABLE `ITSM_VHost_Manager` (
+  `vhost` int(11) NOT NULL,
+  `user` int(11) NOT NULL,
+  PRIMARY KEY (`vhost`, `user`),
+  FOREIGN KEY (`vhost`) REFERENCES `ITSM_VHost`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (`user`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 -- URL ALIAS
 CREATE TABLE `NIS_URLAlias` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

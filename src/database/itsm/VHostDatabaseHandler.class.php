@@ -264,4 +264,12 @@ class VHostDatabaseHandler extends DatabaseHandler
 
         return $check->getRowCount() === 1;
     }
+
+    public static function addUser(int $id, int $user): bool{}
+
+    public static function removeUser(int $id, int $user): bool{}
+
+    public static function getUsers(int $id): array{}
+
+    public static function selectByUser(int $user): array{}
 }

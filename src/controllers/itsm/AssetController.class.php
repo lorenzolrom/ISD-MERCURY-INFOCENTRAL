@@ -34,6 +34,8 @@ class AssetController extends Controller
         'locationCode', 'warehouseCode', 'purchaseOrder', 'manufacturer', 'model', 'commodityCode', 'commodityName',
         'commodityType', 'assetType', 'isVerified', 'notes');
 
+    const EDIT_FIELDS = array('assetTag', 'serialNumber', 'notes', 'manufactureDate');
+
     /**
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
@@ -77,7 +79,7 @@ class AssetController extends Controller
         {
             $action = $this->request->next();
 
-            if($param === NULL)
+            if($action === NULL)
                 return $this->updateAsset($param);
 
             if($action == 'verify')
@@ -245,9 +247,9 @@ class AssetController extends Controller
 
         $asset = AssetOperator::getAsset((int)$assetTag);
 
-        $args = $this->getFormattedBody(self::SEARCH_FIELDS, TRUE);
+        $args = $this->getFormattedBody(self::EDIT_FIELDS, TRUE);
 
-        $errors = AssetOperator::updateAsset($asset, $args['assetTag'], $args['serialNumber'], $args['notes']);
+        $errors = AssetOperator::updateAsset($asset, $args['assetTag'], $args['serialNumber'], $args['notes'], $args['manufactureDate']);
 
         if(isset($errors['errors']))
             return new HTTPResponse(HTTPResponse::CONFLICT, $errors);

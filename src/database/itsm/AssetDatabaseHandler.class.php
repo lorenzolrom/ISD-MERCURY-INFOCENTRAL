@@ -313,18 +313,20 @@ class AssetDatabaseHandler extends DatabaseHandler
      * @param int $assetTag
      * @param string $serialNumber
      * @param string|null $notes
+     * @param string|null $manufactureDate
      * @return Asset
-     * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
      */
-    public static function update(int $id, int $assetTag, string $serialNumber, ?string $notes): Asset
+    public static function update(int $id, int $assetTag, string $serialNumber, ?string $notes, ?string $manufactureDate): Asset
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare("UPDATE `ITSM_Asset` SET `assetTag` = :assetTag, `serialNumber` = :serialNumber, `notes` = :notes WHERE `id` = :id");
+        $update = $handler->prepare("UPDATE `ITSM_Asset` SET `assetTag` = :assetTag, `serialNumber` = :serialNumber, `notes` = :notes, `manufactureDate` = :manufactureDate WHERE `id` = :id");
         $update->bindParam('assetTag', $assetTag, DatabaseConnection::PARAM_INT);
         $update->bindParam('serialNumber', $serialNumber, DatabaseConnection::PARAM_STR);
         $update->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
+        $update->bindParam('manufactureDate', $manufactureDate, DatabaseConnection::PARAM_STR);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->execute();
 

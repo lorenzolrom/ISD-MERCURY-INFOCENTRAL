@@ -70,21 +70,22 @@ class AssetOperator extends Operator
      * @param string|null $assetTag
      * @param string|null $serialNumber
      * @param string|null $notes
+     * @param string|null $manufactureDate
      * @return array
+     * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\EntryNotFoundException
      */
-    public static function updateAsset(Asset $asset, ?string $assetTag, ?string $serialNumber, ?string $notes): array
+    public static function updateAsset(Asset $asset, ?string $assetTag, ?string $serialNumber, ?string $notes, ?string $manufactureDate): array
     {
         $errors = self::validateSubmission($assetTag, $serialNumber, $asset);
 
         if(!empty($errors))
             return array('errors' => $errors);
 
-        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, array('assetTag' => $assetTag, 'serialNumber' => $serialNumber, 'notes' => $notes));
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, array('assetTag' => $assetTag, 'serialNumber' => $serialNumber, 'notes' => (string)$notes, 'manufactureDate' => (string)$manufactureDate));
 
-        return array('id' => AssetDatabaseHandler::update($asset->getId(), $assetTag, $serialNumber, $notes));
+        return array('id' => AssetDatabaseHandler::update($asset->getId(), $assetTag, $serialNumber, (string)$notes, (string)$manufactureDate));
     }
 
     /**

@@ -143,12 +143,12 @@ class Mail_RFC822 {
      * Sets up the object. The address must either be set here or when
      * calling parseAddressList(). One or the other.
      *
-     * @param string  $address         The address(es) to validate.
-     * @param string  $default_domain  Default domain/host etc. If not supplied, will be set to localhost.
-     * @param boolean $nest_groups     Whether to return the structure with groups nested for easier viewing.
-     * @param boolean $validate        Whether to validate atoms. Turn this off if you need to run addresses through before encoding the personal names, for instance.
+     * @param string $address The address(es) to validate.
+     * @param string $default_domain Default domain/host etc. If not supplied, will be set to localhost.
+     * @param boolean $nest_groups Whether to return the structure with groups nested for easier viewing.
+     * @param boolean $validate Whether to validate atoms. Turn this off if you need to run addresses through before encoding the personal names, for instance.
      *
-     * @return object Mail_RFC822 A new Mail_RFC822 object.
+     * @param null $limit
      */
     public function __construct($address = null, $default_domain = null, $nest_groups = null, $validate = null, $limit = null)
     {
@@ -163,11 +163,12 @@ class Mail_RFC822 {
      * Starts the whole process. The address must either be set here
      * or when creating the object. One or the other.
      *
-     * @param string  $address         The address(es) to validate.
-     * @param string  $default_domain  Default domain/host etc.
-     * @param boolean $nest_groups     Whether to return the structure with groups nested for easier viewing.
-     * @param boolean $validate        Whether to validate atoms. Turn this off if you need to run addresses through before encoding the personal names, for instance.
+     * @param string $address The address(es) to validate.
+     * @param string $default_domain Default domain/host etc.
+     * @param boolean $nest_groups Whether to return the structure with groups nested for easier viewing.
+     * @param boolean $validate Whether to validate atoms. Turn this off if you need to run addresses through before encoding the personal names, for instance.
      *
+     * @param null $limit
      * @return array A structured array of addresses.
      */
     public function parseAddressList($address = null, $default_domain = null, $nest_groups = null, $validate = null, $limit = null)

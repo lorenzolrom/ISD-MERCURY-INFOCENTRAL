@@ -30,6 +30,8 @@ class HostCategoryController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -129,21 +131,17 @@ class HostCategoryController extends Controller
     }
 
     /**
-     * @return HTTPRequest
+     * @return HTTPResponse
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function create(): HTTPResponse
     {
         CurrentUserController::validatePermission('itsmmonitor-hosts-w');
 
-        $errors = HostCategoryOperator::create(self::getFormattedBody(self::FIELDS));
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, HostCategoryOperator::create(self::getFormattedBody(self::FIELDS)));
     }
 
     /**
@@ -152,17 +150,13 @@ class HostCategoryController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function update(?string $param): HTTPResponse
     {
         CurrentUserController::validatePermission('itsmmonitor-hosts-w');
-
         $category = HostCategoryOperator::getCategory((int) $param);
-
-        $errors = HostCategoryOperator::update($category, self::getFormattedBody(self::FIELDS));
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+        HostCategoryOperator::update($category, self::getFormattedBody(self::FIELDS));
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }

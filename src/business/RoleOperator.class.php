@@ -58,6 +58,7 @@ class RoleOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function createRole(array $vals): array
     {
@@ -85,6 +86,7 @@ class RoleOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function updateRole(Role $role, array $vals): array
     {
@@ -123,6 +125,7 @@ class RoleOperator extends Operator
      * Need to override parent validate because of unique name constraint
      *
      * @return array
+     * @throws \exceptions\ValidationError
      */
     protected static function validateRole(array $vals, ?Role $role = NULL): array
     {

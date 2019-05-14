@@ -34,6 +34,8 @@ class ApplicationController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -346,17 +348,13 @@ class ApplicationController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function createApplication(): HTTPResponse
     {
         $args = self::getFormattedBody(self::FIELDS);
 
-        $errors = ApplicationOperator::createApplication($args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, ApplicationOperator::createApplication($args));
     }
 
     /**
@@ -365,17 +363,13 @@ class ApplicationController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function updateApplication(?string $param): HTTPResponse
     {
         $app = ApplicationOperator::getApplication((int) $param, TRUE);
-
         $args = self::getFormattedBody(self::FIELDS);
-
-        $errors = ApplicationOperator::updateApplication($app, $args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+        ApplicationOperator::updateApplication($app, $args);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }

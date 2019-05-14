@@ -180,6 +180,7 @@ class ApplicationOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function createApplication(array $vals): array
     {
@@ -235,6 +236,7 @@ class ApplicationOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function updateApplication(Application $application, array $vals): array
     {

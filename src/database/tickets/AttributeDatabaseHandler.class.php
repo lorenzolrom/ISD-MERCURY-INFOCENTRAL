@@ -1,0 +1,147 @@
+<?php
+/**
+ * LLR Technologies & Associated Services
+ * Information Systems Development
+ *
+ * INS WEBNOC API
+ *
+ * User: lromero
+ * Date: 5/13/2019
+ * Time: 5:59 PM
+ */
+
+
+namespace database\tickets;
+
+
+use database\DatabaseConnection;
+use database\DatabaseHandler;
+use exceptions\DatabaseException;
+use exceptions\EntryInUseException;
+use exceptions\EntryNotFoundException;
+use models\tickets\Attribute;
+
+class AttributeDatabaseHandler extends DatabaseHandler
+{
+    /**
+     * @param int $id
+     * @return Attribute
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectById(int $id): Attribute
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `workspace`, `type`, `code`, `name` FROM `Tickets_Attribute` WHERE `id` = :id LIMIT 1');
+        $select->bindParam('id', $id, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::PRIMARY_KEY_NOT_FOUND], EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
+
+        return $select->fetchObject('models\tickets\Attribute');
+    }
+
+    /**
+     * @param int $workspace
+     * @param string $type
+     * @return array
+     * @throws DatabaseException
+     */
+    public function selectByType(int $workspace, string $type): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Attribute` WHERE `workspace` = :workspace AND `type` = :type');
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->bindParam('type', $type, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        $attributes = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$attributes[] = self::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param int $workspace
+     * @param string $type
+     * @param string $code
+     * @param string $name
+     * @return Attribute
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(int $workspace, string $type, string $code, string $name): Attribute
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `Tickets_Attribute` (`workspace`, `type`, `code`, `name`) 
+              VALUES (:workspace, :type, :code, :name)');
+        $insert->bindParam('workspace', $workspace, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('type', $type, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $insert->execute();
+
+        $id = $handler->getLastInsertId();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @param string $code
+     * @param string $name
+     * @return Attribute
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(int $id, string $code, string $name): Attribute
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `Tickets_Attribute` SET `code` = :code, `name` = :name WHERE `id` = :id');
+        $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws EntryInUseException
+     */
+    public static function delete(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `Tickets_Attribute` WHERE `id` = :id');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+
+        try{$delete->execute();}
+        catch(DatabaseException $e){throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE, $e);}
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
+}

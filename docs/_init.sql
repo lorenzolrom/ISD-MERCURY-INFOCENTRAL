@@ -192,4 +192,8 @@ INSERT INTO `Permission` (`code`) VALUES
   ('servicenter_desk-w'),
   ('servicenter_requests'),
   ('settings'),
-  ('api-settings');
+  ('api-settings'),
+  ('tickets'),
+  ('tickets-customer'),
+  ('tickets-agent'),
+  ('tickets-admin');

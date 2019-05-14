@@ -28,6 +28,8 @@ class BulletinController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -132,17 +134,13 @@ class BulletinController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function createBulletin(): HTTPResponse
     {
         $args = self::getFormattedBody(self::FIELDS);
 
-        $errors = BulletinOperator::createBulletin($args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, BulletinOperator::createBulletin($args));
     }
 
     /**
@@ -151,17 +149,13 @@ class BulletinController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function updateBulletin(?string $param): HTTPResponse
     {
         $bulletin = BulletinOperator::getBulletin((int) $param);
-
         $args = self::getFormattedBody(self::FIELDS);
-
-        $errors = BulletinOperator::updateBulletin($bulletin, $args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+        BulletinOperator::updateBulletin($bulletin, $args);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }

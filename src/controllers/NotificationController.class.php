@@ -26,6 +26,7 @@ class NotificationController extends Controller
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -40,16 +41,12 @@ class NotificationController extends Controller
     /**
      * @return HTTPResponse
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationError
      */
     private function sendToRoles(): HTTPResponse
     {
         $args = self::getFormattedBody(self::FIELDS);
 
-        $errors = NotificationOperator::bulkSendToRoles($args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, NotificationOperator::bulkSendToRoles($args));
     }
 }

@@ -17,7 +17,6 @@ namespace business;
 use database\NotificationDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use models\Notification;
-use models\Role;
 use models\User;
 use utilities\Mailer;
 
@@ -81,6 +80,7 @@ class NotificationOperator extends Operator
      * @param array $vals
      * @return array
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationError
      */
     public static function bulkSendToRoles(array $vals): array
     {

@@ -28,6 +28,7 @@ class RoleController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -143,15 +144,11 @@ class RoleController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function createRole(): HTTPResponse
     {
-        $errors = RoleOperator::createRole(self::getFormattedBody(self::FIELDS));
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, RoleOperator::createRole(self::getFormattedBody(self::FIELDS)));
     }
 
     /**
@@ -160,16 +157,13 @@ class RoleController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function updateRole(?string $param): HTTPResponse
     {
         $role = RoleOperator::getRole((int) $param);
 
-        $errors = RoleOperator::updateRole($role, self::getFormattedBody(self::FIELDS));
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
+        RoleOperator::updateRole($role, self::getFormattedBody(self::FIELDS));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 

@@ -20,6 +20,7 @@ use exceptions\EntryInUseException;
 use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
+use exceptions\ValidationError;
 use factories\ControllerFactory;
 use models\HTTPRequest;
 use models\HTTPResponse;
@@ -122,6 +123,10 @@ class FrontController
         catch(ControllerNotFoundException $e)
         {
             $response = new HTTPResponse(HTTPResponse::NOT_FOUND, array('errors' => array($e->getMessage())));
+        }
+        catch(ValidationError $e)
+        {
+            $response = new HTTPResponse(HTTPResponse::CONFLICT, array('errors' => $e->getErrors()));
         }
         catch(\Exception $e)
         {

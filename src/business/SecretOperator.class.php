@@ -48,6 +48,7 @@ class SecretOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function issue(array $vals): array
     {
@@ -79,6 +80,7 @@ class SecretOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function update(Secret $secret, array $vals): array
     {
@@ -125,6 +127,7 @@ class SecretOperator extends Operator
      * @param array $vals
      * @param Secret|null $secret
      * @return array
+     * @throws \exceptions\ValidationError
      */
     private static function validateSecret(array $vals, ?Secret $secret = NULL): array
     {

@@ -27,6 +27,9 @@ use models\HTTPRequest;
 class ControllerFactory
 {
     private const CONTROLLERS = array(
+        // Tickets
+        'tickets' => 'controllers\tickets\TicketController',
+
         // Devices
         'hosts' => 'controllers\itsm\HostController',
         'hostCategories' => 'controllers\itsm\HostCategoryController',

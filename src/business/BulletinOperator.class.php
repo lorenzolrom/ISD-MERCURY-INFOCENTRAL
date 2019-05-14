@@ -92,6 +92,7 @@ class BulletinOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function createBulletin(array $vals): array
     {
@@ -125,6 +126,7 @@ class BulletinOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function updateBulletin(Bulletin $bulletin, array $vals): array
     {

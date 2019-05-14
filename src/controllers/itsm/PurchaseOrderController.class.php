@@ -37,6 +37,10 @@ class PurchaseOrderController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     * @throws \exceptions\ValidationError
+     * @throws \exceptions\ValidationError
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -195,19 +199,14 @@ class PurchaseOrderController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function create(): HTTPResponse
     {
         CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
-
         $args = self::getFormattedBody(self::FIELDS);
 
-        $errors = PurchaseOrderOperator::create($args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, PurchaseOrderOperator::create($args));
     }
 
     /**
@@ -216,6 +215,7 @@ class PurchaseOrderController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function update(?string $param): HTTPResponse
     {
@@ -223,11 +223,7 @@ class PurchaseOrderController extends Controller
 
         $po = PurchaseOrderOperator::getPO((int)$param);
         $args = self::getFormattedBody(self::FIELDS);
-
-        $errors = PurchaseOrderOperator::update($po, $args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+        PurchaseOrderOperator::update($po, $args);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
@@ -335,21 +331,15 @@ class PurchaseOrderController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function addCommodity(string $po): HTTPResponse
     {
         CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
-
         $po = PurchaseOrderOperator::getPO((int) $po);
-
         $args = self::getFormattedBody(self::COMMODITY_FIELDS);
 
-        $errors = PurchaseOrderOperator::addCommodity($po, (string)$args['commodity'], (int)$args['quantity'], (float)$args['unitCost']);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, PurchaseOrderOperator::addCommodity($po, (string)$args['commodity'], (int)$args['quantity'], (float)$args['unitCost']));
     }
 
     /**
@@ -358,20 +348,14 @@ class PurchaseOrderController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function addCostItem(string $po): HTTPResponse
     {
         CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
-
         $po = PurchaseOrderOperator::getPO((int) $po);
-
         $args = self::getFormattedBody(self::COST_FIELDS);
 
-        $errors = PurchaseOrderOperator::addCost($po, (float)$args['cost'], (string)$args['notes']);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, PurchaseOrderOperator::addCost($po, (float)$args['cost'], (string)$args['notes']));
     }
 }

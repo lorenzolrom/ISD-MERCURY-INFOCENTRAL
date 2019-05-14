@@ -57,6 +57,7 @@ class HostCategoryOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function create(array $vals): array
     {
@@ -85,6 +86,7 @@ class HostCategoryOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function update(HostCategory $category, array $vals): array
     {
@@ -125,6 +127,7 @@ class HostCategoryOperator extends Operator
      * @param HostCategory|null $category
      * @return array
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationError
      */
     private static function validateCategory(array $vals, ?HostCategory $category = NULL): array
     {

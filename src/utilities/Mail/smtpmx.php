@@ -479,6 +479,7 @@ class Mail_smtpmx extends Mail {
      * @param string $id maps error ids to codes and message
      * @param array $info optional information in associative array
      * @see _errorCode
+     * @return
      */
     function _raiseError($id, $info = array())
     {

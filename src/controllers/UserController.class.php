@@ -30,6 +30,8 @@ class UserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\LDAPException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -213,17 +215,13 @@ class UserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\LDAPException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function create(): HTTPResponse
     {
         $args = self::getFormattedBody(self::FIELDS);
 
-        $errors = UserOperator::createUser($args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, UserOperator::createUser($args));
     }
 
     /**
@@ -233,17 +231,13 @@ class UserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\LDAPException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function update(?string $param): HTTPResponse
     {
         $user = UserOperator::getUser((int) $param);
-
         $args = self::getFormattedBody(self::FIELDS);
-
-        $errors = UserOperator::updateUser($user, $args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+        UserOperator::updateUser($user, $args);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }

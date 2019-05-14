@@ -71,6 +71,7 @@ class UserOperator extends Operator
      * @throws DatabaseException
      * @throws EntryNotFoundException
      * @throws SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function createUser(array $vals): array
     {
@@ -142,6 +143,7 @@ class UserOperator extends Operator
      * @throws EntryNotFoundException
      * @throws LDAPException
      * @throws SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function updateUser(User $user, array $vals): array
     {

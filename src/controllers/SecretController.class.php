@@ -28,6 +28,8 @@ class SecretController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -100,17 +102,13 @@ class SecretController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function issue(): HTTPResponse
     {
         $args = self::getFormattedBody(self::FIELDS);
 
-        $errors = SecretOperator::issue($args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::CREATED, $errors);
+        return new HTTPResponse(HTTPResponse::CREATED, SecretOperator::issue($args));
     }
 
     /**
@@ -119,17 +117,13 @@ class SecretController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function update(?string $param): HTTPResponse
     {
         $secret = SecretOperator::getSecretById((int) $param);
-
         $args = self::getFormattedBody(self::FIELDS);
-
-        $errors = SecretOperator::update($secret, $args);
-
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+        SecretOperator::update($secret, $args);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
@@ -144,9 +138,7 @@ class SecretController extends Controller
     private function delete(?string $param): HTTPResponse
     {
         $secret = SecretOperator::getSecretById((int) $param);
-
         SecretOperator::delete($secret);
-
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

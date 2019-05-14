@@ -13,6 +13,7 @@
 
 namespace business;
 
+use exceptions\ValidationError;
 use exceptions\ValidationException;
 
 /**
@@ -27,9 +28,10 @@ abstract class Operator
     /**
      * @param string $class
      * @param array $vals
-     * @return array
+     * @return bool
+     * @throws ValidationError
      */
-    protected static function validate(string $class, array $vals): array
+    protected static function validate(string $class, array $vals): bool
     {
         $errors = array();
 
@@ -42,6 +44,9 @@ abstract class Operator
             catch(\Error $e){} // Catch function not defined
         }
 
-        return $errors;
+        if(!empty($errors))
+            throw new ValidationError($errors);
+
+        return TRUE;
     }
 }

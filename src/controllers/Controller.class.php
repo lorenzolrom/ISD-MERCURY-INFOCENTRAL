@@ -16,6 +16,7 @@ namespace controllers;
 
 use exceptions\EntryInUseException;
 use exceptions\EntryNotFoundException;
+use exceptions\ValidationError;
 use models\HTTPRequest;
 use models\HTTPResponse;
 
@@ -35,6 +36,7 @@ abstract class Controller
     /**
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
+     * @throws ValidationError
      * @throws EntryNotFoundException
      * @throws EntryInUseException
      */

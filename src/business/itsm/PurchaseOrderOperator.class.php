@@ -70,6 +70,7 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function create(array $vals): array
     {
@@ -94,6 +95,7 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function update(PurchaseOrder $po, array $vals): array
     {
@@ -128,6 +130,7 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function addCommodity(PurchaseOrder $po, string $commodity, int $quantity, float $unitCost): array
     {
@@ -187,6 +190,7 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public static function addCost(PurchaseOrder $po, float $cost, string $notes): array
     {
@@ -399,7 +403,7 @@ class PurchaseOrderOperator extends Operator
     }
 
     /**
-     * @param int $number
+     * @param string $number
      * @return int|null
      * @throws \exceptions\DatabaseException
      */

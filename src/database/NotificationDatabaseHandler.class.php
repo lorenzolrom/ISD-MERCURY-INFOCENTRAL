@@ -133,8 +133,8 @@ class NotificationDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $user
-     * @param int $title
-     * @param int $data
+     * @param string $title
+     * @param string $data
      * @param int $important
      * @return bool
      * @throws \exceptions\DatabaseException

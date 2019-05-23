@@ -28,10 +28,11 @@ abstract class Operator
     /**
      * @param string $class
      * @param array $vals
+     * @param bool $useUnderscored // Also uses validation functions starting with an underscore
      * @return bool
      * @throws ValidationError
      */
-    protected static function validate(string $class, array $vals): bool
+    protected static function validate(string $class, array $vals, bool $useUnderscored = FALSE): bool
     {
         $errors = array();
 
@@ -42,6 +43,14 @@ abstract class Operator
             try{$class::$func($vals[$val]);}
             catch(ValidationException $e){$errors[] = $e->getMessage();}
             catch(\Error $e){} // Catch function not defined
+
+            if($useUnderscored)
+            {
+                $func = '_validate' . ucfirst($val);
+                try{$class::$func($vals[$val]);}
+                catch(ValidationException $e){$errors[] = $e->getMessage();}
+                catch(\Error $e){} // Catch function not defined
+            }
         }
 
         if(!empty($errors))

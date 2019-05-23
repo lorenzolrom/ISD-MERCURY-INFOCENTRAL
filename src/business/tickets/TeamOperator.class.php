@@ -15,21 +15,20 @@ namespace business\tickets;
 
 
 use business\Operator;
+use controllers\CurrentUserController;
 use database\tickets\TeamDatabaseHandler;
 use models\tickets\Team;
 use utilities\HistoryRecorder;
 
 class TeamOperator extends Operator
 {
-    private const FIELDS = array('name', 'users');
-
     /**
      * @param int $id
      * @return Team
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      */
-    public static function getWorkspace(int $id): Team
+    public static function getTeam(int $id): Team
     {
         return TeamDatabaseHandler::selectById($id);
     }
@@ -52,6 +51,7 @@ class TeamOperator extends Operator
      */
     public static function delete(Team $team): array
     {
+        CurrentUserController::validatePermission('tickets-admin');
         HistoryRecorder::writeHistory('Tickets_Team', HistoryRecorder::DELETE, $team->getId(), $team);
 
         TeamDatabaseHandler::delete($team->getId());
@@ -69,13 +69,13 @@ class TeamOperator extends Operator
      */
     public static function create(array $vals): array
     {
-        $errors = self::validate('models\tickets\Team', $vals);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\tickets\Team', $vals);
 
         $team = TeamDatabaseHandler::insert($vals['name']);
         $history = HistoryRecorder::writeHistory('Tickets_Team', HistoryRecorder::CREATE, $team->getId(), $team);
+
+        if($vals['users'] === NULL)
+            $vals['users'] = array();
 
         HistoryRecorder::writeAssocHistory($history, $vals['users']);
         TeamDatabaseHandler::setUsers($team->getId(), $vals['users']);
@@ -96,11 +96,11 @@ class TeamOperator extends Operator
     {
         if(isset($vals['name']) AND $team->getName() != (string)$vals['name']) // Only check name if it has been changed
         {
-            $errors = self::validate('models\tickets\Team', $vals);
-
-            if(!empty($errors))
-                return array('errors' => $errors);
+            self::validate('models\tickets\Team', $vals);
         }
+
+        if($vals['users'] === NULL)
+            $vals['users'] = array();
 
         $history = HistoryRecorder::writeHistory('Tickets_Team', HistoryRecorder::MODIFY, $team->getId(), $team, $vals);
         HistoryRecorder::writeAssocHistory($history, $vals['users']);

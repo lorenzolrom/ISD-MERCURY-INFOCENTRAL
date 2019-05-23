@@ -43,7 +43,7 @@ class TeamDatabaseHandler extends DatabaseHandler
         if($select->getRowCount() !== 1)
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::PRIMARY_KEY_NOT_FOUND], EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
 
-        return $select->fetchObject('models\tickets\Workspace');
+        return $select->fetchObject('models\tickets\Team');
     }
 
     /**
@@ -213,6 +213,7 @@ class TeamDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $delete = $handler->prepare('DELETE FROM `Tickets_Team_User` WHERE `team` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $delete->execute();
 
         $insert = $handler->prepare('INSERT INTO `Tickets_Team_User` (`team`, `user`) VALUES (:team, :user)');

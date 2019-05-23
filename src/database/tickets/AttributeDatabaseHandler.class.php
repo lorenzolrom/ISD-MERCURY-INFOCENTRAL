@@ -51,7 +51,7 @@ class AttributeDatabaseHandler extends DatabaseHandler
      * @return array
      * @throws DatabaseException
      */
-    public function selectByType(int $workspace, string $type): array
+    public static function selectByType(int $workspace, string $type): array
     {
         $handler = new DatabaseConnection();
 
@@ -143,5 +143,63 @@ class AttributeDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @return string|null
+     * @throws DatabaseException
+     */
+    public static function selectNameById(int $id): ?string
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `name` FROM `Tickets_Attribute` WHERE `id` = :id LIMIT 1');
+        $select->bindParam('id', $id, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
+    }
+
+    /**
+     * @param int $workspace
+     * @param string $type
+     * @param string $code
+     * @return int|null
+     * @throws DatabaseException
+     */
+    public static function selectIdByCode(int $workspace, string $type, string $code): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Attribute` WHERE `workspace` = :workspace AND `type` = :type AND `code` = :code LIMIT 1');
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->bindParam('type', $type, DatabaseConnection::PARAM_STR);
+        $select->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function attributeInUse(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `status` = :attr OR `category` = :attr OR `severity` = :attr OR `type` LIKE :attr LIMIT 1');
+        $select->bindParam('attr', $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
     }
 }

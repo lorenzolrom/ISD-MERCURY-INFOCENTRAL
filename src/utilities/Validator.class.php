@@ -147,6 +147,14 @@ class Validator
         if(isset($rules['upper']) AND strlen($value) > $rules['upper'])
             throw new ValidationException("{$rules['name']} must be no greater than {$rules['upper']} characters", ValidationException::VALUE_TOO_LONG);
 
+        // alnum only
+        if(isset($rules['alnum']) AND !ctype_alnum($value))
+            throw new ValidationException("{$rules['name']} must consist of letters and numbers only", ValidationException::VALUE_IS_NOT_VALID);
+
+        // alnumds
+        if(isset($rules['alnumds']) AND !self::alnumDashSpaceOnly($value))
+            throw new ValidationException("{$rules['name']} must consist of letters, numbers, dashes, and spaces only", ValidationException::VALUE_IS_NOT_VALID);
+
         return TRUE;
     }
 }

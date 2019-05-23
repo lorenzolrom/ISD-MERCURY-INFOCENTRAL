@@ -16,6 +16,7 @@ namespace controllers\tickets;
 
 use business\tickets\WorkspaceOperator;
 use controllers\Controller;
+use controllers\CurrentUserController;
 use exceptions\EntryInUseException;
 use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
@@ -27,11 +28,15 @@ class WorkspaceController extends Controller
 
     /**
      * @return HTTPResponse|null
-     * @throws \exceptions\DatabaseException
+     * @throws EntryInUseException
      * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
+        CurrentUserController::validatePermission('tickets');
         $param = $this->request->next();
         $subject = $this->request->next();
 
@@ -40,12 +45,23 @@ class WorkspaceController extends Controller
             $a = new AttributeController($param, $this->request);
             return $a->getResponse();
         }
-
-        if($this->request->method() === HTTPRequest::GET)
+        else if($this->request->method() === HTTPRequest::GET)
         {
             if($param === NULL)
                 return $this->getAll();
             return $this->getWorkspace($param);
+        }
+        else if($this->request->method() === HTTPRequest::POST)
+        {
+            return $this->createWorkspace();
+        }
+        else if($this->request->method() === HTTPRequest::PUT)
+        {
+            return $this->updateWorkspace($param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            return $this->deleteWorkspace($param);
         }
 
         return NULL;
@@ -94,5 +110,52 @@ class WorkspaceController extends Controller
             'name' => $workspace->getName(),
             'teams' => $teams
         ));
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     */
+    private function createWorkspace(): HTTPResponse
+    {
+        CurrentUserController::validatePermission('tickets-admin');
+        return new HTTPResponse(HTTPResponse::CREATED, WorkspaceOperator::create(self::getFormattedBody(self::FIELDS)));
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     */
+    private function updateWorkspace(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission('tickets-admin');
+        $workspace = WorkspaceOperator::getWorkspace((int)$param);
+        WorkspaceOperator::update($workspace, self::getFormattedBody(self::FIELDS));
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws EntryInUseException
+     */
+    private function deleteWorkspace(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission('tickets-admin');
+        $workspace = WorkspaceOperator::getWorkspace((int)$param);
+        WorkspaceOperator::delete($workspace);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

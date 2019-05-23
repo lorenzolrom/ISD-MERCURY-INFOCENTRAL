@@ -102,7 +102,7 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
 
         $update = $handler->prepare('UPDATE `Tickets_Workspace` SET `name` = :name WHERE `id` = :id');
         $update->bindParam('name', $name, DatabaseConnection::PARAM_STR);
-        $update->bindParam('id', $id, DatabaseConnection::PARAM_STR);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->execute();
 
         $handler->close();
@@ -177,6 +177,7 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $delete = $handler->prepare('DELETE FROM `Tickets_Workspace_Team` WHERE `workspace` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $delete->execute();
 
         $insert = $handler->prepare('INSERT INTO `Tickets_Workspace_Team` (`team`, `workspace`) VALUES (:team, :workspace)');

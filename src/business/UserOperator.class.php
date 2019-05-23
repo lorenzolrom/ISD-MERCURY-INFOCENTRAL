@@ -21,6 +21,7 @@ use exceptions\EntryInUseException;
 use exceptions\EntryNotFoundException;
 use exceptions\LDAPException;
 use exceptions\SecurityException;
+use exceptions\ValidationError;
 use exceptions\ValidationException;
 use models\Role;
 use models\Token;
@@ -85,7 +86,7 @@ class UserOperator extends Operator
         catch(ValidationException $e){$errors[] = $e->getMessage();}
 
         if(!empty($errors))
-            return array('errors' => $errors);
+            throw new ValidationError($errors);
 
         if(isset($vals['authType']) AND $vals['authType'] == 'ldap') // LDAP user
         {
@@ -114,10 +115,7 @@ class UserOperator extends Operator
 
             // Password must exist for new local user
             try{User::_validatePassword($vals['password'], 'loca');}
-            catch(ValidationException $e){$errors[] = $e->getMessage();}
-
-            if(!empty($errors))
-                return array('errors' => $errors);
+            catch(ValidationException $e){throw new ValidationError(array($e->getMessage()));}
 
             // Hash password
             $vals['password'] = User::hashPassword($vals['password']);
@@ -161,7 +159,7 @@ class UserOperator extends Operator
         }
 
         if(!empty($errors))
-            return array('errors' => $errors);
+            throw new ValidationError($errors);
 
         if(isset($vals['authType']) AND $vals['authType'] == 'ldap') // LDAP user
         {
@@ -194,7 +192,7 @@ class UserOperator extends Operator
             if(isset($vals['password']) AND strlen($vals['password']) !== 0)
             {
                 try{User::_validatePassword($vals['password'], 'loca');}
-                catch(ValidationException $e){$errors[] = $e->getMessage();}
+                catch(ValidationException $e){throw new ValidationError(array($e->getMessage()));}
 
                 // Hash password
                 UserDatabaseHandler::updatePassword($user->getId(), User::hashPassword($vals['password']));
@@ -203,8 +201,8 @@ class UserOperator extends Operator
             if((!isset($vals['password']) OR strlen($vals['password']) === 0) AND ($user->getPassword() === NULL OR strlen($user->getPassword()) === 0))
                 $errors[] = 'Password has not been set';
 
-            if(!empty($errors))
-                return array('errors' => $errors);
+            if(is_array($errors) AND !empty($errors))
+                throw new ValidationError($errors);
         }
 
         $history = HistoryRecorder::writeHistory('User', HistoryRecorder::MODIFY, $user->getId(), $user, $vals);

@@ -18,9 +18,10 @@ use database\lockshop\CoreDatabaseHandler;
 use database\lockshop\KeyDatabaseHandler;
 use database\lockshop\SystemDatabaseHandler;
 use exceptions\ValidationException;
+use models\Model;
 use utilities\Validator;
 
-class System
+class System extends Model
 {
     private const NAME_RULES = array(
         'name' => 'Name',

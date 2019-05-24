@@ -25,9 +25,11 @@ CREATE TABLE `LockShop_Core` (
 CREATE TABLE `LockShop_Key` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `system` int(11) NOT NULL,
+  `code` varchar(32) NOT NULL,
   `bitting` varchar(32) NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
+  UNIQUE KEY (`system`, `code`),
   FOREIGN KEY (`system`) REFERENCES `LockShop_System`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 

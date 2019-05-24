@@ -32,7 +32,7 @@ class KeyDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id`, `system`, `bitting`, `quantity` FROM `LockShop_Key` WHERE `id` = ? LIMIT 1');
+        $select = $handler->prepare('SELECT `id`, `system`, `code`, `bitting`, `quantity` FROM `LockShop_Key` WHERE `id` = ? LIMIT 1');
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -42,6 +42,26 @@ class KeyDatabaseHandler extends DatabaseHandler
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::PRIMARY_KEY_NOT_FOUND], EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
 
         return $select->fetchObject('models\lockshop\Key');
+    }
+
+    /**
+     * @param int $system
+     * @param string $code
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdByCode(int $system, string $code): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `LockShop_Key` WHERE `system` = :system AND `code` = :code LIMIT 1');
+        $select->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $select->bindParam('system', $system, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
     }
 
     /**
@@ -72,20 +92,22 @@ class KeyDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $system
+     * @param string $code
      * @param string $bitting
      * @param int $quantity
      * @return Key
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(int $system, string $bitting, int $quantity): Key
+    public static function insert(int $system, string $code, string $bitting, int $quantity): Key
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare('INSERT INTO `LockShop_Key` (`system`, `bitting`, `quantity`) VALUES (:system, :bitting, :quantity)');
+        $insert = $handler->prepare('INSERT INTO `LockShop_Key` (`system`, `bitting`, `quantity`, `code`) VALUES (:system, :bitting, :quantity, :code)');
         $insert->bindParam('system', $system, DatabaseConnection::PARAM_INT);
         $insert->bindParam('bitting', $bitting, DatabaseConnection::PARAM_STR);
         $insert->bindParam('quantity', $quantity, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $insert->execute();
 
         $id = $handler->getLastInsertId();
@@ -97,18 +119,20 @@ class KeyDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $id
+     * @param string $code
      * @param string $bitting
      * @param int $quantity
      * @return Key
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function update(int $id, string $bitting, int $quantity): Key
+    public static function update(int $id, string $code, string $bitting, int $quantity): Key
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare('UPDATE `LockShop_Key` SET `bitting` = :bitting, `quantity` = :quantity WHERE `id` = :id');
+        $update = $handler->prepare('UPDATE `LockShop_Key` SET `bitting` = :bitting, `quantity` = :quantity, `code` = :code WHERE `id` = :id');
         $update->bindParam('bitting', $bitting, DatabaseConnection::PARAM_STR);
+        $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $update->bindParam('quantity', $quantity, DatabaseConnection::PARAM_INT);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
 

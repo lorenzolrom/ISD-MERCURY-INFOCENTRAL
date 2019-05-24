@@ -45,6 +45,26 @@ class CoreDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $system
+     * @param string $code
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdByCode(int $system, string $code): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `LockShop_Core` WHERE `system` = :system AND `code` = :code LIMIT 1');
+        $select->bindParam('code', $code, DatabaseConnection::PARAM_STR);
+        $select->bindParam('system', $system, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
+    }
+
+    /**
+     * @param int $system
      * @return Core[]
      * @throws \exceptions\DatabaseException
      */

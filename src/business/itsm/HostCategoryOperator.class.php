@@ -16,6 +16,7 @@ namespace business\itsm;
 
 use business\Operator;
 use database\HostCategoryDatabaseHandler;
+use exceptions\ValidationError;
 use exceptions\ValidationException;
 use models\itsm\HostCategory;
 use utilities\HistoryRecorder;
@@ -131,16 +132,12 @@ class HostCategoryOperator extends Operator
      */
     private static function validateCategory(array $vals, ?HostCategory $category = NULL): array
     {
-        $errors = array();
-
         if($category === NULL OR $category->getName() != $vals['name'])
         {
             try{HostCategory::_validateName($vals['name']);}
-            catch(ValidationException $e){$errors[] = $e->getMessage();}
+            catch(ValidationException $e){throw new ValidationError(array($e));}
         }
 
-        array_merge($errors, self::validate('models\itsm\HostCategory', $vals));
-
-        return $errors;
+        self::validate('models\itsm\HostCategory', $vals);
     }
 }

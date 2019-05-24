@@ -62,10 +62,7 @@ class RoleOperator extends Operator
      */
     public static function createRole(array $vals): array
     {
-        $errors = self::validate('models\Role', $vals);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\Role', $vals);
 
         $role = RoleDatabaseHandler::insert($vals['name']);
         $history = HistoryRecorder::writeHistory('Role', HistoryRecorder::CREATE, $role->getId(), $role);
@@ -90,10 +87,7 @@ class RoleOperator extends Operator
      */
     public static function updateRole(Role $role, array $vals): array
     {
-        $errors = self::validateRole($vals, $role);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validateRole($vals, $role);
 
         $history = HistoryRecorder::writeHistory('Role', HistoryRecorder::MODIFY, $role->getId(), $role, $vals);
 
@@ -124,18 +118,16 @@ class RoleOperator extends Operator
      *
      * Need to override parent validate because of unique name constraint
      *
-     * @return array
+     * @return bool
      * @throws \exceptions\ValidationError
      */
-    protected static function validateRole(array $vals, ?Role $role = NULL): array
+    protected static function validateRole(array $vals, ?Role $role = NULL): bool
     {
-        $errors = array();
-
         if($role === NULL OR $role->getName() != $vals['name'])
         {
-            $errors = parent::validate('models\Role', $vals);
+            return parent::validate('models\Role', $vals);
         }
 
-        return $errors;
+        return TRUE;
     }
 }

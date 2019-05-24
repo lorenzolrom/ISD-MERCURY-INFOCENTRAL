@@ -55,10 +55,7 @@ class SecretOperator extends Operator
         // New secret token
         $secret = hash('SHA512', openssl_random_pseudo_bytes(2048));
 
-        $errors = self::validateSecret($vals);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validateSecret($vals);
 
         $secret = SecretDatabaseHandler::insert($secret, $vals['name']);
 
@@ -84,10 +81,7 @@ class SecretOperator extends Operator
      */
     public static function update(Secret $secret, array $vals): array
     {
-        $errors = self::validateSecret($vals, $secret);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validateSecret($vals, $secret);
 
         $history = HistoryRecorder::writeHistory('Secret', HistoryRecorder::MODIFY, $secret->getId(), $secret, $vals);
         SecretDatabaseHandler::update($secret->getId(), $vals['name']);
@@ -126,18 +120,16 @@ class SecretOperator extends Operator
     /**
      * @param array $vals
      * @param Secret|null $secret
-     * @return array
+     * @return bool
      * @throws \exceptions\ValidationError
      */
-    private static function validateSecret(array $vals, ?Secret $secret = NULL): array
+    private static function validateSecret(array $vals, ?Secret $secret = NULL): bool
     {
-        $errors = array();
-
         if($secret === NULL OR $secret->getName() != $vals['name'])
         {
-            $errors = self::validate('models\Secret', $vals);
+            return self::validate('models\Secret', $vals);
         }
 
-        return $errors;
+        return TRUE;
     }
 }

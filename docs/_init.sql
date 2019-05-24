@@ -196,4 +196,7 @@ INSERT INTO `Permission` (`code`) VALUES
   ('tickets'),
   ('tickets-customer'),
   ('tickets-agent'),
-  ('tickets-admin');
+  ('tickets-admin'),
+  ('lockshop'),
+  ('lockshop-r'),
+  ('lockshop-w');

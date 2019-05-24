@@ -98,8 +98,10 @@ class UserOperator extends Operator
 
             if($results['count'] !== 1)
             {
-                return array('errors' => array('Username not found in directory'));
+                throw new ValidationError(array('Username not found in directory'));
             }
+
+            $results = $results[0];
 
             // Get name + email from LDAP
             $vals['firstName'] = isset($results['givenname'][0]) ? $results['givenname'][0] : '';
@@ -111,7 +113,7 @@ class UserOperator extends Operator
         else // Fallback - Local user
         {
             // Generic validation
-            $errors = self::validate('models\User', $vals);
+            self::validate('models\User', $vals);
 
             // Password must exist for new local user
             try{User::_validatePassword($vals['password'], 'loca');}
@@ -171,7 +173,7 @@ class UserOperator extends Operator
 
             if($results['count'] !== 1)
             {
-                return array('errors' => array('Username not found in directory'));
+                throw new ValidationError(array('Username not found in directory'));
             }
 
             $results = $results[0];

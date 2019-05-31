@@ -184,10 +184,7 @@ class ApplicationOperator extends Operator
      */
     public static function createApplication(array $vals): array
     {
-        $errors = self::validate('models\itsm\Application', $vals);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\itsm\Application', $vals);
 
         $vals['owner'] = UserOperator::idFromUsername($vals['owner']);
         $vals['type'] = AttributeOperator::idFromCode('itsm', 'aitt', $vals['type']);
@@ -240,10 +237,7 @@ class ApplicationOperator extends Operator
      */
     public static function updateApplication(Application $application, array $vals): array
     {
-        $errors = self::validate('models\itsm\Application', $vals);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\itsm\Application', $vals);
 
         $vals['owner'] = UserOperator::idFromUsername($vals['owner']);
         $vals['type'] = AttributeOperator::idFromCode('itsm', 'aitt', $vals['type']);

@@ -96,10 +96,7 @@ class BulletinOperator extends Operator
      */
     public static function createBulletin(array $vals): array
     {
-        $errors = self::validate('models\Bulletin', $vals);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\Bulletin', $vals);
 
         $vals['inactive'] = (int)$vals['inactive'];
 
@@ -130,10 +127,7 @@ class BulletinOperator extends Operator
      */
     public static function updateBulletin(Bulletin $bulletin, array $vals): array
     {
-        $errors = self::validate('models\Bulletin', $vals);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\Bulletin', $vals);
 
         $vals['inactive'] = (int)$vals['inactive'];
 

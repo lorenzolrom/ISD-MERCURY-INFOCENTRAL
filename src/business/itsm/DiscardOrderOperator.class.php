@@ -74,7 +74,7 @@ class DiscardOrderOperator extends Operator
 
         HistoryRecorder::writeHistory('ITSM_DiscardOrder', HistoryRecorder::CREATE, $do->getId(), $do);
 
-        return $do->getId();
+        return $do->getNumber();
     }
 
     /**
@@ -175,6 +175,9 @@ class DiscardOrderOperator extends Operator
         if($do->getApproved() === 1)
             throw new ValidationError(array('Discard Order has already been approved'));
 
+        if($do->getCanceled() === 1)
+            throw new ValidationError(array('Discard Order has been canceled'));
+
         $date = date('Y-m-d');
 
         HistoryRecorder::writeHistory('ITSM_DiscardOrder', HistoryRecorder::MODIFY, $do->getId(), $do, array(
@@ -229,9 +232,6 @@ class DiscardOrderOperator extends Operator
      */
     public static function cancel(DiscardOrder $do): bool
     {
-        if($do->getApproved() === 0)
-            throw new ValidationError(array('Discard Order has not been approved'));
-
         if($do->getFulfilled() === 1)
             throw new ValidationError(array('Discard Order has been fulfilled'));
 
@@ -242,7 +242,28 @@ class DiscardOrderOperator extends Operator
             'cancelDate' => $date
         ));
 
+        DiscardOrderDatabaseHandler::removeAllAssets($do->getId());
         DiscardOrderDatabaseHandler::update($do->getId(), $do->getNotes(), $do->getApproved(), $do->getApproveDate(), $do->getFulfilled(), $do->getFulfillDate(), 1, $date);
         return TRUE;
+    }
+
+    /**
+     * @param int $number
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function idFromNumber(int $number): ?int
+    {
+        return DiscardOrderDatabaseHandler::selectIdByNumber($number);
+    }
+
+    /**
+     * @param int $id
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function numberFromId(int $id): ?int
+    {
+        return DiscardOrderDatabaseHandler::selectNumberById($id);
     }
 }

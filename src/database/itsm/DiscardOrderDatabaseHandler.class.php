@@ -69,6 +69,42 @@ class DiscardOrderDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $number
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdByNumber(int $number): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_DiscardOrder` WHERE `number` = ? LIMIT 1');
+        $select->bindParam(1, $number, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
+    }
+
+    /**
+     * @param int $id
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectNumberById(int $id): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `number` FROM `ITSM_DiscardOrder` WHERE `id` = ? LIMIT 1');
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
+    }
+
+    /**
      * @param string $number
      * @param string $startDate
      * @param string $endDate
@@ -88,11 +124,11 @@ class DiscardOrderDatabaseHandler extends DatabaseHandler
 
         $query = 'SELECT `id` FROM `ITSM_DiscardOrder` WHERE `number` LIKE :number AND `date` BETWEEN :startDate AND :endDate';
 
-        if($approved !== NULL)
+        if($approved !== NULL AND !empty($approved))
             $query .= ' AND `approved` IN (' . self::getBooleanString($approved) . ')';
-        if($fulfilled !== NULL)
+        if($fulfilled !== NULL AND !empty($fulfilled))
             $query .= ' AND `fulfilled` IN (' . self::getBooleanString($fulfilled) . ')';
-        if($canceled !== NULL)
+        if($canceled !== NULL AND !empty($canceled))
             $query .= ' AND `canceled` IN (' . self::getBooleanString($canceled) . ')';
 
         $handler = new DatabaseConnection();
@@ -244,6 +280,24 @@ class DiscardOrderDatabaseHandler extends DatabaseHandler
         $delete = $handler->prepare('DELETE FROM `ITSM_DiscardOrder_Asset` WHERE `asset` = ? AND `order` = ?');
         $delete->bindParam(1, $asset, DatabaseConnection::PARAM_INT);
         $delete->bindParam(2, $id, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function removeAllAssets(int $id): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `ITSM_DiscardOrder_Asset` WHERE `order` = ?');
+        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $delete->execute();
 
         $handler->close();

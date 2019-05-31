@@ -19,6 +19,7 @@ use business\facilities\BuildingOperator;
 use business\facilities\LocationOperator;
 use business\itsm\AssetOperator;
 use business\itsm\CommodityOperator;
+use business\itsm\DiscardOrderOperator;
 use business\itsm\PurchaseOrderOperator;
 use business\itsm\WarehouseOperator;
 use business\UserOperator;
@@ -157,6 +158,7 @@ class AssetController extends Controller
             'notes' => $asset->getNotes(),
             'discarded' => $asset->getDiscarded(),
             'discardDate' => $asset->getDiscardDate(),
+            'discardOrder' => DiscardOrderOperator::numberFromId((int)$asset->getDiscardOrder()),
             'verified' => $asset->getVerified(),
             'verifyDate' => $asset->getVerifyDate(),
             'verifyUser' => ($asset->getVerifyUser() !== NULL) ? UserOperator::usernameFromId($asset->getVerifyUser()) : NULL

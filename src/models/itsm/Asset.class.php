@@ -36,6 +36,7 @@ class Asset extends Model
     private $manufactureDate;
     private $purchaseOrder;
     private $notes;
+    private $discardOrder;
     private $discarded;
     private $discardDate;
     private $verified;
@@ -120,6 +121,14 @@ class Asset extends Model
     public function getNotes(): ?string
     {
         return $this->notes;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getDiscardOrder(): ?int
+    {
+        return $this->discardOrder;
     }
 
     /**

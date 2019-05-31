@@ -32,7 +32,7 @@ class AssetDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $select = $handler->prepare("SELECT `id`, `commodity`, `warehouse`, `assetTag`, `parent`, `location`, `serialNumber`, 
-                                            `manufactureDate`, `purchaseOrder`, `notes`, `discarded`, `discardDate`, 
+                                            `manufactureDate`, `purchaseOrder`, `notes`, `discardOrder`, `discarded`, `discardDate`, 
                                             `verified`, `verifyDate`, `verifyUser` FROM 
                                             `ITSM_Asset` WHERE `assetTag` = ? LIMIT 1");
 

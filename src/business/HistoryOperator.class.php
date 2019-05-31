@@ -16,6 +16,7 @@ namespace business;
 
 use business\itsm\ApplicationOperator;
 use business\itsm\AssetOperator;
+use business\itsm\DiscardOrderOperator;
 use business\itsm\PurchaseOrderOperator;
 use controllers\CurrentUserController;
 use database\HistoryDatabaseHandler;
@@ -38,6 +39,7 @@ class HistoryOperator extends Operator
         'ITSM_Application' => 'itsm_ait-apps-r',
         'ITSM_HostCategory' => 'itsmmonitor-hosts-w',
         'ITSM_PurchaseOrder' => 'itsm_inventory-purchaseorders-r',
+        'ITSM_DiscardOrder' => 'itsm_inventory-discards-r',
         'Bulletin' => 'settings',
         'Role' => 'settings',
         'Secret' => 'api-settings',
@@ -67,7 +69,9 @@ class HistoryOperator extends Operator
         if($tableName == 'ITSM_Application')
             $index = (string)ApplicationOperator::idFromNumber($index);
         if($tableName == 'ITSM_PurchaseOrder')
-            $index = (string)PurchaseOrderOperator::idFromNumber($index);
+        $index = (string)PurchaseOrderOperator::idFromNumber($index);
+        if($tableName == 'ITSM_DiscardOrder')
+            $index = (string)DiscardOrderOperator::idFromNumber($index);
 
         return HistoryDatabaseHandler::select($tableName, $index, $action, $username);
     }

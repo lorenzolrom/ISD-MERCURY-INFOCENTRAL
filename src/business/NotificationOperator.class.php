@@ -84,10 +84,7 @@ class NotificationOperator extends Operator
      */
     public static function bulkSendToRoles(array $vals): array
     {
-        $errors = self::validate('models\Notification', $vals);
-        if(!empty($errors))
-            return array('errors' => $errors);
-
+        self::validate('models\Notification', $vals);
 
         if(!isset($vals['roles']) OR !is_array($vals['roles']) OR empty($vals['roles']))
             return array('errors' => array('Roles not defined'));

@@ -346,9 +346,6 @@ class PurchaseOrderOperator extends Operator
     public static function cancel(PurchaseOrder $po): array
     {
         // Cannot cancel PO that has been received
-        if($po->getSent() === 0)
-            throw new ValidationError(array('Purchase Order has not been sent'));
-
         if($po->getReceived() === 1)
             throw new ValidationError(array('Cannot cancel received Purchase Order'));
 

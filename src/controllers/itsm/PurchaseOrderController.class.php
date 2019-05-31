@@ -31,6 +31,7 @@ class PurchaseOrderController extends Controller
     private const SEARCH_FIELDS = array('number', 'vendor', 'warehouse', 'orderStart', 'orderEnd', 'status');
     private const COMMODITY_FIELDS = array('commodity', 'quantity', 'unitCost');
     private const COST_FIELDS = array('cost', 'notes');
+    private const RECEIVE_FIELDS = array('receiveDate', 'startAssetTag');
 
     /**
      * @return HTTPResponse|null
@@ -93,6 +94,8 @@ class PurchaseOrderController extends Controller
                     return $this->send($param);
                 case 'cancel':
                     return $this->cancel($param);
+                case 'receive':
+                    return $this->receive($param);
                 default:
                     return $this->update($param);
             }
@@ -300,6 +303,7 @@ class PurchaseOrderController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function removeCommodity(string $po, string $commodity): HTTPResponse
     {
@@ -322,6 +326,7 @@ class PurchaseOrderController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function removeCostItem(string $po, string $cost): HTTPResponse
     {
@@ -377,18 +382,16 @@ class PurchaseOrderController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function send(string $po): HTTPResponse
     {
         CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
         $po = PurchaseOrderOperator::getPO((int) $po);
 
-        $errors = PurchaseOrderOperator::send($po);
+        PurchaseOrderOperator::send($po);
 
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
-
-        return new HTTPResponse(HTTPResponse::NO_CONTENT, $errors);
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
@@ -397,17 +400,37 @@ class PurchaseOrderController extends Controller
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     private function cancel(string $po): HTTPResponse
     {
         CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
         $po = PurchaseOrderOperator::getPO((int) $po);
 
-        $errors = PurchaseOrderOperator::cancel($po);
+        PurchaseOrderOperator::cancel($po);
 
-        if(isset($errors['errors']))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
 
-        return new HTTPResponse(HTTPResponse::NO_CONTENT, $errors);
+    /**
+     * @param string $po
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
+     */
+    private function receive(string $po): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+        $po = PurchaseOrderOperator::getPO((int)$po);
+        $args = self::getFormattedBody(self::RECEIVE_FIELDS);
+
+        if(!ctype_digit($args['startAssetTag']))
+            $args['startAssetTag'] = NULL;
+
+        PurchaseOrderOperator::receive($po, (string)$args['receiveDate'], $args['startAssetTag']);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

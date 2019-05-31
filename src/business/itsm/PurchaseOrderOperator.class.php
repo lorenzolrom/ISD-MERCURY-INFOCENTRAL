@@ -264,69 +264,47 @@ class PurchaseOrderOperator extends Operator
     /**
      * @param PurchaseOrder $po
      * @param string $receiveDate
-     * @param bool $inFull
      * @param int|null $startAssetTag
-     * @param array|null $partialVals
      * @return array
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      * @throws ValidationError
      */
-    public static function receive(PurchaseOrder $po, string $receiveDate, bool $inFull = TRUE, ?int $startAssetTag = NULL, ?array $partialVals = NULL): array
+    public static function receive(PurchaseOrder $po, string $receiveDate, ?int $startAssetTag = NULL): array
     {
         // Cannot receive PO that has not been sent
         if($po->getSent() === 0)
             throw new ValidationError(array('Purchase Order has not been sent'));
 
         if($po->getReceived() === 1)
-            throw new ValidationError(array('errors' => array('Purchase Order has already been received')));
+            throw new ValidationError(array('Purchase Order has already been received'));
 
         // Cannot receive PO that has been canceled
-        if($po->getCanceled() === 0)
-            throw new ValidationError(array('errors' => array('Purchase Order has been canceled')));
+        if($po->getCanceled() === 1)
+            throw new ValidationError(array('Purchase Order has been canceled'));
 
 
         if(!Validator::validDate($receiveDate))
-            throw new ValidationError(array('errors' => array('Receive Date is not valid')));
+            throw new ValidationError(array('Receive Date is not valid'));
 
         $commodities = $po->getCommodities();
 
-        $status = NULL; // To be set below
-
         $receivedCommodities = array(); // Store actual received commodities
 
-        // Determine what commodities and quantities should be added to inventory
-        if($inFull)
+        $status = AttributeOperator::idFromCode('itsm', 'post', 'rcvf'); // Received in full
+
+        foreach($commodities as $commodity)
         {
-            $status = AttributeOperator::idFromCode('itsm', 'post', 'rcvf'); // Received in full
-
-            foreach($commodities as $commodity)
-            {
-                $receivedCommodities[] = array($commodity->getCommodity(), $commodity->getQuantity());
-            }
-        }
-        else if($partialVals !== NULL)
-        {
-            $status = AttributeOperator::idFromCode('itsm', 'post', 'rcvp'); // Received in part
-
-            foreach($commodities as $commodity)
-            {
-                if(in_array($commodity->getId(), array_keys($partialVals)))
-                {
-                    if(!is_numeric($partialVals[$commodity->getId()]))
-                        throw new ValidationError( array('errors' => array('One or more received quantities is invalid')));
-
-                    $receivedCommodities[] = array($commodity->getCommodity(), (int)$partialVals[$commodity->getId()]);
-                }
-            }
+            $receivedCommodities[] = array($commodity->getCommodity(), $commodity->getQuantity());
         }
 
         // Create assets
         $assetTags = array();
+
         foreach($receivedCommodities as $receivedCommodity)
         {
-            for($i = 0; $i < $receivedCommodities[1]; $i++)
+            for($i = 0; $i < $receivedCommodity[1]; $i++)
             {
                 if($startAssetTag !== NULL AND is_numeric($startAssetTag))
                 {
@@ -369,13 +347,13 @@ class PurchaseOrderOperator extends Operator
     {
         // Cannot cancel PO that has been received
         if($po->getSent() === 0)
-            throw new ValidationError(array('errors' => array('Purchase Order has not been sent')));
+            throw new ValidationError(array('Purchase Order has not been sent'));
 
         if($po->getReceived() === 1)
-            throw new ValidationError(array('errors' => array('Cannot cancel received Purchase Order')));
+            throw new ValidationError(array('Cannot cancel received Purchase Order'));
 
         if($po->getCanceled() === 1)
-            throw new ValidationError(array('errors' => array('Purchase Order has already been canceled')));
+            throw new ValidationError(array('Purchase Order has already been canceled'));
 
         $status = AttributeOperator::idFromCode('itsm', 'post', 'cncl');
         $cancelDate = date('Y-m-d');

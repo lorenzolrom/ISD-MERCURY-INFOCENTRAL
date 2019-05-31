@@ -135,6 +135,9 @@ class PurchaseOrderOperator extends Operator
         if($po->getSent() === 1)
             throw new ValidationError(array('Cannot edit commodities of sent Purchase Order'));
 
+        if($po->getCanceled() === 1)
+            throw new ValidationError(array('Purchase Order has been canceled'));
+
         self::validate('models\itsm\PurchaseOrderCommodity', array('commodity' => $commodity, 'quantity' => $quantity, 'unitCost' => $unitCost));
 
         $commodity = CommodityOperator::getCommodityByCode($commodity);
@@ -163,6 +166,9 @@ class PurchaseOrderOperator extends Operator
         // Cannot edit P.O. that has been sent
         if($po->getSent() === 1)
             throw new ValidationError(array('Cannot edit commodities of sent Purchase Order'));
+
+        if($po->getCanceled() === 1)
+            throw new ValidationError(array('Purchase Order has been canceled'));
 
         $commodity = PurchaseOrderDatabaseHandler::selectCommodityById($id);
 
@@ -194,6 +200,9 @@ class PurchaseOrderOperator extends Operator
         if($po->getSent() === 1)
             throw new ValidationError(array('Cannot edit cost items of sent Purchase Order'));
 
+        if($po->getCanceled() === 1)
+            throw new ValidationError(array('Purchase Order has been canceled'));
+
         self::validate('models\itsm\PurchaseOrderCostItem', array('cost' => $cost));
 
         $history = HistoryRecorder::writeHistory('ITSM_PurchaseOrder', HistoryRecorder::MODIFY, $po->getId(), $po);
@@ -220,6 +229,9 @@ class PurchaseOrderOperator extends Operator
         if($po->getSent() === 1)
             throw new ValidationError(array('Cannot edit cost items of sent Purchase Order'));
 
+        if($po->getCanceled() === 1)
+            throw new ValidationError(array('Purchase Order has been canceled'));
+
         $cost = PurchaseOrderDatabaseHandler::selectCostItemById($id);
 
         $history = HistoryRecorder::writeHistory('ITSM_PurchaseOrder', HistoryRecorder::MODIFY, $po->getId(), $po);
@@ -245,6 +257,9 @@ class PurchaseOrderOperator extends Operator
         // Cannot sent PO that has already been sent
         if($po->getSent() === 1)
             throw new ValidationError(array('Purchase Order has already been sent'));
+
+        if($po->getCanceled() === 1)
+            throw new ValidationError(array('Purchase Order has been canceled'));
 
         if(sizeof($po->getCommodities()) < 1)
             throw new ValidationError(array('Purchase Order cannot be sent without at least one commodity'));

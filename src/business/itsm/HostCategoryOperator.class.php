@@ -62,10 +62,7 @@ class HostCategoryOperator extends Operator
      */
     public static function create(array $vals): array
     {
-        $errors = self::validateCategory($vals);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validateCategory($vals);
 
         $hostCategory = HostCategoryDatabaseHandler::insert($vals['name'], (int)$vals['displayed']);
 
@@ -91,10 +88,7 @@ class HostCategoryOperator extends Operator
      */
     public static function update(HostCategory $category, array $vals): array
     {
-        $errors = self::validateCategory($vals, $category);
-
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validateCategory($vals, $category);
 
         $history = HistoryRecorder::writeHistory('ITSM_HostCategory', HistoryRecorder::MODIFY, $category->getId(), $category, $vals);
 
@@ -126,18 +120,20 @@ class HostCategoryOperator extends Operator
     /**
      * @param array $vals
      * @param HostCategory|null $category
-     * @return array
+     * @return bool
+     * @throws ValidationError
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\ValidationError
      */
-    private static function validateCategory(array $vals, ?HostCategory $category = NULL): array
+    private static function validateCategory(array $vals, ?HostCategory $category = NULL): bool
     {
         if($category === NULL OR $category->getName() != $vals['name'])
         {
             try{HostCategory::_validateName($vals['name']);}
-            catch(ValidationException $e){throw new ValidationError(array($e));}
+            catch(ValidationException $e){throw new ValidationError(array($e->getMessage()));}
         }
 
         self::validate('models\itsm\HostCategory', $vals);
+
+        return TRUE;
     }
 }

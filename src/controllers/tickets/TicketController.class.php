@@ -29,6 +29,7 @@ class TicketController extends Controller
      * @throws EntryNotFoundException
      * @throws EntryInUseException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {

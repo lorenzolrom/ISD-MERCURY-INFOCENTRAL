@@ -84,7 +84,19 @@ class PurchaseOrderController extends Controller
             }
         }
         else if($this->request->method() === HTTPRequest::PUT)
-            return $this->update($param);
+        {
+            $operation = $this->request->next();
+
+            switch($operation)
+            {
+                case 'send':
+                    return $this->send($param);
+                case 'cancel':
+                    return $this->cancel($param);
+                default:
+                    return $this->update($param);
+            }
+        }
         else if($this->request->method() === HTTPRequest::DELETE)
         {
             switch($this->request->next())
@@ -357,5 +369,45 @@ class PurchaseOrderController extends Controller
         $args = self::getFormattedBody(self::COST_FIELDS);
 
         return new HTTPResponse(HTTPResponse::CREATED, PurchaseOrderOperator::addCost($po, (float)$args['cost'], (string)$args['notes']));
+    }
+
+    /**
+     * @param string $po
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function send(string $po): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+        $po = PurchaseOrderOperator::getPO((int) $po);
+
+        $errors = PurchaseOrderOperator::send($po);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT, $errors);
+    }
+
+    /**
+     * @param string $po
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function cancel(string $po): HTTPResponse
+    {
+        CurrentUserController::validatePermission('itsm_inventory-purchaseorders-w');
+        $po = PurchaseOrderOperator::getPO((int) $po);
+
+        $errors = PurchaseOrderOperator::cancel($po);
+
+        if(isset($errors['errors']))
+            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT, $errors);
     }
 }

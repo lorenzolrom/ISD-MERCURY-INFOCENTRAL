@@ -17,7 +17,6 @@ namespace business\itsm;
 use business\Operator;
 use database\itsm\AssetDatabaseHandler;
 use database\itsm\PurchaseOrderDatabaseHandler;
-use database\itsm\ReturnOrderDatabaseHandler;
 use database\itsm\WarehouseDatabaseHandler;
 use exceptions\EntryInUseException;
 use exceptions\ValidationException;
@@ -106,8 +105,7 @@ class WarehouseOperator extends Operator
     public static function deleteWarehouse(Warehouse $warehouse): bool
     {
         if(AssetDatabaseHandler::areAssetsInWarehouse($warehouse->getId())
-            OR PurchaseOrderDatabaseHandler::doPurchaseOrdersReferenceWarehouse($warehouse->getId())
-            OR ReturnOrderDatabaseHandler::doReturnOrdersReferenceWarehouse($warehouse->getId()))
+            OR PurchaseOrderDatabaseHandler::doPurchaseOrdersReferenceWarehouse($warehouse->getId()))
         {
             throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE);
         }

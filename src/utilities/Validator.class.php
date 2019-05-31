@@ -131,6 +131,10 @@ class Validator
 
         }
 
+        // zero
+        if(isset($rules['zero']) AND $rules['zero'] === FALSE AND $value == 0)
+            throw new ValidationException("{$rules['name']} must not be zero",ValidationException::VALUE_IS_NOT_VALID);
+
         // acceptable
         if(isset($rules['acceptable']) AND is_array($rules['acceptable']) AND !in_array($value, $rules['acceptable']))
             throw new ValidationException("{$rules['name']} is not valid", ValidationException::VALUE_IS_NOT_VALID);

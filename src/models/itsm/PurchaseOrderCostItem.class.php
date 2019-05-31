@@ -22,6 +22,7 @@ class PurchaseOrderCostItem extends Model
     private const COST = array(
         'name' => 'Cost',
         'type' => 'float',
+        'zero' => FALSE,
         'positive' => TRUE
     );
 

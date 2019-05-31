@@ -24,6 +24,7 @@ class PurchaseOrderCommodity extends Model
     private const QUANTITY = array(
         'name' => 'Quantity',
         'type' => 'int',
+        'zero' => FALSE,
         'positive' => TRUE
     );
 

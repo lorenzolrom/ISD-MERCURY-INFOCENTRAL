@@ -20,6 +20,7 @@ use database\AttributeDatabaseHandler;
 use database\itsm\PurchaseOrderDatabaseHandler;
 use database\itsm\VendorDatabaseHandler;
 use database\itsm\WarehouseDatabaseHandler;
+use exceptions\ValidationError;
 use models\Attribute;
 use models\itsm\PurchaseOrder;
 use utilities\HistoryRecorder;
@@ -74,9 +75,7 @@ class PurchaseOrderOperator extends Operator
      */
     public static function create(array $vals): array
     {
-        $errors = self::validate('models\itsm\PurchaseOrder', $vals);
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\itsm\PurchaseOrder', $vals);
 
         $po = PurchaseOrderDatabaseHandler::insert(PurchaseOrderDatabaseHandler::nextNumber(), $vals['orderDate'],
             WarehouseDatabaseHandler::selectIdFromCode($vals['warehouse']),
@@ -101,11 +100,9 @@ class PurchaseOrderOperator extends Operator
     {
         // Cannot edit received or canceled P.O.
         if($po->getReceiveDate() !== NULL OR $po->getCancelDate() !== NULL)
-            return array('errors' => array('Cannot edit closed Purchase Order'));
+            throw new ValidationError(array('Cannot edit closed Purchase Order'));
 
-        $errors = self::validate('models\itsm\PurchaseOrder', $vals);
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\itsm\PurchaseOrder', $vals);
 
         $vals['warehouse'] = WarehouseDatabaseHandler::selectIdFromCode($vals['warehouse']);
         $vals['vendor'] = VendorDatabaseHandler::selectIdFromCode($vals['vendor']);
@@ -136,11 +133,9 @@ class PurchaseOrderOperator extends Operator
     {
         // Cannot edit P.O. that has been sent
         if($po->getSent() === 1)
-            return array('errors' => array('Cannot edit commodities of sent Purchase Order'));
+            throw new ValidationError(array('Cannot edit commodities of sent Purchase Order'));
 
-        $errors = self::validate('models\itsm\PurchaseOrderCommodity', array('commodity' => $commodity, 'quantity' => $quantity, 'unitCost' => $unitCost));
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\itsm\PurchaseOrderCommodity', array('commodity' => $commodity, 'quantity' => $quantity, 'unitCost' => $unitCost));
 
         $commodity = CommodityOperator::getCommodityByCode($commodity);
 
@@ -161,12 +156,13 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws ValidationError
      */
     public static function removeCommodity(PurchaseOrder $po, int $id): array
     {
         // Cannot edit P.O. that has been sent
         if($po->getSent() === 1)
-            return array('errors' => array('Cannot edit commodities of sent Purchase Order'));
+            throw new ValidationError(array('Cannot edit commodities of sent Purchase Order'));
 
         $commodity = PurchaseOrderDatabaseHandler::selectCommodityById($id);
 
@@ -196,11 +192,9 @@ class PurchaseOrderOperator extends Operator
     {
         // Cannot edit P.O. that has been sent
         if($po->getSent() === 1)
-            return array('errors' => array('Cannot edit cost items of sent Purchase Order'));
+            throw new ValidationError(array('Cannot edit cost items of sent Purchase Order'));
 
-        $errors = self::validate('models\itsm\PurchaseOrderCostItem', array('cost' => $cost));
-        if(!empty($errors))
-            return array('errors' => $errors);
+        self::validate('models\itsm\PurchaseOrderCostItem', array('cost' => $cost));
 
         $history = HistoryRecorder::writeHistory('ITSM_PurchaseOrder', HistoryRecorder::MODIFY, $po->getId(), $po);
         HistoryRecorder::writeAssocHistory($history, array(
@@ -218,12 +212,13 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws ValidationError
      */
     public static function removeCost(PurchaseOrder $po, int $id): array
     {
         // Cannot edit P.O. that has been sent
         if($po->getSent() === 1)
-            return array('errors' => array('Cannot edit cost items of sent Purchase Order'));
+            throw new ValidationError(array('Cannot edit cost items of sent Purchase Order'));
 
         $cost = PurchaseOrderDatabaseHandler::selectCostItemById($id);
 
@@ -243,15 +238,16 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws ValidationError
      */
     public static function send(PurchaseOrder $po): array
     {
         // Cannot sent PO that has already been sent
         if($po->getSent() === 1)
-            return array('errors' => array('Purchase Order has already been sent'));
+            throw new ValidationError(array('Purchase Order has already been sent'));
 
         if(sizeof($po->getCommodities()) < 1)
-            return array('errors' => array('Purchase Order cannot be sent without at least one commodity'));
+            throw new ValidationError(array('Purchase Order cannot be sent without at least one commodity'));
 
         $sendDate = date('Y-m-d');
         $status = AttributeOperator::idFromCode('itsm', 'post', 'sent');
@@ -275,23 +271,24 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws ValidationError
      */
     public static function receive(PurchaseOrder $po, string $receiveDate, bool $inFull = TRUE, ?int $startAssetTag = NULL, ?array $partialVals = NULL): array
     {
         // Cannot receive PO that has not been sent
         if($po->getSent() === 0)
-            return array('errors' => array('Purchase Order has not been sent'));
+            throw new ValidationError(array('Purchase Order has not been sent'));
 
         if($po->getReceived() === 1)
-            return array('errors' => array('Purchase Order has already been received'));
+            throw new ValidationError(array('errors' => array('Purchase Order has already been received')));
 
         // Cannot receive PO that has been canceled
         if($po->getCanceled() === 0)
-            return array('errors' => array('Purchase Order has been canceled'));
+            throw new ValidationError(array('errors' => array('Purchase Order has been canceled')));
 
 
         if(!Validator::validDate($receiveDate))
-            return array('errors' => array('Receive Date is not valid'));
+            throw new ValidationError(array('errors' => array('Receive Date is not valid')));
 
         $commodities = $po->getCommodities();
 
@@ -318,7 +315,7 @@ class PurchaseOrderOperator extends Operator
                 if(in_array($commodity->getId(), array_keys($partialVals)))
                 {
                     if(!is_numeric($partialVals[$commodity->getId()]))
-                        return array('errors' => array('One or more received quantities is invalid'));
+                        throw new ValidationError( array('errors' => array('One or more received quantities is invalid')));
 
                     $receivedCommodities[] = array($commodity->getCommodity(), (int)$partialVals[$commodity->getId()]);
                 }
@@ -366,18 +363,19 @@ class PurchaseOrderOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws ValidationError
      */
     public static function cancel(PurchaseOrder $po): array
     {
         // Cannot cancel PO that has been received
         if($po->getSent() === 0)
-            return array('errors' => array('Purchase Order has not been sent'));
+            throw new ValidationError(array('errors' => array('Purchase Order has not been sent')));
 
         if($po->getReceived() === 1)
-            return array('errors' => array('Cannot cancel received Purchase Order'));
+            throw new ValidationError(array('errors' => array('Cannot cancel received Purchase Order')));
 
         if($po->getCanceled() === 1)
-            return array('errors' => array('Purchase Order has already been canceled'));
+            throw new ValidationError(array('errors' => array('Purchase Order has already been canceled')));
 
         $status = AttributeOperator::idFromCode('itsm', 'post', 'cncl');
         $cancelDate = date('Y-m-d');

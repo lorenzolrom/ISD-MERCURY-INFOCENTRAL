@@ -16,7 +16,6 @@ namespace business\itsm;
 
 use business\Operator;
 use database\itsm\PurchaseOrderDatabaseHandler;
-use database\itsm\ReturnOrderDatabaseHandler;
 use database\itsm\VendorDatabaseHandler;
 use exceptions\EntryInUseException;
 use exceptions\ValidationException;
@@ -129,8 +128,7 @@ class VendorOperator extends Operator
     public static function deleteVendor(Vendor $vendor): bool
     {
         // Check if P.O. is referenced
-        if(PurchaseOrderDatabaseHandler::doPurchaseOrdersReferenceVendor($vendor->getId())
-            OR ReturnOrderDatabaseHandler::doReturnOrdersReferenceVendor($vendor->getId()))
+        if(PurchaseOrderDatabaseHandler::doPurchaseOrdersReferenceVendor($vendor->getId()))
         {
             throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE);
         }

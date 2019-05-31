@@ -40,6 +40,7 @@ class ControllerFactory
         'vendors' => 'controllers\itsm\VendorController',
         'assets' => 'controllers\itsm\AssetController',
         'purchaseorders' => 'controllers\itsm\PurchaseOrderController',
+        'discardorders' => 'controllers\itsm\DiscardOrderController',
 
         // Web
         'vhosts' => 'controllers\itsm\VHostController',

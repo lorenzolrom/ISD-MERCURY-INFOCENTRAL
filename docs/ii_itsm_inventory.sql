@@ -85,7 +85,7 @@ CREATE TABLE `ITSM_PurchaseOrder_CostItem`
   CONSTRAINT `ITSM_PurchaseOrder_CostItem_ibfk_1` FOREIGN KEY (`purchaseOrder`) REFERENCES `ITSM_PurchaseOrder` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Discard Order TODO
+-- Discard Order
 CREATE TABLE `ITSM_DiscardOrder`
 (
   `id`          int(11)    NOT NULL AUTO_INCREMENT,
@@ -105,7 +105,7 @@ CREATE TABLE `ITSM_DiscardOrder_Asset`
 (
   `order` int(11) NOT NULL,
   `asset` int(11) NOT NULL,
-  PRIMARY KEY (`order`, `asset`),
+  PRIMARY KEY (`asset`),
   FOREIGN KEY (`order`) REFERENCES `ITSM_DiscardOrder` (`id`) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (`asset`) REFERENCES `ITSM_Asset` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
@@ -123,30 +123,27 @@ CREATE TABLE `ITSM_Asset`
   `manufactureDate` varchar(64)         DEFAULT NULL,
   `purchaseOrder`   int(11)             DEFAULT NULL,
   `notes`           text,
-  `createDate`      date                DEFAULT NULL,
+  `discardOrder`    int(11)             DEFAULT NULL,
   `discarded`       tinyint(1) NOT NULL DEFAULT '0',
   `discardDate`     date                DEFAULT NULL,
-  `lastModifyDate`  date                DEFAULT NULL,
-  `lastModifyUser`  int(11)             DEFAULT NULL,
   `verified`        tinyint(1) NOT NULL DEFAULT '0',
   `verifyDate`      date                DEFAULT NULL,
   `verifyUser`      int(11)             DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `assetTag` (`assetTag`),
   KEY `location` (`location`),
-  KEY `lastModifyUser` (`lastModifyUser`),
   KEY `commodity` (`commodity`),
   KEY `warehouse` (`warehouse`),
   KEY `purchaseOrder` (`purchaseOrder`),
   KEY `verifyUser` (`verifyUser`),
   KEY `parent` (`parent`),
   CONSTRAINT `ITSM_Asset_ibfk_1` FOREIGN KEY (`location`) REFERENCES `FacilitiesCore_Location` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `ITSM_Asset_ibfk_2` FOREIGN KEY (`lastModifyUser`) REFERENCES `User` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_Asset_ibfk_3` FOREIGN KEY (`commodity`) REFERENCES `ITSM_Commodity` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_Asset_ibfk_4` FOREIGN KEY (`warehouse`) REFERENCES `ITSM_Warehouse` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_Asset_ibfk_5` FOREIGN KEY (`purchaseOrder`) REFERENCES `ITSM_PurchaseOrder` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_Asset_ibfk_6` FOREIGN KEY (`verifyUser`) REFERENCES `User` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `ITSM_Asset_ibfk_7` FOREIGN KEY (`parent`) REFERENCES `ITSM_Asset` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `ITSM_Asset_ibfk_7` FOREIGN KEY (`parent`) REFERENCES `ITSM_Asset` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  FOREIGN KEY (`discardOrder`) REFERENCES `ITSM_DiscardOrder` (`id`) ON UPDATE CASCADE
 );
 
 -- Asset Worksheet

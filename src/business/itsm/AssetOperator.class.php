@@ -479,4 +479,46 @@ class AssetOperator extends Operator
     {
         return AssetWorksheetDatabaseHandler::getWorksheetCount();
     }
+
+    /**
+     * @param Asset $asset
+     * @param int $discardOrder
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function discard(Asset $asset, int $discardOrder): bool
+    {
+        $date = date('Y-m-d');
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, array(
+            'discardOrder' => $discardOrder,
+            'discarded' => 1,
+            'discardDate' => $date,
+            'location' => NULL,
+            'warehouse' => NULL,
+            'verified' => 0,
+            'verifyDate' => NULL,
+            'verifyUser' => NULL,
+            'parent' => NULL,
+        ), array(
+            'location',
+            'warehouse',
+            'verifyDate',
+            'verifyUser',
+            'parent'
+        ));
+
+        AssetDatabaseHandler::fullUpdate($asset->getId(), NULL, $asset->getAssetTag(), NULL,
+            NULL, $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(), 1, $date,
+            0, NULL, NULL);
+
+        // Remove reference in child assets
+        foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)
+        {
+            self::unlinkFromParent($child);
+        }
+
+        return TRUE;
+    }
 }

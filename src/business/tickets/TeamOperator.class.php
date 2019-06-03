@@ -77,7 +77,7 @@ class TeamOperator extends Operator
         if($vals['users'] === NULL)
             $vals['users'] = array();
 
-        HistoryRecorder::writeAssocHistory($history, $vals['users']);
+        HistoryRecorder::writeAssocHistory($history, array('users' => $vals['users']));
         TeamDatabaseHandler::setUsers($team->getId(), $vals['users']);
 
         return array('id' => $team->getId());
@@ -103,7 +103,7 @@ class TeamOperator extends Operator
             $vals['users'] = array();
 
         $history = HistoryRecorder::writeHistory('Tickets_Team', HistoryRecorder::MODIFY, $team->getId(), $team, $vals);
-        HistoryRecorder::writeAssocHistory($history, $vals['users']);
+        HistoryRecorder::writeAssocHistory($history, array('user' => $vals['users']));
 
         TeamDatabaseHandler::update($team->getId(), $vals['name']);
         TeamDatabaseHandler::setUsers($team->getId(), $vals['users']);

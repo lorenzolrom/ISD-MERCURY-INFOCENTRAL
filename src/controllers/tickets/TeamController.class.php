@@ -33,7 +33,7 @@ class TeamController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets');
+        CurrentUserController::validatePermission('tickets-admin');
         $param = $this->request->next();
 
         if($this->request->method() === HTTPRequest::GET)
@@ -106,7 +106,6 @@ class TeamController extends Controller
      */
     private function createTeam(): HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-admin');
         return new HTTPResponse(HTTPResponse::CREATED, TeamOperator::create(self::getFormattedBody(self::FIELDS)));
     }
 
@@ -120,7 +119,6 @@ class TeamController extends Controller
      */
     private function updateTeam(?string $param): HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-admin');
         $team = TeamOperator::getTeam((int) $param);
         TeamOperator::update($team, self::getFormattedBody(self::FIELDS));
 
@@ -136,7 +134,6 @@ class TeamController extends Controller
      */
     private function deleteTeam(?string $param): HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-admin');
         $team = TeamOperator::getTeam((int) $param);
         TeamOperator::delete($team);
 

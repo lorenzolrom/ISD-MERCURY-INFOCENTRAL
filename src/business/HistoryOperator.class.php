@@ -26,6 +26,8 @@ use models\History;
 class HistoryOperator extends Operator
 {
     private const TABLE_PERMISSIONS = array(
+        'Tickets_Workspace' => 'tickets-admin',
+        'Tickets_Team' => 'tickets-admin',
         'FacilitiesCore_Building' => 'facilitiescore_facilities-r',
         'FacilitiesCore_Location' => 'facilitiescore_facilities-r',
         'ITSM_Asset' => 'itsm_inventory-assets-r',

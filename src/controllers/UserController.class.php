@@ -15,6 +15,7 @@ namespace controllers;
 
 
 use business\UserOperator;
+use exceptions\SecurityException;
 use models\HTTPRequest;
 use models\HTTPResponse;
 
@@ -35,7 +36,7 @@ class UserController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('settings');
+        CurrentUserController::validatePermission(array('settings', 'tickets-admin'));
 
         $param = $this->request->next();
 
@@ -46,6 +47,7 @@ class UserController extends Controller
                 case null:
                     return $this->getSearchResult();
                 default:
+                    CurrentUserController::validatePermission('settings');
                     switch($this->request->next())
                     {
                         case "roles":
@@ -53,12 +55,12 @@ class UserController extends Controller
                         case "permissions":
                             return $this->getPermissionsById($param);
                     }
-
                     return $this->getById($param);
             }
         }
         else if($this->request->method() == HTTPRequest::POST)
         {
+            CurrentUserController::validatePermission('settings');
             switch($param)
             {
                 case 'search':
@@ -69,10 +71,12 @@ class UserController extends Controller
         }
         else if($this->request->method() === HTTPRequest::PUT)
         {
+            CurrentUserController::validatePermission('settings');
             return $this->update($param);
         }
         else if($this->request->method() === HTTPRequest::DELETE)
         {
+            CurrentUserController::validatePermission('settings');
             return $this->delete($param);
         }
 
@@ -165,6 +169,14 @@ class UserController extends Controller
      */
     private function getSearchResult(bool $search = FALSE, bool $strict = FALSE): HTTPResponse
     {
+        $restricted = FALSE;
+
+        try
+        {
+            CurrentUserController::validatePermission('settings');
+        }
+        catch(SecurityException $e){$restricted = TRUE;}
+
         if($search)
         {
             $args = $this->getFormattedBody(self::SEARCH_FIELDS, $strict);
@@ -183,9 +195,9 @@ class UserController extends Controller
                 'username' => $user->getUsername(),
                 'firstName' => $user->getFirstName(),
                 'lastName' => $user->getLastName(),
-                'email' => $user->getEmail(),
-                'disabled' => $user->getDisabled(),
-                'authType' => $user->getAuthType()
+                'email' => $restricted ? NULL : $user->getEmail(),
+                'disabled' => $restricted ? NULL : $user->getDisabled(),
+                'authType' => $restricted ? NULL : $user->getAuthType()
             );
         }
 

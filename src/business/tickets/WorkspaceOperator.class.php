@@ -81,7 +81,7 @@ class WorkspaceOperator extends Operator
 
         $history = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::CREATE, $workspace->getId(), $workspace);
 
-        HistoryRecorder::writeAssocHistory($history, $vals['teams']);
+        HistoryRecorder::writeAssocHistory($history, array('team' => $vals['teams']));
         WorkspaceDatabaseHandler::setTeams($workspace->getId(), $vals['teams']);
 
         return array('id' => $workspace->getId());
@@ -109,7 +109,7 @@ class WorkspaceOperator extends Operator
         $history = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace, $vals);
         WorkspaceDatabaseHandler::update($workspace->getId(), $vals['name']);
 
-        HistoryRecorder::writeAssocHistory($history, $vals['teams']);
+        HistoryRecorder::writeAssocHistory($history, array('team' => $vals['teams']));
         WorkspaceDatabaseHandler::setTeams($workspace->getId(), $vals['teams']);
 
         return array('id' => $workspace->getId());

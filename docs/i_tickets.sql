@@ -1,6 +1,7 @@
 CREATE TABLE `Tickets_Workspace` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL UNIQUE,
+  `requestPortal` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 );
 

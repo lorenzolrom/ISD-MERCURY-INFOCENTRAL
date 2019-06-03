@@ -57,6 +57,9 @@ class WorkspaceController extends Controller
         }
         else if($this->request->method() === HTTPRequest::PUT)
         {
+            if($subject == 'requestPortal')
+                return $this->setRequestPortal($param);
+
             return $this->updateWorkspace($param);
         }
         else if($this->request->method() === HTTPRequest::DELETE)
@@ -79,7 +82,8 @@ class WorkspaceController extends Controller
         {
             $data[] = array(
                 'id' => $workspace->getId(),
-                'name' => $workspace->getName()
+                'name' => $workspace->getName(),
+                'requestPortal' => $workspace->getRequestPortal()
             );
         }
 
@@ -156,6 +160,22 @@ class WorkspaceController extends Controller
         $workspace = WorkspaceOperator::getWorkspace((int)$param);
         WorkspaceOperator::delete($workspace);
 
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    private function setRequestPortal(?string $param): HTTPResponse
+    {
+        CurrentUserController::validatePermission('tickets-admin');
+        $workspace = WorkspaceOperator::getWorkspace((int)$param);
+
+        WorkspaceOperator::setRequestPortal($workspace);
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

@@ -32,7 +32,7 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id`, `name` FROM `Tickets_Workspace` WHERE `id` = ? LIMIT 1');
+        $select = $handler->prepare('SELECT `id`, `name`, `requestPortal` FROM `Tickets_Workspace` WHERE `id` = ? LIMIT 1');
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -218,5 +218,26 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $workspace
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function setRequestPortal(int $workspace): bool
+    {
+        $handler = new DatabaseConnection();
+        
+        $update = $handler->prepare('UPDATE `Tickets_Workspace` SET `requestPortal` = 0 WHERE `requestPortal` = 1');
+        $update->execute();
+
+        $update = $handler->prepare('UPDATE `Tickets_Workspace` SET `requestPortal` = 1 WHERE `id` = ?');
+        $update->bindParam(1, $workspace, DatabaseConnection::PARAM_INT);
+        $update->execute();
+        
+        $handler->close();
+
+        return $update->getRowCount();
     }
 }

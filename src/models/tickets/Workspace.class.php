@@ -30,6 +30,7 @@ class Workspace extends Model
 
     private $id;
     private $name;
+    private $requestPortal;
 
     /**
      * @return int
@@ -46,6 +47,16 @@ class Workspace extends Model
     {
         return $this->name;
     }
+
+    /**
+     * @return int
+     */
+    public function getRequestPortal(): int
+    {
+        return $this->requestPortal;
+    }
+
+
 
     /**
      * @return Team[]

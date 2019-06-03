@@ -114,4 +114,19 @@ class WorkspaceOperator extends Operator
 
         return array('id' => $workspace->getId());
     }
+
+    /**
+     * @param Workspace $workspace
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    public static function setRequestPortal(Workspace $workspace): bool
+    {
+        HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace, array('requestPortal' => 1));
+        WorkspaceDatabaseHandler::setRequestPortal($workspace->getId());
+
+        return TRUE;
+    }
 }

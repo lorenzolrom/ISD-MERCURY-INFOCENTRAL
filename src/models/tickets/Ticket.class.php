@@ -26,6 +26,7 @@ class Ticket
     private $type;
     private $category;
     private $status;
+    private $closureCode;
     private $severity;
     private $desiredDate;
     private $scheduledDate;
@@ -92,6 +93,14 @@ class Ticket
     public function getStatus(): ?int
     {
         return $this->status;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getClosureCode()
+    {
+        return $this->closureCode;
     }
 
     /**

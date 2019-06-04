@@ -8,7 +8,7 @@ CREATE TABLE `Tickets_Workspace` (
 CREATE TABLE Tickets_Attribute (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `workspace` int(11) NOT NULL,
-  `type` char(4) NOT NULL,
+  `type` enum('type', 'status', 'category', 'severity') NOT NULL,
   `code` char(4) NOT NULL,
   `name` TEXT NOT NULL,
   PRIMARY KEY (`id`),
@@ -47,6 +47,7 @@ CREATE TABLE `Tickets_Ticket` (
   `type` int(11) NOT NULL,
   `category` int(11) NOT NULL,
   `status` int(11) DEFAULT NULL,
+  `closureCode` int(11) DEFAULT NULL,
   `severity` int(11) DEFAULT NULL,
   `desiredDate` date DEFAULT NULL,
   `scheduledDate` date DEFAULT NULL,
@@ -57,7 +58,8 @@ CREATE TABLE `Tickets_Ticket` (
   FOREIGN KEY (`type`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE,
   FOREIGN KEY (`category`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE,
   FOREIGN KEY (`status`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE,
-  FOREIGN KEY (`severity`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE
+  FOREIGN KEY (`severity`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE,
+  FOREIGN KEY (`closureCode`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE
 );
 
 CREATE TABLE `Tickets_Assignee` (

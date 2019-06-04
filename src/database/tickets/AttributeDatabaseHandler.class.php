@@ -33,7 +33,7 @@ class AttributeDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `workspace`, `type`, `code`, `name` FROM `Tickets_Attribute` WHERE `id` = :id LIMIT 1');
+        $select = $handler->prepare('SELECT `id`, `workspace`, `type`, `code`, `name` FROM `Tickets_Attribute` WHERE `id` = :id LIMIT 1');
         $select->bindParam('id', $id, DatabaseConnection::PARAM_STR);
         $select->execute();
 
@@ -135,7 +135,7 @@ class AttributeDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $delete = $handler->prepare('DELETE FROM `Tickets_Attribute` WHERE `id` = :id');
-        $delete->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $delete->bindParam('id', $id, DatabaseConnection::PARAM_INT);
 
         try{$delete->execute();}
         catch(DatabaseException $e){throw new EntryInUseException(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE], EntryInUseException::ENTRY_IN_USE, $e);}
@@ -194,7 +194,7 @@ class AttributeDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `status` = :attr OR `category` = :attr OR `severity` = :attr OR `type` LIKE :attr LIMIT 1');
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `status` = :attr OR `category` = :attr OR `severity` = :attr OR `type` LIKE :attr OR `closureCode` LIKE :attr LIMIT 1');
         $select->bindParam('attr', $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 

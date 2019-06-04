@@ -21,7 +21,7 @@ use utilities\Validator;
 
 class Attribute extends Model
 {
-    public const TYPES = array('stat', 'cate', 'seve', 'type');
+    public const TYPES = array('status', 'category', 'severity', 'type', 'closureCode');
 
     public const TYPE_RULES = array(
         'name' => 'Type',
@@ -29,7 +29,7 @@ class Attribute extends Model
     );
 
     public const CODE_RULES = array(
-        'name' => 'code',
+        'name' => 'Code',
         'exact' => 4,
         'alnum' => TRUE
     );
@@ -105,7 +105,7 @@ class Attribute extends Model
      * @throws ValidationException
      * @throws \exceptions\DatabaseException
      */
-    public static function _validateCode(int $workspace, ?string $type, ?string $code): bool
+    public static function __validateCode(int $workspace, ?string $type, ?string $code): bool
     {
         // Code is unique
         if(AttributeDatabaseHandler::selectIdByCode($workspace, (string)$type, (string)$code) !== NULL)

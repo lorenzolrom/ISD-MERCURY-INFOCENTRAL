@@ -33,7 +33,7 @@ class TicketDatabaseHandler extends DatabaseHandler
         $handler = new DatabaseConnection();
 
         $select = $handler->prepare('SELECT `id`, `workspace`, `number`, `title`, `contact`, `type`, `category`, 
-            `status`, `severity`, `desiredDate`, `scheduledDate` FROM `Tickets_Ticket` WHERE `id` = ? LIMIT 1');
+            `status`, `closureCode`, `severity`, `desiredDate`, `scheduledDate` FROM `Tickets_Ticket` WHERE `id` = ? LIMIT 1');
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -77,6 +77,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @param array $type
      * @param array $category
      * @param array $status
+     * @param array $closureCode
      * @param array $severity
      * @param string|null $desiredStart
      * @param string|null $desiredEnd
@@ -87,7 +88,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      */
     public static function select(int $workspace, string $number = '%', string $title = '%',
                                   string $contact = '%', array $type = array(), array $category = array(),
-                                  array $status = array(), array $severity = array(), ?string $desiredStart = NULL,
+                                  array $status = array(), array $closureCode = array(), array $severity = array(), ?string $desiredStart = NULL,
                                   ?string $desiredEnd = NULL, ?string $scheduledStart = NULL, ?string $scheduledEnd = NULL): array
     {
         // Sanitize Dates
@@ -105,13 +106,15 @@ class TicketDatabaseHandler extends DatabaseHandler
                                     AND `desiredDate` BETWEEN :desiredStart AND :desiredEnd";
 
         // Array values
-        if($type !== NULL)
+        if($type !== NULL AND !empty($type))
             $query .= ' AND `type` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($type) . '))';
-        if($category !== NULL)
+        if($category !== NULL AND !empty($category))
             $query .= ' AND `category` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($category) . '))';
-        if($status !== NULL)
+        if($status !== NULL AND !empty($status))
             $query .= ' AND `status` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($status) . '))';
-        if($severity !== NULL)
+        if($closureCode !== NULL AND !empty($closureCode))
+            $query .= ' AND `closureCode` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($status) . '))';
+        if($severity !== NULL AND !empty($severity))
             $query .= ' AND `severity` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($severity) . '))';
 
         $handler = new DatabaseConnection();
@@ -148,6 +151,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @param int $type
      * @param int $category
      * @param int|null $status
+     * @param int|null $closureCode
      * @param int|null $severity
      * @param string|null $desiredDate
      * @param string|null $scheduledDate
@@ -156,14 +160,14 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @throws \exceptions\DatabaseException
      */
     public static function insert(int $workspace, int $number, string $title, ?string $contact, int $type,
-                                  int $category, ?int $status, ?int $severity, ?string $desiredDate,
+                                  int $category, ?int $status, ?int $closureCode, ?int $severity, ?string $desiredDate,
                                   ?string $scheduledDate): Ticket
     {
         $handler = new DatabaseConnection();
 
         $insert = $handler->prepare('INSERT INTO `Tickets_Ticket` (`workspace`, `number`, `title`, `contact`, 
-                              `type`, `category`, `status`, `severity`, `desiredDate`, `scheduledDate`) VALUES 
-                              (:workspace, :number, :title, :contact, :type, :category, :status, :severity, 
+                              `type`, `category`, `status`, `closureCode`, `severity`, `desiredDate`, `scheduledDate`) VALUES 
+                              (:workspace, :number, :title, :contact, :type, :category, :status, :closureCode, :severity, 
                                :desiredDate, :scheduledDate)');
         $insert->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
         $insert->bindParam('number', $number, DatabaseConnection::PARAM_INT);
@@ -172,6 +176,7 @@ class TicketDatabaseHandler extends DatabaseHandler
         $insert->bindParam('type', $type, DatabaseConnection::PARAM_INT);
         $insert->bindParam('category', $category, DatabaseConnection::PARAM_INT);
         $insert->bindParam('status', $status, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('closureCode', $closureCode, DatabaseConnection::PARAM_INT);
         $insert->bindParam('severity', $severity, DatabaseConnection::PARAM_INT);
         $insert->bindParam('desiredDate', $desiredDate, DatabaseConnection::PARAM_STR);
         $insert->bindParam('scheduledDate', $scheduledDate, DatabaseConnection::PARAM_STR);
@@ -191,6 +196,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @param int $type
      * @param int $category
      * @param int|null $status
+     * @param int|null $closureCode
      * @param int|null $severity
      * @param string|null $desiredDate
      * @param string|null $scheduledDate
@@ -199,13 +205,13 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @throws \exceptions\DatabaseException
      */
     public static function update(int $id, string $title, ?string $contact, int $type,
-                                  int $category, ?int $status, ?int $severity, ?string $desiredDate,
+                                  int $category, ?int $status, ?int $closureCode, ?int $severity, ?string $desiredDate,
                                   ?string $scheduledDate): Ticket
     {
         $handler = new DatabaseConnection();
 
         $update = $handler->prepare('UPDATE `Tickets_Ticket` SET `title` = :title, `contact` = :contact, 
-                            `type` = :type, `category` = :category, `status` = :status, `severity` = :severity, 
+                            `type` = :type, `category` = :category, `status` = :status, `closureCode` = :closureCode, `severity` = :severity, 
                             `desiredDate` = :desiredDate, `scheduledDate` = :scheduledDate WHERE `id` = :id');
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->bindParam('title', $title, DatabaseConnection::PARAM_STR);
@@ -213,6 +219,7 @@ class TicketDatabaseHandler extends DatabaseHandler
         $update->bindParam('type', $type, DatabaseConnection::PARAM_INT);
         $update->bindParam('category', $category, DatabaseConnection::PARAM_INT);
         $update->bindParam('status', $status, DatabaseConnection::PARAM_INT);
+        $update->bindParam('closureCode', $closureCode, DatabaseConnection::PARAM_INT);
         $update->bindParam('severity', $severity, DatabaseConnection::PARAM_INT);
         $update->bindParam('desiredDate', $desiredDate, DatabaseConnection::PARAM_STR);
         $update->bindParam('scheduledDate', $scheduledDate, DatabaseConnection::PARAM_STR);

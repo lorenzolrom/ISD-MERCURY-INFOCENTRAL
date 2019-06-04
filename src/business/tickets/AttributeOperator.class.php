@@ -26,9 +26,35 @@ use utilities\HistoryRecorder;
 class AttributeOperator extends Operator
 {
     /**
+     * @param int $id
+     * @return Attribute
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function getById(int $id): Attribute
+    {
+        return AttributeDatabaseHandler::selectById($id);
+    }
+
+    /**
      * @param Workspace $workspace
      * @param string $type
-     * @return array
+     * @param string $code
+     * @return Attribute
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function getByCode(Workspace $workspace, string $type, string $code): Attribute
+    {
+        $id = AttributeDatabaseHandler::selectIdByCode($workspace->getId(), $type, $code);
+
+        return AttributeDatabaseHandler::selectById((int)$id);
+    }
+
+    /**
+     * @param Workspace $workspace
+     * @param string $type
+     * @return Attribute[]
      * @throws \exceptions\DatabaseException
      */
     public static function getAllOfType(Workspace $workspace, string $type): array
@@ -57,7 +83,16 @@ class AttributeOperator extends Operator
      */
     public static function create(Workspace $workspace, array $vals): int
     {
-        self::validate('models\tickets\Ticket', $vals, TRUE);
+        self::validate('models\tickets\Attribute', $vals, TRUE);
+
+        try
+        {
+            Attribute::__validateCode($workspace->getId(), $vals['type'], $vals['code']);
+        }
+        catch(ValidationException $e)
+        {
+            throw new ValidationError(array($e->getMessage()));
+        }
 
         $attr = AttributeDatabaseHandler::insert($workspace->getId(), $vals['type'], $vals['code'], $vals['name']);
         HistoryRecorder::writeHistory('Tickets_Attribute', HistoryRecorder::CREATE, $attr->getId(), $attr);
@@ -76,14 +111,14 @@ class AttributeOperator extends Operator
      */
     public static function update(Attribute $attr, array $vals): bool
     {
-        self::validate('models\tickets\Ticket', $vals);
+        self::validate('models\tickets\Attribute', $vals);
 
         // Check code if it has been changed
         if($attr->getCode() != $vals['code'])
         {
             try
             {
-                Attribute::_validateCode($attr->getWorkspace(), $attr->getType(), $vals['code']);
+                Attribute::__validateCode($attr->getWorkspace(), $attr->getType(), $vals['code']);
             }
             catch(ValidationException $e)
             {

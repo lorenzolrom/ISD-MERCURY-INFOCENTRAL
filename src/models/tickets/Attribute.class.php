@@ -22,6 +22,8 @@ use utilities\Validator;
 class Attribute extends Model
 {
     public const TYPES = array('status', 'category', 'severity', 'type', 'closureCode');
+    public const CLOSED_STATUS = 'clo';
+    public const NEW_STATUS = 'new';
 
     public const TYPE_RULES = array(
         'name' => 'Type',

@@ -6,52 +6,61 @@
  * INS WEBNOC API
  *
  * User: lromero
- * Date: 5/14/2019
- * Time: 9:23 AM
+ * Date: 6/05/2019
+ * Time: 9:17 AM
  */
 
 
 namespace controllers\tickets;
 
 
+use business\tickets\WorkspaceOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
-use exceptions\EntryInUseException;
 use exceptions\EntryNotFoundException;
+use exceptions\SecurityException;
+use models\HTTPRequest;
 use models\HTTPResponse;
 
+/**
+ * Class TicketController
+ *
+ * Controller for accessing tickets
+ *
+ * @package controllers\tickets
+ */
 class TicketController extends Controller
 {
+    private $workspace;
+
+    /**
+     * TicketController constructor.
+     * @param string $workspace
+     * @param HTTPRequest $request
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public function __construct(string $workspace, HTTPRequest $request)
+    {
+        $this->workspace = WorkspaceOperator::getWorkspace((int)$workspace);
+
+        // User must be in a team assigned to workspace
+        if(!WorkspaceOperator::currentUserInWorkspace($this->workspace))
+            throw new SecurityException('You are not a member of this workspace', SecurityException::USER_NO_PERMISSION);
+
+        parent::__construct($request);
+    }
 
     /**
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
-     * @throws EntryNotFoundException
-     * @throws EntryInUseException
      * @throws \exceptions\SecurityException
-     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets');
-
-        $param = $this->request->next();
-
-        switch($param)
-        {
-            case 'workspaces':
-                $w = new WorkspaceController($this->request);
-                return $w->getResponse();
-            case 'teams':
-                $t = new TeamController($this->request);
-                return $t->getResponse();
-        }
+        CurrentUserController::validatePermission('tickets-agent');
 
         return NULL;
-    }
-
-    public static function validateWorkspaceMembership(): bool
-    {
-        return TRUE;
     }
 }

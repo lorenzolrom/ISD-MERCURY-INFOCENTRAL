@@ -46,7 +46,7 @@ CREATE TABLE `Tickets_Ticket` (
   `contact` varchar(64) DEFAULT NULL,
   `type` int(11) NOT NULL,
   `category` int(11) NOT NULL,
-  `status` int(11) DEFAULT NULL,
+  `status` char(4) NOT NULL DEFAULT 'new',
   `closureCode` int(11) DEFAULT NULL,
   `severity` int(11) DEFAULT NULL,
   `desiredDate` date DEFAULT NULL,
@@ -57,7 +57,6 @@ CREATE TABLE `Tickets_Ticket` (
   FOREIGN KEY (`contact`) REFERENCES `User`(`username`) ON UPDATE CASCADE ON DELETE SET NULL,
   FOREIGN KEY (`type`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE,
   FOREIGN KEY (`category`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE,
-  FOREIGN KEY (`status`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE,
   FOREIGN KEY (`severity`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE,
   FOREIGN KEY (`closureCode`) REFERENCES `Tickets_Attribute`(`id`) ON UPDATE CASCADE
 );

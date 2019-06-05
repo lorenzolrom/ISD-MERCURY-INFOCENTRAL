@@ -28,7 +28,7 @@ class ControllerFactory
 {
     private const CONTROLLERS = array(
         // Tickets
-        'tickets' => 'controllers\tickets\TicketController',
+        'tickets' => 'controllers\tickets\TicketsController',
 
         // Devices
         'hosts' => 'controllers\itsm\HostController',

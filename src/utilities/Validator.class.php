@@ -96,6 +96,8 @@ class Validator
         // null (default true)
         if((!isset($rules['null']) OR !$rules['null'])AND $value === NULL)
             throw new ValidationException($rules['name'] . ' is required', ValidationException::VALUE_IS_NULL);
+        else if(isset($rules['null']) AND $rules['null'] AND $value === NULL)
+            return TRUE;
 
         // skip validation if empty string allowed, and string is empty
         if(isset($rules['empty']) AND $rules['empty'] AND strlen($value) === 0)

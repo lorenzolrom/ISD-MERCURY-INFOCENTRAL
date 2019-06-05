@@ -240,4 +240,24 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
 
         return $update->getRowCount();
     }
+
+    /**
+     * @return Workspace
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     */
+    public static function selectRequestPortal(): Workspace
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Workspace` WHERE `requestPortal` = 1 LIMIT 1');
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            throw new EntryNotFoundException('No Request Portal has been defined', EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+
+        return self::selectById((int)$select->fetchColumn());
+    }
 }

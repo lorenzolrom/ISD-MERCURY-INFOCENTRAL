@@ -15,6 +15,7 @@ namespace business\tickets;
 
 
 use business\Operator;
+use controllers\CurrentUserController;
 use database\tickets\WorkspaceDatabaseHandler;
 use exceptions\EntryInUseException;
 use models\tickets\Workspace;
@@ -128,5 +129,37 @@ class WorkspaceOperator extends Operator
         WorkspaceDatabaseHandler::setRequestPortal($workspace->getId());
 
         return TRUE;
+    }
+
+    /**
+     * @return Workspace
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function getRequestPortal(): Workspace
+    {
+        return WorkspaceDatabaseHandler::selectRequestPortal();
+    }
+
+    /**
+     * @param Workspace $workspace
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function currentUserInWorkspace(Workspace $workspace): bool
+    {
+        $user = CurrentUserController::currentUser();
+
+        foreach($workspace->getTeams() as $team)
+        {
+            foreach($team->getUsers() as $member)
+            {
+                if($user->getId() === $member->getId())
+                    return TRUE;
+            }
+        }
+
+        return FALSE;
     }
 }

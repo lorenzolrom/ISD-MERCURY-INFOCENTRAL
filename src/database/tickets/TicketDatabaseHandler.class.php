@@ -87,8 +87,8 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @throws \exceptions\DatabaseException
      */
     public static function select(int $workspace, string $number = '%', string $title = '%',
-                                  string $contact = '%', array $type = array(), array $category = array(),
-                                  array $status = array(), array $closureCode = array(), array $severity = array(), ?string $desiredStart = NULL,
+                                  string $contact = '%', ?array $type = array(), ?array $category = array(),
+                                  ?array $status = array(), ?array $closureCode = array(), ?array $severity = array(), ?string $desiredStart = NULL,
                                   ?string $desiredEnd = NULL, ?string $scheduledStart = NULL, ?string $scheduledEnd = NULL): array
     {
         // Sanitize Dates
@@ -150,7 +150,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @param string|null $contact
      * @param int $type
      * @param int $category
-     * @param int|null $status
+     * @param string $status
      * @param int|null $closureCode
      * @param int|null $severity
      * @param string|null $desiredDate
@@ -160,7 +160,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @throws \exceptions\DatabaseException
      */
     public static function insert(int $workspace, int $number, string $title, ?string $contact, int $type,
-                                  int $category, ?int $status, ?int $closureCode, ?int $severity, ?string $desiredDate,
+                                  int $category, string $status, ?int $closureCode, ?int $severity, ?string $desiredDate,
                                   ?string $scheduledDate): Ticket
     {
         $handler = new DatabaseConnection();
@@ -175,7 +175,7 @@ class TicketDatabaseHandler extends DatabaseHandler
         $insert->bindParam('contact', $contact, DatabaseConnection::PARAM_STR);
         $insert->bindParam('type', $type, DatabaseConnection::PARAM_INT);
         $insert->bindParam('category', $category, DatabaseConnection::PARAM_INT);
-        $insert->bindParam('status', $status, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('status', $status, DatabaseConnection::PARAM_STR);
         $insert->bindParam('closureCode', $closureCode, DatabaseConnection::PARAM_INT);
         $insert->bindParam('severity', $severity, DatabaseConnection::PARAM_INT);
         $insert->bindParam('desiredDate', $desiredDate, DatabaseConnection::PARAM_STR);
@@ -195,7 +195,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @param string|null $contact
      * @param int $type
      * @param int $category
-     * @param int|null $status
+     * @param string $status
      * @param int|null $closureCode
      * @param int|null $severity
      * @param string|null $desiredDate
@@ -205,7 +205,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @throws \exceptions\DatabaseException
      */
     public static function update(int $id, string $title, ?string $contact, int $type,
-                                  int $category, ?int $status, ?int $closureCode, ?int $severity, ?string $desiredDate,
+                                  int $category, string $status, ?int $closureCode, int $severity, ?string $desiredDate,
                                   ?string $scheduledDate): Ticket
     {
         $handler = new DatabaseConnection();
@@ -218,7 +218,7 @@ class TicketDatabaseHandler extends DatabaseHandler
         $update->bindParam('contact', $contact, DatabaseConnection::PARAM_STR);
         $update->bindParam('type', $type, DatabaseConnection::PARAM_INT);
         $update->bindParam('category', $category, DatabaseConnection::PARAM_INT);
-        $update->bindParam('status', $status, DatabaseConnection::PARAM_INT);
+        $update->bindParam('status', $status, DatabaseConnection::PARAM_STR);
         $update->bindParam('closureCode', $closureCode, DatabaseConnection::PARAM_INT);
         $update->bindParam('severity', $severity, DatabaseConnection::PARAM_INT);
         $update->bindParam('desiredDate', $desiredDate, DatabaseConnection::PARAM_STR);
@@ -228,5 +228,23 @@ class TicketDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return self::selectById($id);
+    }
+
+    /**
+     * @param int $workspace
+     * @return int
+     * @throws \exceptions\DatabaseException
+     */
+    public static function nextNumber(int $workspace): int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `number` FROM `Tickets_Ticket` WHERE `workspace` = ? ORDER BY `number` DESC LIMIT 1');
+        $select->bindParam(1, $workspace, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() + 1 : 1;
     }
 }

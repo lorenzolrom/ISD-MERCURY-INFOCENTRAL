@@ -45,6 +45,11 @@ class WorkspaceController extends Controller
             $a = new AttributeController($param, $this->request);
             return $a->getResponse();
         }
+        else if($param !== NULL AND $subject == 'tickets')
+        {
+            $t = new TicketController($param, $this->request);
+            return $t->getResponse();
+        }
         else if($this->request->method() === HTTPRequest::GET)
         {
             if($param === NULL)

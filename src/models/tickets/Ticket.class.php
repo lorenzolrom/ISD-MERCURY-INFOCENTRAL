@@ -15,9 +15,33 @@ namespace models\tickets;
 
 
 use database\tickets\UpdateDatabaseHandler;
+use models\Model;
+use utilities\Validator;
 
-class Ticket
+class Ticket extends Model
 {
+    public const STATIC_STATUSES = array(
+        'new' => 'New',
+        'clo' => 'Closed',
+        'res' => 'Responded',
+        'reo' => 'Reopened'
+    );
+
+    private const CONTACT_RULES = array(
+        'null' => TRUE,
+        'username' => TRUE
+    );
+
+    private const DESIRED_DATE_RULES = array(
+        'null' => TRUE,
+        'type' => 'date'
+    );
+
+    private const SCHEDULED_DATE_RULES = array(
+        'null' => TRUE,
+        'type' => 'date'
+    );
+
     private $id;
     private $workspace;
     private $number;
@@ -88,9 +112,9 @@ class Ticket
     }
 
     /**
-     * @return int|null
+     * @return string
      */
-    public function getStatus(): ?int
+    public function getStatus(): string
     {
         return $this->status;
     }
@@ -134,5 +158,38 @@ class Ticket
     public function getUpdates(): array
     {
         return UpdateDatabaseHandler::selectByTicket($this->id);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateContact(?string $val): bool
+    {
+        return Validator::validate(self::CONTACT_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateDesiredDate(?string $val): bool
+    {
+        return Validator::validate(self::DESIRED_DATE_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateScheduledDate(?string $val): bool
+    {
+        return Validator::validate(self::SCHEDULED_DATE_RULES, $val);
     }
 }

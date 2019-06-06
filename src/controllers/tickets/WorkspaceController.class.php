@@ -19,6 +19,7 @@ use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryInUseException;
 use exceptions\EntryNotFoundException;
+use exceptions\SecurityException;
 use models\HTTPRequest;
 use models\HTTPResponse;
 
@@ -50,13 +51,23 @@ class WorkspaceController extends Controller
             $t = new TicketController($param, $this->request);
             return $t->getResponse();
         }
-        else if($this->request->method() === HTTPRequest::GET)
+
+        if($this->request->method() === HTTPRequest::GET)
         {
+            if($param === 'requestPortal')
+                return $this->getRequestPortal();
+
+            CurrentUserController::validatePermission('tickets-agent');
+
             if($param === NULL)
                 return $this->getAll();
+
             return $this->getWorkspace($param);
         }
-        else if($this->request->method() === HTTPRequest::POST)
+
+        CurrentUserController::validatePermission('tickets-admin');
+
+        if($this->request->method() === HTTPRequest::POST)
         {
             return $this->createWorkspace();
         }
@@ -77,14 +88,24 @@ class WorkspaceController extends Controller
 
     /**
      * @return HTTPResponse
+     * @throws SecurityException
      * @throws \exceptions\DatabaseException
      */
     private function getAll(): HTTPResponse
     {
+        $showAll = TRUE;
+
+        // Only show workspace memberships if the user does not have admin permission
+        try{CurrentUserController::validatePermission('tickets-admin');}
+        catch(SecurityException $e){$showAll = FALSE;}
+
         $data = array();
 
         foreach(WorkspaceOperator::getAll() as $workspace)
         {
+            if(!$showAll AND !WorkspaceOperator::currentUserInWorkspace($workspace)) // Skip workspace if user does not have 'admin' and is not a member of the workspace
+                continue;
+
             $data[] = array(
                 'id' => $workspace->getId(),
                 'name' => $workspace->getName(),
@@ -100,10 +121,19 @@ class WorkspaceController extends Controller
      * @return HTTPResponse
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
+     * @throws SecurityException
      */
     private function getWorkspace(?string $param): HTTPResponse
     {
         $workspace = WorkspaceOperator::getWorkspace((int) $param);
+
+        try{CurrentUserController::validatePermission('tickets-admin');}
+        catch(SecurityException $e)
+        {
+            if(!WorkspaceOperator::currentUserInWorkspace($workspace))
+                throw new SecurityException('You are not allowed to view this workspace', SecurityException::USER_NO_PERMISSION);
+        }
+
         $teams = array();
 
         foreach($workspace->getTeams() as $team)
@@ -125,12 +155,26 @@ class WorkspaceController extends Controller
      * @return HTTPResponse
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
+     */
+    private function getRequestPortal(): HTTPResponse
+    {
+        $workspace = WorkspaceOperator::getRequestPortal();
+
+        return new HTTPResponse(HTTPResponse::OK, array(
+            'id' => $workspace->getId(),
+            'name' => $workspace->getName()
+        ));
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      * @throws \exceptions\ValidationError
      */
     private function createWorkspace(): HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-admin');
         return new HTTPResponse(HTTPResponse::CREATED, WorkspaceOperator::create(self::getFormattedBody(self::FIELDS)));
     }
 
@@ -144,7 +188,6 @@ class WorkspaceController extends Controller
      */
     private function updateWorkspace(?string $param): HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-admin');
         $workspace = WorkspaceOperator::getWorkspace((int)$param);
         WorkspaceOperator::update($workspace, self::getFormattedBody(self::FIELDS));
 
@@ -161,7 +204,6 @@ class WorkspaceController extends Controller
      */
     private function deleteWorkspace(?string $param): HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-admin');
         $workspace = WorkspaceOperator::getWorkspace((int)$param);
         WorkspaceOperator::delete($workspace);
 
@@ -177,7 +219,6 @@ class WorkspaceController extends Controller
      */
     private function setRequestPortal(?string $param): HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-admin');
         $workspace = WorkspaceOperator::getWorkspace((int)$param);
 
         WorkspaceOperator::setRequestPortal($workspace);

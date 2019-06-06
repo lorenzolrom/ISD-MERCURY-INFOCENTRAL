@@ -81,3 +81,13 @@ CREATE TABLE `Tickets_Update` (
   FOREIGN KEY (`ticket`) REFERENCES `Tickets_Ticket`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (`user`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+CREATE TABLE `Tickets_Search` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `workspace` int(11) NOT NULL,
+  `user` int(11) DEFAULT NULL,
+  `encodedSearch` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`workspace`) REFERENCES `Tickets_Workspace`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY `user` REFERENCES User(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);

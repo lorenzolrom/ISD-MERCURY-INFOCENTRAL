@@ -55,7 +55,7 @@ class AttributeDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id` FROM `Tickets_Attribute` WHERE `workspace` = :workspace AND `type` = :type');
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Attribute` WHERE `workspace` = :workspace AND `type` = :type ORDER BY `name` ASC');
         $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
         $select->bindParam('type', $type, DatabaseConnection::PARAM_STR);
         $select->execute();

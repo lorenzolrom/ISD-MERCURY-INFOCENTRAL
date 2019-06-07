@@ -22,6 +22,7 @@ use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
 use models\HTTPResponse;
 use models\tickets\Attribute;
+use models\tickets\Ticket;
 
 class AttributeController extends Controller
 {
@@ -84,6 +85,18 @@ class AttributeController extends Controller
     private function getAllOfType(string $type): HTTPResponse
     {
         $data = array();
+
+        // Display static statuses
+        if($type == 'status')
+        {
+            foreach(array_keys(Ticket::STATIC_STATUSES) as $status)
+            {
+                $data[] = array(
+                    'code' => $status,
+                    'name' => Ticket::STATIC_STATUSES[$status]
+                );
+            }
+        }
 
         foreach (AttributeOperator::getAllOfType($this->workspace, $type) as $attr)
         {

@@ -20,11 +20,16 @@ use utilities\Validator;
 
 class Ticket extends Model
 {
+    public const CLOSED = 'clo';
+    public const NEW = 'new';
+    public const RESPONDED = 'res';
+    public const REOPENED = 'reo';
+
     public const STATIC_STATUSES = array(
-        'new' => 'New',
-        'clo' => 'Closed',
-        'res' => 'Responded',
-        'reo' => 'Reopened'
+        self::NEW => 'New',
+        self::CLOSED => 'Closed',
+        self::RESPONDED => 'Responded',
+        self::REOPENED => 'Reopened'
     );
 
     private const CONTACT_RULES = array(

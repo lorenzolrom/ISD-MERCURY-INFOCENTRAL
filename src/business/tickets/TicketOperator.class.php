@@ -52,7 +52,7 @@ class TicketOperator extends Operator
     public static function getSearchResults(Workspace $workspace, array $vals): array
     {
         // These values must be arrays or null
-        foreach(array('type', 'category', 'status', 'closureCode') as $val)
+        foreach(array('type', 'category', 'status', 'closureCode', 'severity') as $val)
         {
             if($vals[$val] !== NULL AND !is_array($vals[$val]))
                 $vals[$val] = NULL;
@@ -155,7 +155,7 @@ class TicketOperator extends Operator
         // Determine customer request workspace
         $workspace = WorkspaceOperator::getRequestPortal();
 
-        $vals['status'] = 'new'; // New
+        $vals['status'] = Ticket::NEW; // New
         $vals['severity'] = NULL;
 
         return self::createTicket($workspace, $vals);
@@ -175,10 +175,10 @@ class TicketOperator extends Operator
         if($description === NULL OR strlen($description) === 0)
             throw new ValidationError(array('Description is required'));
 
-        if($ticket->getStatus() == 'clo') // If ticket is closed
-            $vals['status'] = 'reo'; // Re-Opened
+        if($ticket->getStatus() == Ticket::CLOSED) // If ticket is closed
+            $vals['status'] = Ticket::REOPENED; // Re-Opened
         else
-            $vals['status'] = 'res'; // Customer responded
+            $vals['status'] = Ticket::RESPONDED; // Customer responded
 
         $history = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket->getId(), $ticket, $vals, array('severity', 'desiredDate', 'scheduledDate'));
         $ticket = TicketDatabaseHandler::update($ticket->getId(), $ticket->getTitle(), $ticket->getContact(), $ticket->getType(), $ticket->getCategory(), 'res', $ticket->getClosureCode(), $ticket->getSeverity(), $ticket->getDesiredDate(), $ticket->getScheduledDate());
@@ -187,6 +187,27 @@ class TicketOperator extends Operator
         HistoryRecorder::writeAssocHistory($history, array('appendDescription' => array($description)));
 
         return $ticket;
+    }
+
+    /**
+     * @param Workspace $workspace
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function getMyAssignments(Workspace $workspace): array
+    {
+        return TicketDatabaseHandler::selectByAssignee($workspace->getId(), CurrentUserController::currentUser()->getId());
+    }
+
+    /**
+     * @param Workspace $workspace
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getOpenTickets(Workspace $workspace): array
+    {
+        return TicketDatabaseHandler::selectOpen($workspace->getId());
     }
 
     /**

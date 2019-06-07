@@ -124,8 +124,8 @@ class TicketDatabaseHandler extends DatabaseHandler
         $select->bindParam('number', $number, DatabaseConnection::PARAM_STR);
         $select->bindParam('title', $title, DatabaseConnection::PARAM_STR);
         $select->bindParam('contact', $contact, DatabaseConnection::PARAM_STR);
-        $select->bindParam('scheduledStart', $scheduledStart, DatabaseConnection::PARAM_STR);
-        $select->bindParam('scheduledEnd', $scheduledEnd, DatabaseConnection::PARAM_STR);
+        $select->bindParam('scheduleStart', $scheduledStart, DatabaseConnection::PARAM_STR);
+        $select->bindParam('scheduleEnd', $scheduledEnd, DatabaseConnection::PARAM_STR);
         $select->bindParam('desiredStart', $desiredStart, DatabaseConnection::PARAM_STR);
         $select->bindParam('desiredEnd', $desiredEnd, DatabaseConnection::PARAM_STR);
         $select->execute();
@@ -246,5 +246,61 @@ class TicketDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return $select->getRowCount() === 1 ? $select->fetchColumn() + 1 : 1;
+    }
+
+    /**
+     * @param int $workspace
+     * @param int $user
+     * @return Ticket[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectByAssignee(int $workspace, int $user): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `workspace` = :workspace AND `status` != :closed AND `id` IN (SELECT `ticket` FROM `Tickets_Assignee` WHERE `user` = :user)');
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->bindParam('closed', Ticket::CLOSED, DatabaseConnection::PARAM_STR);
+        $select->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $tickets = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$tickets[] = self::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $tickets;
+    }
+
+    /**
+     * @param int $workspace
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectOpen(int $workspace): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `workspace` = :workspace AND `status` != :closed');
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->bindParam('closed', Ticket::CLOSED, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        $tickets = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$tickets[] = self::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $tickets;
     }
 }

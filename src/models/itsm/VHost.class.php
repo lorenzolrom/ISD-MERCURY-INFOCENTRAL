@@ -20,6 +20,7 @@ use database\itsm\RegistrarDatabaseHandler;
 use database\itsm\VHostDatabaseHandler;
 use exceptions\ValidationException;
 use models\Model;
+use models\User;
 use utilities\Validator;
 
 class VHost extends Model
@@ -160,7 +161,14 @@ class VHost extends Model
         return $this->logPath;
     }
 
-
+    /**
+     * @return User[]
+     * @throws \exceptions\DatabaseException
+     */
+    public function getManagers(): array
+    {
+        return VHostDatabaseHandler::getUsers($this->id);
+    }
 
     /**
      * @param string|null $domain

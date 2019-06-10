@@ -16,8 +16,10 @@ namespace database\itsm;
 
 use database\DatabaseConnection;
 use database\DatabaseHandler;
+use database\UserDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use models\itsm\VHost;
+use models\User;
 
 class VHostDatabaseHandler extends DatabaseHandler
 {
@@ -265,13 +267,96 @@ class VHostDatabaseHandler extends DatabaseHandler
         return $check->getRowCount() === 1;
     }
 
-    /*
-    public static function addUser(int $id, int $user): bool{}
+    /**
+     * @param int $id
+     * @param int $user
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function addUser(int $id, int $user): bool
+    {
+        $handler = new DatabaseConnection();
 
-    public static function removeUser(int $id, int $user): bool{}
+        $insert = $handler->prepare('INSERT INTO `ITSM_VHost_Manager` (`vhost`, `user`) VALUES (:vhost, :user)');
+        $insert->bindParam('vhost', $id, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('user', $id, DatabaseConnection::PARAM_INT);
+        $insert->execute();
 
-    public static function getUsers(int $id): array{}
+        $handler->close();
 
-    public static function selectByUser(int $user): array{}
-    */
+        return $insert->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $id
+     * @param int $user
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function removeUser(int $id, int $user): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `ITSM_VHost_Manager` WHERE `vhost` = :vhost AND `user` = :user');
+        $delete->bindParam('vhost', $id, DatabaseConnection::PARAM_INT);
+        $delete->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount();
+    }
+
+    /**
+     * @param int $id
+     * @return User[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getUsers(int $id): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `user` FROM `ITSM_VHost_Manager` WHERE `vhost` = ?');
+        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $users = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$users[] = UserDatabaseHandler::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $users;
+    }
+
+    /**
+     * @param int $user
+     * @return VHost[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectByUser(int $user): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `vhost` FROM `ITSM_VHost_Manager` WHERE `user` = ?');
+        $select->bindParam(1, $user, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $vhosts = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$vhosts[] = self::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $vhosts;
+    }
+
 }

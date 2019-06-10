@@ -16,15 +16,18 @@ namespace business\itsm;
 
 use business\AttributeOperator;
 use business\Operator;
+use business\UserOperator;
 use database\AttributeDatabaseHandler;
 use database\itsm\ApplicationDatabaseHandler;
 use database\itsm\HostDatabaseHandler;
 use database\itsm\RegistrarDatabaseHandler;
 use database\itsm\VHostDatabaseHandler;
 use exceptions\EntryInUseException;
+use exceptions\ValidationError;
 use exceptions\ValidationException;
 use models\Attribute;
 use models\itsm\VHost;
+use models\User;
 use utilities\HistoryRecorder;
 use utilities\WebLogFileRetriever;
 
@@ -227,6 +230,56 @@ class VHostOperator extends Operator
             return array();
 
         return WebLogFileRetriever::getLogFileList($vHost->getLogPath());
+    }
+
+    /**
+     * @param VHost $vhost
+     * @param String $username
+     * @return bool
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     */
+    public static function assignManager(VHost $vhost, String $username): bool
+    {
+        $userId = UserOperator::idFromUsername($username);
+        
+        if($userId === NULL)
+            throw new ValidationError(array('User not found'));
+
+        foreach($vhost->getManagers() as $manager)
+        {
+            if($manager->getId() == $userId)
+                throw new ValidationError(array('User already assigned to this VHost'));
+        }
+
+        return VHostDatabaseHandler::addUser($vhost->getId(), $userId);
+    }
+
+    /**
+     * @param VHost $vhost
+     * @param String $username
+     * @return bool
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     */
+    public static function removeManager(VHost $vhost, String $username): bool
+    {
+        $userId = UserOperator::idFromUsername($username);
+
+        if($userId === NULL)
+            throw new ValidationError(array('User not found'));
+
+        return VHostDatabaseHandler::removeUser($vhost->getId(), $userId);
+    }
+
+    /**
+     * @param User $user
+     * @return VHost[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getManagedSites(User $user): array
+    {
+        return VHostDatabaseHandler::selectByUser($user->getId());
     }
 
     /**

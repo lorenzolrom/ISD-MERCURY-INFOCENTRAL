@@ -43,7 +43,8 @@ class AssetWorksheetController extends Controller
                 return $this->getWorksheetCount();
             return $this->getWorksheet();
         }
-        else if($this->request->method() === HTTPRequest::PUT)
+
+        if($this->request->method() === HTTPRequest::PUT)
         {
             $action = $this->request->next();
 
@@ -170,6 +171,8 @@ class AssetWorksheetController extends Controller
      */
     private function verify(): HTTPResponse
     {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
         foreach(AssetOperator::getWorksheet() as $asset)
         {
             AssetOperator::verifyAsset($asset);
@@ -186,6 +189,8 @@ class AssetWorksheetController extends Controller
      */
     private function unVerify(): HTTPResponse
     {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
         foreach(AssetOperator::getWorksheet() as $asset)
         {
             AssetOperator::unVerifyAsset($asset);
@@ -202,6 +207,8 @@ class AssetWorksheetController extends Controller
      */
     private function setLocation(): HTTPResponse
     {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
         $args = self::getFormattedBody(array('buildingCode', 'locationCode'));
 
         try
@@ -229,6 +236,8 @@ class AssetWorksheetController extends Controller
      */
     private function setWarehouse(): HTTPResponse
     {
+        CurrentUserController::validatePermission(array('itsm_inventory-assets-w'));
+
         $args = self::getFormattedBody(array('warehouseCode'));
 
         if(WarehouseOperator::idFromCode((string)$args['warehouseCode']) === NULL)

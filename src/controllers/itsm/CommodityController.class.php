@@ -36,7 +36,7 @@ class CommodityController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('itsm_inventory-commodities-r');
+        CurrentUserController::validatePermission(array('itsm_inventory-commodities-r', 'itsm_inventory-assets-r'));
 
         $param = $this->request->next();
 
@@ -56,12 +56,17 @@ class CommodityController extends Controller
                             return $this->getAssetType($param);
                     }
                 case null:
+                    CurrentUserController::validatePermission('itsm_inventory-commodities-r');
                     return $this->getSearchResult();
                 default:
+                    CurrentUserController::validatePermission('itsm_inventory-commodities-r');
                     return $this->getById($param);
             }
         }
-        else if($this->request->method() === HTTPRequest::PUT)
+
+        CurrentUserController::validatePermission('itsm_inventory-commodities-r');
+
+        if($this->request->method() === HTTPRequest::PUT)
         {
             switch($param)
             {

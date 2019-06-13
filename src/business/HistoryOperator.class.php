@@ -26,6 +26,9 @@ use models\History;
 class HistoryOperator extends Operator
 {
     private const TABLE_PERMISSIONS = array(
+        'LockShop_System' => 'lockshop-r',
+        'LockShop_Core' => 'lockshop-r',
+        'LockShop_Key' => 'lockshop-r',
         'Tickets_Workspace' => 'tickets-admin',
         'Tickets_Team' => 'tickets-admin',
         'FacilitiesCore_Building' => 'facilitiescore_facilities-r',

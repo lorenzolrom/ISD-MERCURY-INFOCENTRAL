@@ -34,12 +34,15 @@ class SystemOperator extends Operator
 
     /**
      * @param $vals
-     * @return array
+     * @return System[]
      * @throws \exceptions\DatabaseException
      */
-    public static function search($vals): array
+    public static function search(?array $vals = NULL): array
     {
-        return SystemDatabaseHandler::select($vals['code'], $vals['name']);
+        if(is_array($vals))
+            return SystemDatabaseHandler::select($vals['code'], $vals['name']);
+        else
+            return SystemDatabaseHandler::select('%', '%');
     }
 
     /**
@@ -78,9 +81,8 @@ class SystemOperator extends Operator
 
         self::validate('models\lockshop\System', $vals, $full);
 
-        HistoryRecorder::writeHistory('models\lockshop\System', HistoryRecorder::MODIFY, $system->getId(), $system, $vals);
+        HistoryRecorder::writeHistory('LockShop_System', HistoryRecorder::MODIFY, $system->getId(), $system, $vals);
         SystemDatabaseHandler::update($system->getId(), $vals['name'], $vals['code'], $system->getParent(), $system->getMaster());
-
         return TRUE;
     }
 
@@ -93,7 +95,7 @@ class SystemOperator extends Operator
      */
     public static function delete(System $system): bool
     {
-        HistoryRecorder::writeHistory('models\lockshop\System', HistoryRecorder::DELETE, $system->getId(), $system);
+        HistoryRecorder::writeHistory('LockShop_System', HistoryRecorder::DELETE, $system->getId(), $system);
         SystemDatabaseHandler::delete($system->getId());
 
         return TRUE;

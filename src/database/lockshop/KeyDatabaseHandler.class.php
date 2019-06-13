@@ -32,7 +32,7 @@ class KeyDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id`, `system`, `code`, `bitting`, `quantity` FROM `LockShop_Key` WHERE `id` = ? LIMIT 1');
+        $select = $handler->prepare('SELECT `id`, `system`, `code`, `bitting`, `keyway`, `quantity` FROM `LockShop_Key` WHERE `id` = ? LIMIT 1');
         $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
         $select->execute();
 
@@ -94,18 +94,20 @@ class KeyDatabaseHandler extends DatabaseHandler
      * @param int $system
      * @param string $code
      * @param string $bitting
+     * @param string $keyway
      * @param int $quantity
      * @return Key
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(int $system, string $code, string $bitting, int $quantity): Key
+    public static function insert(int $system, string $code, string $bitting, string $keyway, int $quantity): Key
     {
         $handler = new DatabaseConnection();
 
-        $insert = $handler->prepare('INSERT INTO `LockShop_Key` (`system`, `bitting`, `quantity`, `code`) VALUES (:system, :bitting, :quantity, :code)');
+        $insert = $handler->prepare('INSERT INTO `LockShop_Key` (`system`, `bitting`, `quantity`, `keyway`, `code`) VALUES (:system, :bitting, :quantity, :keyway, :code)');
         $insert->bindParam('system', $system, DatabaseConnection::PARAM_INT);
         $insert->bindParam('bitting', $bitting, DatabaseConnection::PARAM_STR);
+        $insert->bindParam('keyway', $keyway, DatabaseConnection::PARAM_STR);
         $insert->bindParam('quantity', $quantity, DatabaseConnection::PARAM_INT);
         $insert->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $insert->execute();
@@ -121,17 +123,19 @@ class KeyDatabaseHandler extends DatabaseHandler
      * @param int $id
      * @param string $code
      * @param string $bitting
+     * @param string $keyway
      * @param int $quantity
      * @return Key
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function update(int $id, string $code, string $bitting, int $quantity): Key
+    public static function update(int $id, string $code, string $bitting, string $keyway, int $quantity): Key
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare('UPDATE `LockShop_Key` SET `bitting` = :bitting, `quantity` = :quantity, `code` = :code WHERE `id` = :id');
+        $update = $handler->prepare('UPDATE `LockShop_Key` SET `bitting` = :bitting, `keyway` = :keyway, `quantity` = :quantity, `code` = :code WHERE `id` = :id');
         $update->bindParam('bitting', $bitting, DatabaseConnection::PARAM_STR);
+        $update->bindParam('keyway', $keyway, DatabaseConnection::PARAM_STR);
         $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $update->bindParam('quantity', $quantity, DatabaseConnection::PARAM_INT);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);

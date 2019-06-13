@@ -136,6 +136,7 @@ class SystemDatabaseHandler extends DatabaseHandler
         $update->bindParam('code', $code, DatabaseConnection::PARAM_STR);
         $update->bindParam('master', $master, DatabaseConnection::PARAM_INT);
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
 
         $handler->close();
 

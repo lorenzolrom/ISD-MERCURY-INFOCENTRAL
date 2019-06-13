@@ -27,6 +27,7 @@ CREATE TABLE `LockShop_Key` (
   `system` int(11) NOT NULL,
   `code` varchar(32) NOT NULL,
   `bitting` varchar(32) NOT NULL,
+  `keyway` varchar(32) NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY (`system`, `code`),

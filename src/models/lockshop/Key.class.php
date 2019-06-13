@@ -34,6 +34,12 @@ class Key extends Model
         'upper' => 32
     );
 
+    private const KEYWAY_RULES = array(
+        'name' => 'Keyway',
+        'alnumds' => TRUE,
+        'upper' => 32
+    );
+
     private const QUANTITY_RULES = array(
         'name' => 'Quantity',
         'type' => 'int',
@@ -44,6 +50,7 @@ class Key extends Model
     private $system;
     private $code;
     private $bitting;
+    private $keyway;
     private $quantity;
 
     /**
@@ -79,6 +86,14 @@ class Key extends Model
     }
 
     /**
+     * @return mixed
+     */
+    public function getKeyway()
+    {
+        return $this->keyway;
+    }
+
+    /**
      * @return int
      */
     public function getQuantity(): int
@@ -110,6 +125,17 @@ class Key extends Model
     public static function validateBitting(?string $bitting): bool
     {
         return Validator::validate(self::BITTING_RULES, $bitting);
+    }
+
+    /**
+     * @param string|null $keyway
+     * @return bool
+     * @throws ValidationException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function validateKeyway(?string $keyway): bool
+    {
+        return Validator::validate(self::KEYWAY_RULES, $keyway);
     }
 
     /**

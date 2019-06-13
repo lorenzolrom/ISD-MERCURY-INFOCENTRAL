@@ -59,7 +59,7 @@ class KeyOperator extends Operator
             throw new ValidationError(array($e));
         }
 
-        $key = KeyDatabaseHandler::insert($sys->getId(), $vals['code'], $vals['bitting'], $vals['quantity']);
+        $key = KeyDatabaseHandler::insert($sys->getId(), $vals['code'], $vals['bitting'], $vals['keyway'], $vals['quantity']);
         HistoryRecorder::writeHistory('LockShop_Key', HistoryRecorder::CREATE, $key->getId(), $key);
 
         return $key->getId();
@@ -85,7 +85,7 @@ class KeyOperator extends Operator
         self::validate('models\lockshop\Key', $vals);
 
         HistoryRecorder::writeHistory('LockShop_Key', HistoryRecorder::MODIFY, $key->getId(), $key, $vals);
-        KeyDatabaseHandler::update($key->getId(), $vals['code'], $vals['bitting'], $vals['quantity']);
+        KeyDatabaseHandler::update($key->getId(), $vals['code'], $vals['bitting'], $vals['keyway'], $vals['quantity']);
 
         return TRUE;
     }

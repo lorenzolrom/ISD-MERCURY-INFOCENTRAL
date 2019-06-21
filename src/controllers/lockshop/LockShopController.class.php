@@ -15,6 +15,7 @@ namespace controllers\lockshop;
 
 
 use controllers\Controller;
+use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use models\HTTPResponse;
@@ -31,12 +32,24 @@ class LockShopController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
+        CurrentUserController::validatePermission('lockshop-r');
+
         $param = $this->request->next();
 
         if($param == 'systems')
         {
             $s = new SystemController($this->request);
             return $s->getResponse();
+        }
+        else if($param == 'cores')
+        {
+            $c = new CoreController($this->request);
+            return $c->getResponse();
+        }
+        else if($param == 'keys')
+        {
+            $k = new KeyController($this->request);
+            return $k->getResponse();
         }
 
         return NULL;

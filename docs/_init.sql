@@ -153,6 +153,7 @@ CREATE TABLE `HistoryItem` (
 INSERT INTO `Permission` (`code`) VALUES
   ('facilitiescore_facilities-r'),
   ('facilitiescore_facilities-w'),
+  ('itsm'),
   ('itsmmonitor'),
   ('itsmmonitor-hosts-r'),
   ('itsmmonitor-hosts-w'),

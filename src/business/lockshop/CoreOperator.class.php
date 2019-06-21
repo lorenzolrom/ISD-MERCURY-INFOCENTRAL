@@ -46,8 +46,6 @@ class CoreOperator extends Operator
      */
     public static function create(System $sys, array $vals): int
     {
-        self::validate('models\lockshop\Core', $vals);
-
         $vals['system'] = $sys->getId();
 
         try
@@ -56,10 +54,12 @@ class CoreOperator extends Operator
         }
         catch(ValidationException $e)
         {
-            throw new ValidationError(array($e));
+            throw new ValidationError(array($e->getMessage()));
         }
 
-        $core = CoreDatabaseHandler::insert($sys->getId(), $vals['code'], $vals['quantity']);
+        self::validate('models\lockshop\Core', $vals);
+
+        $core = CoreDatabaseHandler::insert($sys->getId(), $vals['code'], (int)$vals['quantity']);
         HistoryRecorder::writeHistory('LockShop_Core', HistoryRecorder::CREATE, $core->getId(), $core);
 
         return $core->getId();

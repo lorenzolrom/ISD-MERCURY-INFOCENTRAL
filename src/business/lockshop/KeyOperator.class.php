@@ -46,8 +46,6 @@ class KeyOperator extends Operator
      */
     public static function create(System $sys, array $vals): int
     {
-        self::validate('models\lockshop\Key', $vals);
-
         $vals['system'] = $sys->getId();
 
         try
@@ -56,8 +54,10 @@ class KeyOperator extends Operator
         }
         catch(ValidationException $e)
         {
-            throw new ValidationError(array($e));
+            throw new ValidationError(array($e->getMessage()));
         }
+
+        self::validate('models\lockshop\Key', $vals);
 
         $key = KeyDatabaseHandler::insert($sys->getId(), $vals['code'], $vals['bitting'], $vals['keyway'], $vals['quantity']);
         HistoryRecorder::writeHistory('LockShop_Key', HistoryRecorder::CREATE, $key->getId(), $key);

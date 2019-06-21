@@ -72,7 +72,7 @@ class CoreDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id` FROM `LockShop_Core` WHERE `system` = ? LIMIT 1');
+        $select = $handler->prepare('SELECT `id` FROM `LockShop_Core` WHERE `system` = ?');
         $select->bindParam(1, $system, DatabaseConnection::PARAM_INT);
         $select->execute();
 

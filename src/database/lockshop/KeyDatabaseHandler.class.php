@@ -73,7 +73,7 @@ class KeyDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id` FROM `LockShop_Key` WHERE `system` = ? LIMIT 1');
+        $select = $handler->prepare('SELECT `id` FROM `LockShop_Key` WHERE `system` = ?');
         $select->bindParam(1, $system, DatabaseConnection::PARAM_INT);
         $select->execute();
 

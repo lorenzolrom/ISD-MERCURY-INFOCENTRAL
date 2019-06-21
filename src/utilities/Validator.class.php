@@ -127,6 +127,9 @@ class Validator
             if($rules['type'] === 'email' AND !filter_var($value, FILTER_VALIDATE_EMAIL))
                 throw new ValidationException("{$rules['name']} must be a valid email address", ValidationException::VALUE_IS_NOT_VALID);
 
+            if($rules['type'] === 'int' AND !is_numeric($value))
+                throw new ValidationException("{$rules['name']} must be a number", ValidationException::VALUE_IS_NOT_VALID);
+
             // Positive number
             if(isset($rules['positive']) AND $rules['positive'] AND in_array($rules['type'], array('int', 'float')) AND $value < 0)
                 throw new ValidationException("{$rules['name']} must be positive",ValidationException::VALUE_IS_NOT_VALID);

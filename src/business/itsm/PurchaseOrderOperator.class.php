@@ -321,7 +321,7 @@ class PurchaseOrderOperator extends Operator
         {
             for($i = 0; $i < $receivedCommodity[1]; $i++)
             {
-                if($startAssetTag !== NULL AND is_numeric($startAssetTag))
+                if($startAssetTag !== NULL AND $startAssetTag !== '' AND is_numeric($startAssetTag))
                 {
                     $assetTag = $startAssetTag;
                     $startAssetTag++; // Increment start asset tag by one

@@ -444,7 +444,7 @@ class AssetDatabaseHandler extends DatabaseHandler
         if($select->getRowCount() === 0)
             return 1;
         else
-            return $select->getRowCount() + 1;
+            return $select->fetchColumn() + 1;
     }
 
     /**

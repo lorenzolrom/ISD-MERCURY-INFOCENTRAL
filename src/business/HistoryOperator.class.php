@@ -50,7 +50,8 @@ class HistoryOperator extends Operator
         'purchaseorder' => 'ITSM_PurchaseOrder',
         'discardorder' => 'ITSM_DiscardOrder',
         'workspace' => 'Tickets_Workspace',
-        'team' => 'Tickets_Team'
+        'team' => 'Tickets_Team',
+        'ticket' => 'Tickets_Ticket'
     );
 
     // Associate table with permissions
@@ -60,6 +61,7 @@ class HistoryOperator extends Operator
         'LockShop_Key' => 'lockshop-r',
         'Tickets_Workspace' => 'tickets-admin',
         'Tickets_Team' => 'tickets-admin',
+        'Tickets_Ticket' => 'tickets-agent',
         'FacilitiesCore_Building' => 'facilitiescore_facilities-r',
         'FacilitiesCore_Location' => 'facilitiescore_facilities-r',
         'ITSM_Asset' => 'itsm_inventory-assets-r',

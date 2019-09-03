@@ -15,8 +15,10 @@ namespace controllers\tickets;
 
 
 use business\tickets\AttributeOperator;
+use business\tickets\TeamOperator;
 use business\tickets\TicketOperator;
 use business\tickets\WorkspaceOperator;
+use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
@@ -46,6 +48,8 @@ class TicketController extends Controller
      */
     public function __construct(string $workspace, HTTPRequest $request)
     {
+        CurrentUserController::validatePermission('tickets-agent'); // ALL AGENTS
+
         $this->workspace = WorkspaceOperator::getWorkspace((int)$workspace);
 
         // User must be in a team assigned to workspace
@@ -57,12 +61,14 @@ class TicketController extends Controller
 
     /**
      * @return HTTPResponse|null
+     * @throws EntryNotFoundException
+     * @throws SecurityException
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-agent');
+        CurrentUserController::validatePermission('tickets-agent'); // ALL AGENTS
 
         $param = $this->request->next();
 
@@ -70,13 +76,33 @@ class TicketController extends Controller
         {
             if($param == 'myAssignments')
                 return $this->getMyAssignments();
-            if($param == 'open')
+            else if($param == 'open')
                 return $this->getOpen();
+            else if($param == 'closed')
+                return $this->getClosed();
+            else
+            {
+                $action = $this->request->next();
+                if($action == 'updates')
+                    return $this->getUpdates((int)$param);
+                else if($action == 'history')
+                    return $this->getHistory((int)$param);
+                else if($action == 'assignees')
+                    return $this->getAssignees((int)$param);
+
+                return $this->getTicket((int)$param);
+            }
         }
         else if($this->request->method() === HTTPRequest::POST)
         {
             if($param === 'search')
                 return $this->search();
+            else
+                return $this->createTicket();
+        }
+        else if($this->request->method() === HTTPRequest::PUT)
+        {
+            return $this->updateTicket((int)$param);
         }
 
         return NULL;
@@ -99,6 +125,15 @@ class TicketController extends Controller
     private function getOpen(): HTTPResponse
     {
         return $this->returnTickets(TicketOperator::getOpenTickets($this->workspace));
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     */
+    private function getClosed(): HTTPResponse
+    {
+        return $this->returnTickets(TicketOperator::getClosedTickets($this->workspace));
     }
 
     /**
@@ -137,13 +172,188 @@ class TicketController extends Controller
 
             $data[] = array(
                 'number' => $ticket->getNumber(),
+                'title' => $ticket->getTitle(),
                 'type' => AttributeOperator::nameFromId($ticket->getType()),
                 'category' => AttributeOperator::nameFromId($ticket->getCategory()),
                 'severity' => AttributeOperator::nameFromId((int)$ticket->getSeverity()),
-                'status' => $status
+                'status' => $status,
+                'scheduledDate' => $ticket->getScheduledDate()
             );
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse containing the new ticket number
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationError
+     */
+    private function createTicket(): HTTPResponse
+    {
+        return new HTTPResponse(HTTPResponse::CREATED, array('number' => TicketOperator::createTicket($this->workspace, self::getFormattedBody(TicketOperator::FIELDS))->getNumber()));
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationError
+     */
+    private function updateTicket(int $number): HTTPResponse
+    {
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        TicketOperator::updateTicket($ticket, self::getFormattedBody(TicketOperator::FIELDS, TRUE));
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getTicket(int $number): HTTPResponse
+    {
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        $statusName = NULL;
+
+        if(in_array($ticket->getStatus(), array_keys(Ticket::STATIC_STATUSES)))
+            $statusName = Ticket::STATIC_STATUSES[$ticket->getStatus()];
+        else
+        {
+            try{$statusName = AttributeOperator::getByCode(WorkspaceOperator::getWorkspace($ticket->getWorkspace()), 'status', $ticket->getStatus())->getName();}
+            catch(EntryNotFoundException $e){}
+        }
+
+        $data = array(
+            'workspace' => WorkspaceOperator::getWorkspace($ticket->getWorkspace())->getName(),
+            'number' => $ticket->getNumber(),
+            'title' => $ticket->getTitle(),
+            'contact' => $ticket->getContact(),
+            'type' => AttributeOperator::codeFromId($ticket->getType()),
+            'typeName' => AttributeOperator::nameFromId($ticket->getType()),
+            'category' => AttributeOperator::codeFromId($ticket->getCategory()),
+            'categoryName' => AttributeOperator::nameFromId($ticket->getCategory()),
+            'status' => $ticket->getStatus(),
+            'statusName' => $statusName,
+            'closureCode' => AttributeOperator::codeFromId($ticket->getClosureCode()),
+            'closureCodeName' => ($ticket->getClosureCode() == NULL) ? NULL : AttributeOperator::nameFromId((int)$ticket->getClosureCode()),
+            'severity' => AttributeOperator::codeFromId($ticket->getSeverity()),
+            'severityName' => AttributeOperator::nameFromId($ticket->getSeverity()),
+            'desiredDate' => $ticket->getDesiredDate(),
+            'scheduledDate' => $ticket->getScheduledDate()
+        );
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getUpdates(int $number): HTTPResponse
+    {
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        $data = array();
+
+        foreach($ticket->getUpdates() as $update)
+        {
+            $user = UserOperator::getUser($update->getUser());
+            $data[] = array(
+                'user' => $user->getUsername(),
+                'name' => $user->getFirstName() . ' ' . $user->getLastName(),
+                'time' => $update->getTime(),
+                'description' => $update->getDescription()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getHistory(int $number): HTTPResponse
+    {
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        return new HTTPResponse(HTTPResponse::OK, TicketOperator::getTicketHistory($ticket));
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getAssignees(int $number): HTTPResponse
+    {
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        $assignees = TicketOperator::getTicketAssignees($ticket);
+
+        $assigneeList = array(); // Team IDs as array keys, user IDs in those arrays
+
+        foreach($assignees as $assignee)
+        {
+            $team = $assignee['team'];
+            $user = $assignee['user'];
+
+            // Add team if it has not been seen before
+            if(!in_array($team, array_keys($assigneeList)))
+            {
+                $assigneeList[$team] = array();
+            }
+
+            // Add member to the team
+            if(!in_array($user, $assigneeList[$team]))
+                $assigneeList[$team][] = $user;
+        }
+
+        // Translate to data for display
+        $finalList = array();
+
+        foreach(array_keys($assigneeList) as $teamID)
+        {
+            $teamData = array();
+
+            $team = TeamOperator::getTeam((int)$teamID);
+
+            $teamData['id'] = $teamID;
+            $teamData['name'] = $team->getName();
+
+            $teamData['users'] = array();
+
+            // Users
+            foreach($assigneeList as $userID)
+            {
+                $user = UserOperator::getUser((int)$userID);
+
+                $userData = array();
+                $userData['id'] = $userID;
+                $userData['username'] = $user->getUsername();
+                $userData['name'] = $user->getFirstName() . " " . $user->getLastName();
+
+                $teamData['users'][] = $userData;
+            }
+
+            $finalList[] = $teamData;
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $finalList);
     }
 }

@@ -73,6 +73,16 @@ class AttributeOperator extends Operator
     }
 
     /**
+     * @param int|null $id
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function codeFromId(?int $id): ?string
+    {
+        return AttributeDatabaseHandler::selectCodeById((int)$id);
+    }
+
+    /**
      * @param Workspace $workspace
      * @param array $vals
      * @return int

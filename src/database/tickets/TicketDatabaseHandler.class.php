@@ -16,6 +16,7 @@ namespace database\tickets;
 
 use database\DatabaseConnection;
 use database\DatabaseHandler;
+use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use models\tickets\Ticket;
 use utilities\Validator;
@@ -302,5 +303,94 @@ class TicketDatabaseHandler extends DatabaseHandler
         }
 
         return $tickets;
+    }
+
+    /**
+     * @param int $workspace
+     * @return array
+     * @throws DatabaseException
+     */
+    public static function selectClosed(int $workspace): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `workspace` = :workspace AND `status` = :closed');
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->bindParam('closed', Ticket::CLOSED, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        $tickets = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$tickets[] = self::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $tickets;
+    }
+
+    /**
+     * @param int $ticket
+     * @param int $team
+     * @param int|null $user
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function addAssignee(int $ticket, int $team, ?int $user): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `Tickets_Assignee` (`ticket`, `team`, `user`) VALUES (:ticket, :team, :user)');
+        $insert->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $insert->execute();
+
+        $handler->close();
+
+        return $insert->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $ticket
+     * @param int $team
+     * @param int|null $user
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function removeAssignee(int $ticket, int $team, ?int $user): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `Tickets_Assignee` WHERE `ticket` = :ticket AND `team` = :team AND `user` = :user');
+        $delete->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $delete->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $delete->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $ticket
+     * @return array
+     * @throws DatabaseException
+     */
+    public static function selectAssignees(int $ticket): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `team`, `user` FROM `Tickets_Assignee` WHERE `ticket` = ?');
+        $select->bindParam(1, $ticket, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchAll();
     }
 }

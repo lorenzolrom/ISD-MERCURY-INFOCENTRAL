@@ -14,12 +14,14 @@
 namespace business\tickets;
 
 
+use business\HistoryOperator;
 use business\Operator;
 use business\UserOperator;
 use controllers\CurrentUserController;
 use database\tickets\AttributeDatabaseHandler;
 use database\tickets\TicketDatabaseHandler;
 use database\tickets\UpdateDatabaseHandler;
+use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use models\tickets\Ticket;
 use models\tickets\Workspace;
@@ -30,6 +32,25 @@ class TicketOperator extends Operator
 {
     public const FIELDS = array('title', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredDate', 'scheduledDate', 'description');
     public const SEARCH_FIELDS = array('title', 'number', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredStart', 'desiredEnd', 'scheduledStart', 'scheduledEnd');
+
+    private const FIELD_NAMES = array(
+        'title' => 'Title',
+        'contact' => 'Contact',
+        'type' => 'Type',
+        'category' => 'Category',
+        'status' => 'Status',
+        'closureCode' => 'Closure Code',
+        'severity' => 'Severity',
+        'desiredDate' => 'Desired Date',
+        'scheduledDate' => 'Scheduled Date'
+    );
+
+    private const ATTR_FIELDS = array(
+        'type',
+        'category',
+        'closureCode',
+        'severity'
+    );
 
     /**
      * @param Workspace $workspace
@@ -82,18 +103,19 @@ class TicketOperator extends Operator
     /**
      * @param Workspace $workspace
      * @param array $vals
+     * @param bool $ignoreSeverity
      * @return Ticket
      * @throws ValidationError
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public static function createTicket(Workspace $workspace, array $vals): Ticket
+    public static function createTicket(Workspace $workspace, array $vals, bool $ignoreSeverity = FALSE): Ticket
     {
-        self::validateTicket($workspace, $vals);
+        self::validateTicket($workspace, $vals, $ignoreSeverity);
 
         // Update required for new ticket
-        if($vals['description'] === NULL OR strlen($vals['description']))
+        if($vals['description'] === NULL OR strlen($vals['description']) == 0)
             throw new ValidationError(array('Initial description is required'));
 
         // Convert
@@ -106,7 +128,7 @@ class TicketOperator extends Operator
 
         // Create update
         UpdateDatabaseHandler::insert($ticket->getId(), CurrentUserController::currentUser()->getId(), $vals['description']);
-        HistoryRecorder::writeAssocHistory($history, array('appendDescription' => array($vals['description'])));
+        HistoryRecorder::writeAssocHistory($history, array('Appended Description' => array(''))); // blank description, it is held in TicketUpdate
         
         return $ticket;
     }
@@ -136,7 +158,7 @@ class TicketOperator extends Operator
         {
             // Create update
             UpdateDatabaseHandler::insert($ticket->getId(), CurrentUserController::currentUser()->getId(), $vals['description']);
-            HistoryRecorder::writeAssocHistory($history, array('appendDescription' => array($vals['description'])));
+            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Appended Description')));
         }
 
         return $ticket;
@@ -158,7 +180,7 @@ class TicketOperator extends Operator
         $vals['status'] = Ticket::NEW; // New
         $vals['severity'] = NULL;
 
-        return self::createTicket($workspace, $vals);
+        return self::createTicket($workspace, $vals, TRUE);
     }
 
     /**
@@ -184,7 +206,7 @@ class TicketOperator extends Operator
         $ticket = TicketDatabaseHandler::update($ticket->getId(), $ticket->getTitle(), $ticket->getContact(), $ticket->getType(), $ticket->getCategory(), 'res', $ticket->getClosureCode(), $ticket->getSeverity(), $ticket->getDesiredDate(), $ticket->getScheduledDate());
 
         UpdateDatabaseHandler::insert($ticket->getId(), CurrentUserController::currentUser()->getId(), $description);
-        HistoryRecorder::writeAssocHistory($history, array('appendDescription' => array($description)));
+        HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Appended Description')));
 
         return $ticket;
     }
@@ -212,12 +234,115 @@ class TicketOperator extends Operator
 
     /**
      * @param Workspace $workspace
-     * @param array $vals
-     * @return bool
+     * @return array
      * @throws \exceptions\DatabaseException
-     * @throws ValidationError
      */
-    private static function validateTicket(Workspace $workspace, array $vals): bool
+    public static function getClosedTickets(Workspace $workspace): array
+    {
+        return TicketDatabaseHandler::selectClosed($workspace->getId());
+    }
+
+    /**
+     * @param Ticket $ticket
+     * @return array
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    public static function getTicketHistory(Ticket $ticket): array
+    {
+        $history = HistoryOperator::getHistory('ticket', $ticket->getId());
+        $data = array();
+
+        foreach($history as $item)
+        {
+            $itemData = array();
+
+            $itemData['user'] = $item->getUsername();
+            $itemData['time'] = $item->getTime();
+
+            $columns = $item->getItems();
+            $columnStrings = array();
+
+            foreach($columns as $column)
+            {
+                if($column['column'] == 'systemEntry') // This gets passed right through
+                {
+                    $columnStrings[] = $column['newValue'];
+                }
+                else if(in_array($column['column'], array_keys(self::FIELD_NAMES))) // Column has a specified display name
+                {
+                    $string = self::FIELD_NAMES[$column['column']] . " ";
+
+                    $oldVal = $column['oldValue'];
+                    $newVal = $column['newValue'];
+
+                    if(in_array($column['column'], self::ATTR_FIELDS)) // Check if field is an attribute ID that must be converted to a display name
+                    {
+                        $oldVal = AttributeOperator::nameFromId((int)$oldVal);
+                        $newVal = AttributeOperator::nameFromId((int)$newVal);
+                    }
+                    else if($column['column'] == 'status') // special case for status
+                    {
+                        // If code is not three characters, it is not a built-in status code
+                        if(strlen($oldVal) === 4)
+                        {
+                            try{$oldVal = AttributeOperator::getByCode(WorkspaceOperator::getWorkspace($ticket->getWorkspace()), 'status', $oldVal)->getName();}
+                            catch(EntryNotFoundException $e){}
+                        }
+                        else
+                            $oldVal = Ticket::STATIC_STATUSES[$oldVal];
+
+
+                        if(strlen($newVal) === 4)
+                        {
+                            try{$newVal = AttributeOperator::getByCode(WorkspaceOperator::getWorkspace($ticket->getWorkspace()), 'status', $newVal)->getName();}
+                            catch(EntryNotFoundException $e){}
+                        }
+                        else
+                            $newVal = Ticket::STATIC_STATUSES[$newVal];
+                    }
+
+                    if($oldVal === NULL OR strlen($oldVal) === 0 OR $oldVal == $newVal) // If value was not set, don't include blank old one
+                    {
+                        $string .= "set ";
+                    }
+                    else
+                    {
+                        $string .= "changed from '$oldVal' ";
+                    }
+
+                    $string .= "to '$newVal'";
+                    $columnStrings[] = $string;
+                }
+            }
+
+            $itemData['changes'] = $columnStrings;
+            $data[] = $itemData;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param Ticket $ticket
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getTicketAssignees(Ticket $ticket): array
+    {
+        return TicketDatabaseHandler::selectAssignees($ticket->getId());
+    }
+
+    /**
+     * @param Workspace $workspace
+     * @param array $vals
+     * @param bool $ignoreSeverity
+     * @return bool
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     */
+    private static function validateTicket(Workspace $workspace, array $vals, bool $ignoreSeverity = FALSE): bool
     {
         $errs = array();
 
@@ -229,27 +354,27 @@ class TicketOperator extends Operator
             $errs[] = 'Contact not found';
 
         // Type, category, severity valid attribute codes for this workspace
-        if(!AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'type', $vals['type']))
+        if(!AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'type', (string)$vals['type']))
             $errs[] = 'Type is not valid';
 
-        if(!AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'category', $vals['category']))
+        if(!AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'category', (string)$vals['category']))
             $errs[] = 'Category is not valid';
 
-        if($vals['severity'] !== NULL AND strlen($vals['severity']) !== 0 AND !AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'severity', $vals['severity']))
+        if(!$ignoreSeverity AND !AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'severity', (string)$vals['severity']))
             $errs[] = 'Severity is not valid';
 
-        if($vals['closureCode'] !== NULL AND strlen($vals['closureCode']) !== 0 AND !AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'closureCode', $vals['closureCode']))
+        if($vals['closureCode'] !== NULL AND strlen($vals['closureCode']) !== 0 AND !AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'closureCode', (string)$vals['closureCode']))
             $errs[] = 'Closure code is not valid';
 
         // Dates are not set or valid dates (desiredDate, scheduledDate)
-        if($vals['desiredDate'] !== NULL AND strlen($vals['desiredDate']) !== 0 AND !Validator::validDate($vals['desiredDate']))
+        if($vals['desiredDate'] !== NULL AND strlen($vals['desiredDate']) !== 0 AND !Validator::validDate((string)$vals['desiredDate']))
             $errs[] = 'Desired date is not valid';
 
-        if($vals['scheduledDate'] !== NULL AND strlen($vals['scheduledDate']) !== 0 AND !Validator::validDate($vals['scheduledDate']))
+        if($vals['scheduledDate'] !== NULL AND strlen($vals['scheduledDate']) !== 0 AND !Validator::validDate((string)$vals['scheduledDate']))
             $errs[] = 'Scheduled date is not valid';
 
         // Status code is 'new' or 'clo' OR valid attribute
-        if(!in_array($vals['status'], array_keys(Ticket::STATIC_STATUSES)) AND !AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'status', $vals['status']))
+        if(!in_array($vals['status'], array_keys(Ticket::STATIC_STATUSES)) AND !AttributeDatabaseHandler::selectIdByCode($workspace->getId(), 'status', (string)$vals['status']))
             $errs[] = 'Status is not valid';
 
         // If status code is 'clo', closure code must be set

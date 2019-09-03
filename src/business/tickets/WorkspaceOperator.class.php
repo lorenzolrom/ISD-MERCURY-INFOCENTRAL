@@ -162,4 +162,38 @@ class WorkspaceOperator extends Operator
 
         return FALSE;
     }
+
+    /**
+     * @param Workspace $workspace
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getAssigneeList(Workspace $workspace): array
+    {
+        $assignees = array();
+
+        foreach($workspace->getTeams() as $team)
+        {
+            $teamArray = array();
+
+            $teamArray['id'] = $team->getId();
+            $teamArray['name'] = $team->getName();
+            $teamArray['users'] = array();
+
+            foreach($team->getUsers() as $user)
+            {
+                $userArray = array();
+
+                $userArray['id'] = $user->getId();
+                $userArray['username'] = $user->getUsername();
+                $userArray['name'] = $user->getFirstName() . " " . $user->getLastName();
+
+                $teamArray['users'][] = $userArray;
+            }
+
+            $assignees[] = $teamArray;
+        }
+
+        return $assignees;
+    }
 }

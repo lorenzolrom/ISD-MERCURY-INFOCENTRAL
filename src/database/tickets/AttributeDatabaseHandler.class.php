@@ -164,6 +164,24 @@ class AttributeDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $id
+     * @return string|null
+     * @throws DatabaseException
+     */
+    public static function selectCodeById(int $id): ?string
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `code` FROM `Tickets_Attribute` WHERE `id` = :id LIMIT 1');
+        $select->bindParam('id', $id, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
+    }
+
+    /**
      * @param int $workspace
      * @param string $type
      * @param string $code

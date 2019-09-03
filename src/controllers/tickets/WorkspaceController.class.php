@@ -37,7 +37,7 @@ class WorkspaceController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets');
+        CurrentUserController::validatePermission('tickets'); // TICKET USERS
         $param = $this->request->next();
         $subject = $this->request->next();
 
@@ -57,29 +57,36 @@ class WorkspaceController extends Controller
             if($param === 'requestPortal')
                 return $this->getRequestPortal();
 
-            CurrentUserController::validatePermission('tickets-agent');
+            CurrentUserController::validatePermission('tickets-agent'); // ALL AGENTS
 
             if($param === NULL)
                 return $this->getAll();
 
+            if($subject == 'assignees')
+                return $this->getAssignees($param);
+
             return $this->getWorkspace($param);
         }
 
-        CurrentUserController::validatePermission('tickets-admin');
-
-        if($this->request->method() === HTTPRequest::POST)
+        if($this->request->method() === HTTPRequest::POST) // ADMIN
         {
+            CurrentUserController::validatePermission('tickets-admin');
+
             return $this->createWorkspace();
         }
-        else if($this->request->method() === HTTPRequest::PUT)
+        else if($this->request->method() === HTTPRequest::PUT) // ADMIN
         {
+            CurrentUserController::validatePermission('tickets-admin');
+
             if($subject == 'requestPortal')
                 return $this->setRequestPortal($param);
 
             return $this->updateWorkspace($param);
         }
-        else if($this->request->method() === HTTPRequest::DELETE)
+        else if($this->request->method() === HTTPRequest::DELETE) // ADMIN
         {
+            CurrentUserController::validatePermission('tickets-admin');
+
             return $this->deleteWorkspace($param);
         }
 
@@ -223,5 +230,18 @@ class WorkspaceController extends Controller
 
         WorkspaceOperator::setRequestPortal($workspace);
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getAssignees(?string $param): HTTPResponse
+    {
+        $workspace = WorkspaceOperator::getWorkspace((int)$param);
+
+        return new HTTPResponse(HTTPResponse::OK, WorkspaceOperator::getAssigneeList($workspace));
     }
 }

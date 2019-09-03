@@ -36,12 +36,11 @@ class AttributeController extends Controller
      * @param HTTPRequest $request
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
      */
     public function __construct(?string $workspace, HTTPRequest $request)
     {
-        CurrentUserController::validatePermission('tickets');
         $this->workspace = WorkspaceOperator::getWorkspace((string)$workspace);
+
         parent::__construct($request);
     }
 
@@ -162,6 +161,8 @@ class AttributeController extends Controller
      */
     private function create(): HTTPResponse
     {
+        CurrentUserController::validatePermission('tickets-admin');
+
         $vals = self::getFormattedBody(self::FIELDS);
 
         return new HTTPResponse(HTTPResponse::CREATED, array('id' => AttributeOperator::create($this->workspace, $vals)));
@@ -177,6 +178,8 @@ class AttributeController extends Controller
      */
     private function update(?string $param): HTTPResponse
     {
+        CurrentUserController::validatePermission('tickets-admin');
+
         $attr = AttributeOperator::getById((int)$param);
         $vals = self::getFormattedBody(self::FIELDS);
 
@@ -195,6 +198,8 @@ class AttributeController extends Controller
      */
     private function delete(?string $param): HTTPResponse
     {
+        CurrentUserController::validatePermission('tickets-admin');
+
         $attr = AttributeOperator::getById((int) $param);
         AttributeOperator::delete($attr);
 

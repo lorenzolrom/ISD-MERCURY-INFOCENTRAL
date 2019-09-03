@@ -64,8 +64,7 @@ CREATE TABLE `Tickets_Ticket` (
 CREATE TABLE `Tickets_Assignee` (
   `ticket` int(11) NOT NULL,
   `team` int(11) NOT NULL,
-  `user` int(11) NOT NULL,
-  PRIMARY KEY(`ticket`, `team`, `user`),
+  `user` int(11),
   FOREIGN KEY (`ticket`) REFERENCES `Tickets_Ticket`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (`user`) REFERENCES `Tickets_Team_User`(`user`) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (`team`) REFERENCES `Tickets_Team_User`(`team`) ON UPDATE CASCADE ON DELETE CASCADE
@@ -89,5 +88,13 @@ CREATE TABLE `Tickets_Search` (
   `encodedSearch` TEXT NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`workspace`) REFERENCES `Tickets_Workspace`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
-  FOREIGN KEY `user` REFERENCES User(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (`user`) REFERENCES User(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE `Tickets_Link` (
+  `ticket1` int(11) NOT NULL,
+  `ticket2` int(11) NOT NULL,
+  PRIMARY KEY (`ticket1`, `ticket2`),
+  FOREIGN KEY (`ticket1`) REFERENCES `Tickets_Ticket`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (`ticket2`) REFERENCES `Tickets_Ticket`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );

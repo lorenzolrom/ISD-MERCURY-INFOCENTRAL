@@ -97,12 +97,24 @@ class TicketController extends Controller
         {
             if($param === 'search')
                 return $this->search();
+            else if($param === 'quickSearch')
+                return $this->quickSearch();
             else
                 return $this->createTicket();
         }
         else if($this->request->method() === HTTPRequest::PUT)
         {
+            $action = $this->request->next();
+
+            if($action == 'assignees')
+                return $this->assign($param);
+
             return $this->updateTicket((int)$param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            if($this->request->next() == 'assignee')
+                return $this->removeAssignee($param);
         }
 
         return NULL;
@@ -148,6 +160,17 @@ class TicketController extends Controller
     }
 
     /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     */
+    private function quickSearch(): HTTPResponse
+    {
+        $query = self::getFormattedBody(array('query'), TRUE);
+
+        return $this->returnTickets(TicketOperator::runQuickSearch($this->workspace->getId(), $query['query']));
+    }
+
+    /**
      * @param Ticket[] $tickets
      * @return HTTPResponse
      *
@@ -177,7 +200,8 @@ class TicketController extends Controller
                 'category' => AttributeOperator::nameFromId($ticket->getCategory()),
                 'severity' => AttributeOperator::nameFromId((int)$ticket->getSeverity()),
                 'status' => $status,
-                'scheduledDate' => $ticket->getScheduledDate()
+                'scheduledDate' => $ticket->getScheduledDate(),
+                'lastUpdate' => TicketOperator::getTimeSince($ticket->getLastUpdateTime())
             );
         }
 
@@ -339,12 +363,15 @@ class TicketController extends Controller
             $teamData['users'] = array();
 
             // Users
-            foreach($assigneeList as $userID)
+            foreach($assigneeList[$teamID] as $userID)
             {
+                if($userID === NULL or strlen($userID) === 0)
+                    continue;
+
                 $user = UserOperator::getUser((int)$userID);
 
                 $userData = array();
-                $userData['id'] = $userID;
+                $userData['id'] = $user->getId();
                 $userData['username'] = $user->getUsername();
                 $userData['name'] = $user->getFirstName() . " " . $user->getLastName();
 
@@ -355,5 +382,47 @@ class TicketController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $finalList);
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationError
+     */
+    private function assign(int $number): HTTPResponse
+    {
+        $body = self::getFormattedBody(array('assignees', 'overwrite'), TRUE); // Array of teams and users in '-' format
+
+        if($body['overwrite'] == 'true')
+            $body['overwrite'] = TRUE;
+        else
+            $body['overwrite'] = FALSE;
+
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        TicketOperator::addAssignees($ticket, (array)$body['assignees'], $body['overwrite']);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     */
+    private function removeAssignee(int $number): HTTPResponse
+    {
+        $body = self::getFormattedBody(array('assignee'), TRUE);
+
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        TicketOperator::removeAssignee($ticket, (string)$body['assignee']);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

@@ -19,8 +19,10 @@ use business\Operator;
 use business\UserOperator;
 use controllers\CurrentUserController;
 use database\tickets\AttributeDatabaseHandler;
+use database\tickets\TeamDatabaseHandler;
 use database\tickets\TicketDatabaseHandler;
 use database\tickets\UpdateDatabaseHandler;
+use database\tickets\WorkspaceDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use models\tickets\Ticket;
@@ -266,9 +268,47 @@ class TicketOperator extends Operator
 
             foreach($columns as $column)
             {
-                if($column['column'] == 'systemEntry') // This gets passed right through
+                $name = $column['column'];
+
+                if($name == 'systemEntry') // This gets passed right through
                 {
                     $columnStrings[] = $column['newValue'];
+                }
+                else if($name == 'assign')
+                {
+                    $value = $column['newValue'];
+                    $operation = substr($value, 0, 1);
+                    $value = substr($value, 1); // Overwrite old value removing the operation character
+
+                    $message = '';
+
+                    // Determine if assignee added or removed
+                    if($operation == '+')
+                        $message = 'Assigned ';
+                    else
+                        $message = 'Removed  assigned ';
+
+                    // Determine if team or user
+                    $parts = explode('-', $value);
+
+                    if(strlen($parts[1]) === 0)
+                    {
+                        $message .= 'team: ';
+                        $team = TeamOperator::getTeam((int)$parts[0]);
+
+                        $message .= $team->getName();
+                    }
+                    else
+                    {
+                        $message .= 'user: ';
+                        $team = TeamOperator::getTeam((int)$parts[0]);
+                        $user = UserOperator::getUser((int)$parts[1]);
+
+                        $message .= $team->getName() . ' - ' . $user->getFirstName() . ' ' . $user->getLastName() . ' (' . $user->getUsername() . ')';
+                    }
+
+                    $columnStrings[] = $message;
+
                 }
                 else if(in_array($column['column'], array_keys(self::FIELD_NAMES))) // Column has a specified display name
                 {
@@ -332,6 +372,231 @@ class TicketOperator extends Operator
     public static function getTicketAssignees(Ticket $ticket): array
     {
         return TicketDatabaseHandler::selectAssignees($ticket->getId());
+    }
+
+    /**
+     * @param Ticket $ticket
+     * @param array $assignees This should be array of strings containing team ID or "team ID"-"user ID"
+     * @param bool $deleteExisting
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws ValidationError
+     */
+    public static function addAssignees(Ticket $ticket, array $assignees, bool $deleteExisting = FALSE): bool
+    {
+        if(empty($assignees) AND !$deleteExisting)
+            return FALSE; // Nothing to do...
+
+        $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket->getId(), $ticket);
+
+        $currentAssignees = TicketDatabaseHandler::selectAssignees($ticket->getId());
+
+        // Convert indexed assignees array to array of strings in '-' notation
+        $formattedAssignees = array();
+
+        foreach($currentAssignees as $assignee)
+        {
+            if(strlen($assignee['user']) === 0 OR $assignee['user'] == NULL)
+                $formattedAssignees[] = $assignee['team'];
+            else
+                $formattedAssignees[] = $assignee['team'] . '-' . $assignee['user'];
+        }
+
+        $currentAssignees = $formattedAssignees;
+        unset($formattedAssignees);
+
+        $addedAssignees = array(); // This will be compared with the above to populate the following two arrays:
+
+        $removedTeams = array();
+        $removedUsers = array();
+
+        foreach($assignees as $assignee)
+        {
+            $assigneeParts = explode('-', $assignee);
+
+            if(sizeof($assigneeParts) === 1) // only team
+            {
+                $teamId = $assigneeParts[0];
+
+                if(TicketDatabaseHandler::isTeamAssignedAtAll($ticket->getId(), $teamId)) // Skip if team already assigned
+                    continue;
+
+                $team = TeamOperator::getTeam($teamId);
+
+                if(!WorkspaceDatabaseHandler::teamInWorkspace($ticket->getWorkspace(), $team->getId()))
+                {
+                    throw new ValidationError(array('Team is not in this workspace'));
+                }
+
+                HistoryRecorder::writeAssocHistory($hist, array('assign' => array('+' . $team->getId())));
+                TicketDatabaseHandler::addAssignee($ticket->getId(), $team->getId(), NULL);
+                $addedAssignees[] = $team->getId();
+            }
+            else if(sizeof($assigneeParts) === 2) // Team and user
+            {
+                $teamId = $assigneeParts[0];
+                $userId = $assigneeParts[1];
+
+                if(TicketDatabaseHandler::isAssigned($ticket->getId(), $teamId, $userId)) // Skip if user already assigned
+                    continue;
+
+                $team = TeamOperator::getTeam($teamId);
+
+                if(!WorkspaceDatabaseHandler::teamInWorkspace($ticket->getWorkspace(), $team->getId()))
+                {
+                    throw new ValidationError(array('Team is not in this workspace'));
+                }
+
+                $user = UserOperator::getUser($userId);
+
+                if(!TeamDatabaseHandler::userInTeam($team->getId(), $user->getId()))
+                {
+                    throw new ValidationError(array('User is not a member of this team'));
+                }
+
+                HistoryRecorder::writeAssocHistory($hist, array('assign' => array('+' . $team->getId() . '-' . $user->getId())));
+                TicketDatabaseHandler::addAssignee($ticket->getId(), $team->getId(), $user->getId());
+                $addedAssignees[] = $team->getId() . '-' . $user->getId();
+
+                // Remove team entry alone if a user is present
+                if(TicketDatabaseHandler::isTeamOnlyAssigned($ticket->getId(), $team->getId()))
+                    TicketDatabaseHandler::removeAssignedTeamOnly($ticket->getId(), $team->getId());
+            }
+        }
+
+        //Sort removed assignees into teams and users
+        foreach($currentAssignees as $assignee)
+        {
+            if(!in_array($assignee, $addedAssignees))
+            {
+                $assigneeParts = explode('-', $assignee);
+
+                if(sizeof($assigneeParts) === 1)
+                    $removedTeams[] = $assigneeParts[0];
+                else
+                    $removedUsers[] = $assigneeParts[0] . '-' . $assigneeParts[1];
+            }
+        }
+
+        if(!$deleteExisting) // If we are not removing existing assignees, do not execute the following
+            return TRUE;
+
+        // Create removal history records and remove users from ticket
+        foreach($removedTeams as $team)
+        {
+            HistoryRecorder::writeAssocHistory($hist, array('assign' => array('_' . $team)));
+            TicketDatabaseHandler::removeAssignedTeamOnly($ticket->getId(), $team);
+        }
+
+        foreach($removedUsers as $user)
+        {
+            HistoryRecorder::writeAssocHistory($hist, array('assign' => array('_' . $user)));
+            $assigneeParts = explode('-', $user);
+            TicketDatabaseHandler::removeAssignee($ticket->getId(), $assigneeParts[0], $assigneeParts[1]);
+        }
+
+        return TRUE;
+    }
+
+    /**
+     * @param Ticket $ticket
+     * @param string $assigneeCode
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function removeAssignee(Ticket $ticket, string $assigneeCode): bool
+    {
+        // get team and user ID
+        $assigneeCodeParts = explode('-', $assigneeCode);
+
+        if(sizeof($assigneeCodeParts) === 1) // if only team is specified, remove entire team from ticket
+        {
+            $team = TeamOperator::getTeam((int)$assigneeCodeParts[0]);
+
+            $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket->getId(), $ticket);
+
+            HistoryRecorder::writeAssocHistory($hist, array('assign' => array('_' . $team->getId())));
+
+            $assignedMembers = TicketDatabaseHandler::selectAssignedTeamUsers($ticket->getId(), $team->getId());
+
+            foreach($assignedMembers as $assignedMember)
+            {
+                HistoryRecorder::writeAssocHistory($hist, array('assign' => array('_' . $team->getId() . '-' . $assignedMember)));
+            }
+
+            return TicketDatabaseHandler::removeAssignedTeam($ticket->getId(), $team->getId());
+        }
+        else if(sizeof($assigneeCodeParts) === 2)
+        {
+            $team = TeamOperator::getTeam((int)$assigneeCodeParts[0]);
+            $user = UserOperator::getUser((int)$assigneeCodeParts[1]);
+
+            $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket->getId(), $ticket);
+            HistoryRecorder::writeAssocHistory($hist, array('assign' => array('_' . $team->getId() . '-' . $user->getId())));
+
+            return TicketDatabaseHandler::removeAssignee($ticket->getId(), $team->getId(), $user->getId());
+        }
+
+        return FALSE;
+    }
+
+    /**
+     * Returns a human readable message of how long it has been since the supplied DATETIME stamp
+     * @param string $time
+     * @return string
+     */
+    public static function getTimeSince(string $time): string
+    {
+        try
+        {
+            $start_date = new \DateTime($time);
+            $since_start = $start_date->diff(new \DateTime(date("Y-m-d H:i:s")));
+
+            $years = $since_start->y.' yr ';
+            $months = $since_start->m.' mos ';
+            $days = $since_start->d.' days ';
+            $hours = $since_start->h.' hrs ';
+            $minutes = $since_start->i.' min ';
+
+            $formattedDate = "";
+
+            if($years != 0)
+                $formattedDate .= $years;
+            if($months != 0)
+                $formattedDate .= $months;
+            if($years == 0 AND $days != 0)
+                $formattedDate .= $days;
+            if($years == 0 AND $months == 0 AND $hours != 0)
+                $formattedDate .= $hours;
+            if($years == 0 AND $months == 0 AND $days == 0 AND $minutes != 0)
+                $formattedDate .= $minutes;
+
+            if(empty($formattedDate))
+                $formattedDate .= "now";
+            else
+                $formattedDate .= "ago";
+
+            return $formattedDate;
+        }
+        catch(\Exception $e)
+        {
+            return '';
+        }
+    }
+
+    /**
+     * @param int $workspaceId
+     * @param string $query
+     * @return Ticket[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function runQuickSearch(int $workspaceId, string $query): array
+    {
+        return TicketDatabaseHandler::quickSearch($workspaceId, $query);
     }
 
     /**

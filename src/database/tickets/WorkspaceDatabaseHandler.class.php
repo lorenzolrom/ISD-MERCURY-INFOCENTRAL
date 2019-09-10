@@ -222,6 +222,26 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $workspace
+     * @param int $team
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function teamInWorkspace(int $workspace, int $team): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `team` FROM `Tickets_Workspace_Team` WHERE `workspace` = :workspace AND `team` = :team LIMIT 1');
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $workspace
      * @return bool
      * @throws DatabaseException
      */

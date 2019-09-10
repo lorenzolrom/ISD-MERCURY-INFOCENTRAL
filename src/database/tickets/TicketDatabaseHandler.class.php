@@ -378,6 +378,46 @@ class TicketDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $ticket
+     * @param int $team
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function removeAssignedTeamOnly(int $ticket, int $team): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `Tickets_Assignee` WHERE `ticket` = :ticket AND `team` = :team AND `user` IS NULL');
+        $delete->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $delete->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $ticket
+     * @param int $team
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function removeAssignedTeam(int $ticket, int $team): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `Tickets_Assignee` WHERE `ticket` = :ticket AND `team` = :team');
+        $delete->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $delete->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount() !== 0;
+    }
+
+    /**
+     * @param int $ticket
      * @return array
      * @throws DatabaseException
      */
@@ -392,5 +432,122 @@ class TicketDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return $select->fetchAll();
+    }
+
+    /**
+     * @param int $ticket
+     * @param int $team
+     * @return array
+     * @throws DatabaseException
+     */
+    public static function selectAssignedTeamUsers(int $ticket, int $team): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `user` FROM `Tickets_Assignee` WHERE `ticket` = :ticket AND `team` = :team AND `user` IS NOT NULL');
+        $select->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $select->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
+
+    /**
+     * Is the given team/user combination assigned
+     * This will not actually work for null users for some reason...
+     *
+     * @param int $ticket
+     * @param int $team
+     * @param int|null $user
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function isAssigned(int $ticket, int $team, ?int $user = NULL): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `ticket` FROM `Tickets_Assignee` WHERE `team` = :team AND `user` = :user AND `ticket` = :ticket LIMIT 1');
+        $select->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $select->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $select->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
+
+    /**
+     * Is the specified team assigned in any capacity (alone or through users)?
+     *
+     * @param int $ticket
+     * @param int $team
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function isTeamAssignedAtAll(int $ticket, int $team): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `ticket` FROM `Tickets_Assignee` WHERE `team` = :team AND `ticket` = :ticket LIMIT 1');
+        $select->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $select->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $ticket
+     * @param int $team
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function isTeamOnlyAssigned(int $ticket, int $team): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `ticket` FROM `Tickets_Assignee` WHERE `team` = :team AND `user` IS NULL AND `ticket` = :ticket LIMIT 1');
+        $select->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $select->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
+
+    /**
+     * Searches ticket titles, numbers, and contacts descriptions matching the query
+     *
+     * @param int $workspace
+     * @param string $query
+     * @return Ticket[]
+     * @throws DatabaseException
+     */
+    public static function quickSearch(int $workspace, string $query): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `id` FROM `Tickets_Ticket` WHERE ((`title` LIKE :query) OR (`number` LIKE :query) OR (IFNULL(`contact`, '') LIKE :query)) AND (`workspace` = :workspace)");
+        $select->bindParam('query', "%$query%", DatabaseConnection::PARAM_STR);
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $tickets = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$tickets[] = self::selectById($id);}
+            catch(EntryNotFoundException $e){} // Ignore
+        }
+
+        return $tickets;
     }
 }

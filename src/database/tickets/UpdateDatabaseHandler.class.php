@@ -92,4 +92,25 @@ class UpdateDatabaseHandler
 
         return self::selectById($id);
     }
+
+    /**
+     * @param int $ticket
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getLastUpdateTime(int $ticket): ?string
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `time` FROM `Tickets_Update` WHERE `ticket` = ? ORDER BY `time` DESC LIMIT 1');
+        $select->bindParam(1, $ticket, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() === 1)
+            return $select->fetchColumn();
+
+        return NULL;
+    }
 }

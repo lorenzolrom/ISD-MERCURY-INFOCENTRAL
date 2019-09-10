@@ -166,6 +166,15 @@ class Ticket extends Model
     }
 
     /**
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public function getLastUpdateTime(): ?string
+    {
+        return UpdateDatabaseHandler::getLastUpdateTime($this->id);
+    }
+
+    /**
      * @param string|null $val
      * @return bool
      * @throws \exceptions\DatabaseException

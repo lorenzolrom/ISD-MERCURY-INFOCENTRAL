@@ -234,4 +234,24 @@ class TeamDatabaseHandler extends DatabaseHandler
 
         return $count;
     }
+
+    /**
+     * @param int $team
+     * @param int $user
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function userInTeam(int $team, int $user): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `user` FROM `Tickets_Team_User` WHERE `user` = :user AND `team` = :team LIMIT 1');
+        $select->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $select->bindParam('team', $team, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
 }

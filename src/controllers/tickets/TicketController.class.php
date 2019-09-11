@@ -272,7 +272,8 @@ class TicketController extends Controller
             'severity' => AttributeOperator::codeFromId($ticket->getSeverity()),
             'severityName' => AttributeOperator::nameFromId($ticket->getSeverity()),
             'desiredDate' => $ticket->getDesiredDate(),
-            'scheduledDate' => $ticket->getScheduledDate()
+            'scheduledDate' => $ticket->getScheduledDate(),
+            'assignees' => $ticket->getAssigneeCodes()
         );
 
         return new HTTPResponse(HTTPResponse::OK, $data);

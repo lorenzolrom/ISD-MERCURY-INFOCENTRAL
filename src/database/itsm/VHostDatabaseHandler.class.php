@@ -269,11 +269,10 @@ class VHostDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $id
-     * @param int $user
      * @return bool
      * @throws \exceptions\DatabaseException
      */
-    public static function addUser(int $id, int $user): bool
+    public static function addUser(int $id): bool
     {
         $handler = new DatabaseConnection();
 

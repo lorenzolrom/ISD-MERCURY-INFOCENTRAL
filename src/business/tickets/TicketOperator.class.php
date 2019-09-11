@@ -25,7 +25,6 @@ use database\tickets\UpdateDatabaseHandler;
 use database\tickets\WorkspaceDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
-use models\History;
 use models\tickets\Ticket;
 use models\tickets\Workspace;
 use utilities\HistoryRecorder;
@@ -33,7 +32,7 @@ use utilities\Validator;
 
 class TicketOperator extends Operator
 {
-    public const FIELDS = array('title', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredDate', 'scheduledDate', 'description');
+    public const FIELDS = array('title', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredDate', 'scheduledDate', 'description', 'assignees');
     public const SEARCH_FIELDS = array('title', 'number', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredStart', 'desiredEnd', 'scheduledStart', 'scheduledEnd');
 
     private const FIELD_NAMES = array(
@@ -132,7 +131,12 @@ class TicketOperator extends Operator
         // Create update
         UpdateDatabaseHandler::insert($ticket->getId(), CurrentUserController::currentUser()->getId(), $vals['description']);
         HistoryRecorder::writeAssocHistory($history, array('Appended Description' => array(''))); // blank description, it is held in TicketUpdate
-        
+
+        if(is_array($vals['assignees']))
+        {
+            TicketOperator::addAssignees($ticket, $vals['assignees'], TRUE, $history);
+        }
+
         return $ticket;
     }
 
@@ -162,6 +166,11 @@ class TicketOperator extends Operator
             // Create update
             UpdateDatabaseHandler::insert($ticket->getId(), CurrentUserController::currentUser()->getId(), $vals['description']);
             HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Appended Description')));
+        }
+
+        if(is_array($vals['assignees']))
+        {
+            TicketOperator::addAssignees($ticket, $vals['assignees'], TRUE, $history);
         }
 
         return $ticket;
@@ -281,8 +290,6 @@ class TicketOperator extends Operator
                     $operation = substr($value, 0, 1);
                     $value = substr($value, 1); // Overwrite old value removing the operation character
 
-                    $message = '';
-
                     // Determine if assignee added or removed
                     if($operation == '+')
                         $message = 'Assigned ';
@@ -292,7 +299,7 @@ class TicketOperator extends Operator
                     // Determine if team or user
                     $parts = explode('-', $value);
 
-                    if(strlen($parts[1]) === 0)
+                    if(!isset($parts[1]))
                     {
                         $message .= 'team: ';
                         $team = TeamOperator::getTeam((int)$parts[0]);
@@ -379,14 +386,14 @@ class TicketOperator extends Operator
      * @param Ticket $ticket
      * @param array $assignees This should be array of strings containing team ID or "team ID"-"user ID"
      * @param bool $deleteExisting
-     * @param History|null $hist
+     * @param int|null $hist
      * @return bool
      * @throws EntryNotFoundException
      * @throws ValidationError
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    public static function addAssignees(Ticket $ticket, array $assignees, bool $deleteExisting = FALSE, History $hist = NULL): bool
+    public static function addAssignees(Ticket $ticket, array $assignees, bool $deleteExisting = FALSE, ?int $hist = NULL): bool
     {
         if(empty($assignees) AND !$deleteExisting)
             return FALSE; // Nothing to do...
@@ -423,7 +430,7 @@ class TicketOperator extends Operator
             {
                 $teamId = $assigneeParts[0];
 
-                if(TicketDatabaseHandler::isTeamAssignedAtAll($ticket->getId(), $teamId)) // Skip if team already assigned
+                if((TicketDatabaseHandler::isTeamAssignedAtAll($ticket->getId(), $teamId) AND !in_array($teamId, $assignees)) OR TicketDatabaseHandler::isTeamOnlyAssigned($ticket->getId(), $teamId)) // Skip if team already assigned and not being added
                     continue;
 
                 $team = TeamOperator::getTeam($teamId);
@@ -435,7 +442,7 @@ class TicketOperator extends Operator
 
                 HistoryRecorder::writeAssocHistory($hist, array('assign' => array('+' . $team->getId())));
                 TicketDatabaseHandler::addAssignee($ticket->getId(), $team->getId(), NULL);
-                $addedAssignees[] = $team->getId();
+                $addedAssignees[] = (string)$team->getId();
             }
             else if(sizeof($assigneeParts) === 2) // Team and user
             {
@@ -465,14 +472,16 @@ class TicketOperator extends Operator
 
                 // Remove team entry alone if a user is present
                 if(TicketDatabaseHandler::isTeamOnlyAssigned($ticket->getId(), $team->getId()))
+                {
                     TicketDatabaseHandler::removeAssignedTeamOnly($ticket->getId(), $team->getId());
+                }
             }
         }
 
         //Sort removed assignees into teams and users
         foreach($currentAssignees as $assignee)
         {
-            if(!in_array($assignee, $addedAssignees) AND !in_array($assignee, $assignees))
+            if(!in_array($assignee, $addedAssignees) AND !in_array($assignee, $assignees)) // TODO this messed up
             {
                 $assigneeParts = explode('-', $assignee);
 

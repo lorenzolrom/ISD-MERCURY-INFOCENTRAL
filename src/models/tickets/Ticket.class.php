@@ -14,6 +14,7 @@
 namespace models\tickets;
 
 
+use database\tickets\TicketDatabaseHandler;
 use database\tickets\UpdateDatabaseHandler;
 use models\Model;
 use utilities\Validator;
@@ -172,6 +173,36 @@ class Ticket extends Model
     public function getLastUpdateTime(): ?string
     {
         return UpdateDatabaseHandler::getLastUpdateTime($this->id);
+    }
+
+    /**
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public function getAssignees(): array
+    {
+        return TicketDatabaseHandler::selectAssignees($this->getId());
+    }
+
+    /**
+     * @return string[]
+     * @throws \exceptions\DatabaseException
+     */
+    public function getAssigneeCodes(): array
+    {
+        $assignees = TicketDatabaseHandler::selectAssignees($this->getId());
+
+        $codes = array();
+
+        foreach($assignees as $assignee)
+        {
+            if(strlen($assignee['user']) === 0)
+                $codes[] = $assignee['team'];
+            else
+                $codes[] = $assignee['team'] . '-' . $assignee['user'];
+        }
+
+        return $codes;
     }
 
     /**

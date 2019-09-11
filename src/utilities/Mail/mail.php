@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection ALL */
 /**
  * internal PHP-mail() implementation of the PEAR Mail:: interface.
  *

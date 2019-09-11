@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection ALL */
 /**
  * RFC 822 Email address list validation Utility
  *

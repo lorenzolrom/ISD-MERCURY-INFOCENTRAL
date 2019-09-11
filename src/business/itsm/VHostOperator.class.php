@@ -252,7 +252,7 @@ class VHostOperator extends Operator
                 throw new ValidationError(array('User already assigned to this VHost'));
         }
 
-        return VHostDatabaseHandler::addUser($vhost->getId(), $userId);
+        return VHostDatabaseHandler::addUser($vhost->getId());
     }
 
     /**

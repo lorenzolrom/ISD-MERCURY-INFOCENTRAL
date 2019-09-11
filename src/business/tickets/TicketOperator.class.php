@@ -422,6 +422,22 @@ class TicketOperator extends Operator
         $removedTeams = array();
         $removedUsers = array();
 
+        // Remove team only assignment if the given assignment contains a team member
+        foreach($assignees as $assignee)
+        {
+            $parts = explode('-', $assignee);
+
+            if(sizeof($parts) != 2) // If this is not a user assignment
+                continue;
+
+            $teamId = $parts[0];
+
+            $key = array_search($teamId, $assignees);
+
+            if($key !== FALSE)
+                unset($assignees[$key]);
+        }
+
         foreach($assignees as $assignee)
         {
             $assigneeParts = explode('-', $assignee);
@@ -481,7 +497,7 @@ class TicketOperator extends Operator
         //Sort removed assignees into teams and users
         foreach($currentAssignees as $assignee)
         {
-            if(!in_array($assignee, $addedAssignees) AND !in_array($assignee, $assignees)) // TODO this messed up
+            if(!in_array($assignee, $addedAssignees) AND !in_array($assignee, $assignees))
             {
                 $assigneeParts = explode('-', $assignee);
 

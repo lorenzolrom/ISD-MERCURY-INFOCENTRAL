@@ -89,16 +89,22 @@ class TicketController extends Controller
                     return $this->getHistory((int)$param);
                 else if($action == 'assignees')
                     return $this->getAssignees((int)$param);
+                else if($action == 'linked')
+                    return $this->getLinked((int)$param);
 
                 return $this->getTicket((int)$param);
             }
         }
         else if($this->request->method() === HTTPRequest::POST)
         {
+            $action = $this->request->next();
+
             if($param === 'search')
                 return $this->search();
             else if($param === 'quickSearch')
                 return $this->quickSearch();
+            else if($action == 'link')
+                return $this->link($param);
             else
                 return $this->createTicket();
         }
@@ -113,8 +119,12 @@ class TicketController extends Controller
         }
         else if($this->request->method() === HTTPRequest::DELETE)
         {
-            if($this->request->next() == 'assignee')
+            $action = $this->request->next();
+
+            if($action == 'assignee')
                 return $this->removeAssignee($param);
+            if($action == 'link')
+                return $this->unlink($param, $this->request->next());
         }
 
         return NULL;
@@ -425,5 +435,65 @@ class TicketController extends Controller
         TicketOperator::removeAssignee($ticket, (string)$body['assignee']);
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationError
+     */
+    private function link(int $number): HTTPResponse
+    {
+        $body = self::getFormattedBody(array('linkedNumber'), TRUE);
+
+        TicketOperator::link(TicketOperator::getTicket($this->workspace, $number), (int)$body['linkedNumber']);
+
+        return new HTTPResponse(HTTPResponse::CREATED);
+    }
+
+    /**
+     * @param int $number
+     * @param int $linkedNumber
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationError
+     */
+    private function unlink(int $number, int $linkedNumber): HTTPResponse
+    {
+        $ticket1 = TicketOperator::getTicket($this->workspace, $number);
+
+        TicketOperator::unlink($ticket1, $linkedNumber);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getLinked(int $number): HTTPResponse
+    {
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        $data = array();
+
+        foreach($ticket->getLinked() as $t)
+        {
+            $tData = array();
+
+            $tData['number'] = $t->getNumber();
+            $tData['title'] = $t->getTitle();
+
+            $data[] = $tData;
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
     }
 }

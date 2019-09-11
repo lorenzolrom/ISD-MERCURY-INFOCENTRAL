@@ -206,6 +206,15 @@ class Ticket extends Model
     }
 
     /**
+     * @return Ticket[]
+     * @throws \exceptions\DatabaseException
+     */
+    public function getLinked(): array
+    {
+        return TicketDatabaseHandler::selectLinkedTickets($this->id);
+    }
+
+    /**
      * @param string|null $val
      * @return bool
      * @throws \exceptions\DatabaseException

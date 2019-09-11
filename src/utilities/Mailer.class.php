@@ -89,7 +89,9 @@ class Mailer
         // Build e-mail message
         $headers = array(
             'From' => \Config::OPTIONS['emailFromName'] . ' <' . \Config::OPTIONS['emailFromAddress'] . '>',
-            'Subject' => $this->subject
+            'Subject' => $this->subject,
+            'MIME-Version' => 1,
+            'Content-type' => 'text/html;charset=iso-8859-1'
         );
 
         /** @noinspection PhpUndefinedClassInspection */

@@ -130,7 +130,7 @@ class TicketOperator extends Operator
 
         // Create update
         UpdateDatabaseHandler::insert($ticket->getId(), CurrentUserController::currentUser()->getId(), $vals['description']);
-        HistoryRecorder::writeAssocHistory($history, array('Appended Description' => array(''))); // blank description, it is held in TicketUpdate
+        HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Appended Description')));
 
         if(is_array($vals['assignees']))
         {
@@ -317,6 +317,19 @@ class TicketOperator extends Operator
 
                     $columnStrings[] = $message;
 
+                }
+                else if($name == 'link')
+                {
+                    $value = $column['newValue'];
+                    $operation = substr($value, 0, 1);
+                    $value = substr($value, 1); // Overwrite old value removing the operation character
+
+                    if($operation == '+')
+                        $message = 'Linked to ticket #' . $value;
+                    else
+                        $message = 'Unlinked from ticket #' . $value;
+
+                    $columnStrings[] = $message;
                 }
                 else if(in_array($column['column'], array_keys(self::FIELD_NAMES))) // Column has a specified display name
                 {
@@ -625,6 +638,70 @@ class TicketOperator extends Operator
     public static function runQuickSearch(int $workspaceId, string $query): array
     {
         return TicketDatabaseHandler::quickSearch($workspaceId, $query);
+    }
+
+    /**
+     * @param Ticket $ticket1
+     * @param int $ticket2Number
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function link(Ticket $ticket1, int $ticket2Number): bool
+    {
+        if($ticket1->getNumber() == $ticket2Number)
+        {
+            throw new ValidationError(array('Cannot link ticket to itself'));
+        }
+
+        $ticket2 = TicketDatabaseHandler::selectByNumber($ticket1->getWorkspace(), $ticket2Number);
+
+        // Check if link exists already
+        if(TicketDatabaseHandler::areTicketsLinked($ticket1->getId(), $ticket2->getId()))
+        {
+            throw new ValidationError(array('Tickets are already linked'));
+        }
+
+        // Ticket 1 history
+        $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket1->getId(), $ticket1);
+        HistoryRecorder::writeAssocHistory($hist, array('link' => array('+' . $ticket2->getNumber())));
+
+        // Ticket 2 history
+        $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket2->getId(), $ticket2);
+        HistoryRecorder::writeAssocHistory($hist, array('link' => array('+' . $ticket1->getNumber())));
+
+        return TicketDatabaseHandler::insertLink($ticket1->getId(), $ticket2->getId());
+    }
+
+    /**
+     * @param Ticket $ticket1
+     * @param int $ticket2Number Ticket NUMBER
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function unlink(Ticket $ticket1, int $ticket2Number): bool
+    {
+        $ticket2 = TicketDatabaseHandler::selectByNumber($ticket1->getWorkspace(), $ticket2Number);
+
+        if(!TicketDatabaseHandler::areTicketsLinked($ticket1->getId(), $ticket2->getId()))
+        {
+            throw new ValidationError(array('Tickets are not linked'));
+        }
+
+        // Ticket 1 history
+        $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket1->getId(), $ticket1);
+        HistoryRecorder::writeAssocHistory($hist, array('link' => array('-' . $ticket2->getNumber())));
+
+        // Ticket 2 history
+        $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket2->getId(), $ticket2);
+        HistoryRecorder::writeAssocHistory($hist, array('link' => array('-' . $ticket1->getNumber())));
+
+        return TicketDatabaseHandler::deleteLink($ticket1->getId(), $ticket2->getId());
     }
 
     /**

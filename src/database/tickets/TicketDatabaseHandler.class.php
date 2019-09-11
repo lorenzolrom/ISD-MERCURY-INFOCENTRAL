@@ -550,4 +550,104 @@ class TicketDatabaseHandler extends DatabaseHandler
 
         return $tickets;
     }
+
+    /**
+     * @param int $ticket1
+     * @param int $ticket2
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function insertLink(int $ticket1, int $ticket2): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $insert = $handler->prepare('INSERT INTO `Tickets_Link` (`ticket1`, `ticket2`) VALUES (:ticket1, :ticket2)');
+        $insert->bindParam('ticket1', $ticket1, DatabaseConnection::PARAM_INT);
+        $insert->bindParam('ticket2', $ticket2, DatabaseConnection::PARAM_INT);
+        $insert->execute();
+
+        $handler->close();
+
+        return $insert->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $ticket1
+     * @param int $ticket2
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function deleteLink(int $ticket1, int $ticket2): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $delete = $handler->prepare('DELETE FROM `Tickets_Link` WHERE (`ticket1` = :ticket1 AND `ticket2` = :ticket2) OR (`ticket1` = :ticket2 AND `ticket2` = :ticket1)');
+        $delete->bindParam('ticket1', $ticket1, DatabaseConnection::PARAM_INT);
+        $delete->bindParam('ticket2', $ticket2, DatabaseConnection::PARAM_INT);
+        $delete->execute();
+
+        $handler->close();
+
+        return $delete->getRowCount();
+    }
+
+    /**
+     * @param int $ticket1
+     * @param int $ticket2
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function areTicketsLinked(int $ticket1, int $ticket2): bool
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `ticket1` FROM `Tickets_Link` WHERE (`ticket1` = :ticket1 AND `ticket2` = :ticket2) OR (`ticket1` = :ticket2 AND `ticket2` = :ticket1) LIMIT 1');
+        $select->bindParam('ticket1', $ticket1, DatabaseConnection::PARAM_INT);
+        $select->bindParam('ticket2', $ticket2, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1;
+    }
+
+    /**
+     * @param int $ticket
+     * @return Ticket[]
+     * @throws DatabaseException
+     */
+    public static function selectLinkedTickets(int $ticket): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `ticket1`, `ticket2` FROM `Tickets_Link` WHERE `ticket1` = :ticket OR `ticket2` = :ticket');
+        $select->bindParam('ticket', $ticket, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $tickets = array();
+
+        foreach($select->fetchAll() as $link) {
+
+            $linkedId = NULL;
+
+            if($link['ticket1'] == $ticket)// ticket2 is linked
+            {
+                $linkedId = $link['ticket2'];
+            }
+            else if($link['ticket2'] == $ticket) // ticket1 is linked
+            {
+                $linkedId = $link['ticket1'];
+            }
+
+            if($linkedId === NULL)
+                continue;
+
+            try{$tickets[] = self::selectById((int)$linkedId);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $tickets;
+    }
 }

@@ -25,6 +25,7 @@ use database\tickets\UpdateDatabaseHandler;
 use database\tickets\WorkspaceDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
+use models\History;
 use models\tickets\Ticket;
 use models\tickets\Workspace;
 use utilities\HistoryRecorder;
@@ -378,18 +379,20 @@ class TicketOperator extends Operator
      * @param Ticket $ticket
      * @param array $assignees This should be array of strings containing team ID or "team ID"-"user ID"
      * @param bool $deleteExisting
+     * @param History|null $hist
      * @return bool
      * @throws EntryNotFoundException
+     * @throws ValidationError
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
-     * @throws ValidationError
      */
-    public static function addAssignees(Ticket $ticket, array $assignees, bool $deleteExisting = FALSE): bool
+    public static function addAssignees(Ticket $ticket, array $assignees, bool $deleteExisting = FALSE, History $hist = NULL): bool
     {
         if(empty($assignees) AND !$deleteExisting)
             return FALSE; // Nothing to do...
 
-        $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket->getId(), $ticket);
+        if($hist === NULL)
+            $hist = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket->getId(), $ticket);
 
         $currentAssignees = TicketDatabaseHandler::selectAssignees($ticket->getId());
 
@@ -469,7 +472,7 @@ class TicketOperator extends Operator
         //Sort removed assignees into teams and users
         foreach($currentAssignees as $assignee)
         {
-            if(!in_array($assignee, $addedAssignees))
+            if(!in_array($assignee, $addedAssignees) AND !in_array($assignee, $assignees))
             {
                 $assigneeParts = explode('-', $assignee);
 

@@ -28,6 +28,7 @@ class HistoryController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      * @throws RouteException
+     * @throws \exceptions\EntryNotFoundException
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -41,6 +42,7 @@ class HistoryController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      * @throws RouteException
+     * @throws \exceptions\EntryNotFoundException
      */
     private function getHistory(): HTTPResponse
     {

@@ -34,7 +34,7 @@ use utilities\Validator;
 class TicketOperator extends Operator
 {
     public const FIELDS = array('title', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredDate', 'scheduledDate', 'description', 'assignees', 'notifyAssignees', 'notifyContact');
-    public const SEARCH_FIELDS = array('title', 'number', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredStart', 'desiredEnd', 'scheduledStart', 'scheduledEnd');
+    public const SEARCH_FIELDS = array('title', 'number', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredDateStart', 'desiredDateEnd', 'scheduledDateStart', 'scheduledDateEnd', 'assignees', 'description');
 
     private const FIELD_NAMES = array(
         'title' => 'Title',
@@ -83,12 +83,12 @@ class TicketOperator extends Operator
         }
 
         // Format dates
-        foreach(array('desiredStart', 'desiredEnd', 'scheduledStart', 'scheduledEnd') as $val)
+        foreach(array('desiredDateStart', 'desiredDateEnd', 'scheduledDateStart', 'scheduledDateEnd') as $val)
         {
             if($vals[$val] === NULL)
                 continue;
 
-            trim($vals[$val], '%'); // Remove wildcards
+            $vals[$val] = trim($vals[$val], '%'); // Remove wildcards
 
             if(!Validator::validDate($vals[$val])) // Convert invalid dates
             {
@@ -99,8 +99,24 @@ class TicketOperator extends Operator
             }
         }
 
+        // If there is no search for description, don't pass it to search
+        if(strlen(trim($vals['description'], '%')) === 0)
+            $vals['description'] = NULL;
+
+        $assignees = array();
+
+        if(is_array($vals['assignees']) AND !empty($vals['assignees']))
+        {
+            // Break up codes
+
+            foreach($vals['assignees'] as $code)
+            {
+                $assignees[] = explode('-', $code);
+            }
+        }
+
         return TicketDatabaseHandler::select($workspace->getId(), $vals['number'], $vals['title'], $vals['contact'], $vals['type'], $vals['category'], $vals['status'], $vals['closureCode'], $vals['severity'],
-            $vals['desiredStart'], $vals['desiredEnd'], $vals['scheduledStart'], $vals['scheduledEnd']);
+            $vals['desiredDateStart'], $vals['desiredDateEnd'], $vals['scheduledDateStart'], $vals['scheduledDateEnd'], $vals['description'], $assignees);
     }
 
     /**
@@ -773,7 +789,7 @@ class TicketOperator extends Operator
             $errs[] = 'Status is not valid';
 
         // If status code is 'clo', closure code must be set
-        if($vals['status'] == 'clo' AND ($vals['closureCode'] === NULL OR strlen($vals['closureCode']) === 0))
+        if($vals['status'] == Ticket::CLOSED AND ($vals['closureCode'] === NULL OR strlen($vals['closureCode']) === 0))
             $errs[] = 'Closure code is required';
 
         if(!empty($errs))
@@ -902,9 +918,9 @@ class TicketOperator extends Operator
         $title = $ticket->getTitle() . ' [TICKET=' . $ticket->getNumber() . ' WORKSPACE=' . $ticket->getWorkspace() . ']';
         $action = 'updated';
 
-        if($ticket->getStatus() == 'new')
+        if($ticket->getStatus() == Ticket::NEW)
             $action = 'opened';
-        else if($ticket->getStatus() == 'clo')
+        else if($ticket->getStatus() == Ticket::CLOSED)
             $action = 'closed';
 
         $message = "<p style='color: #888888;'><em>E-Mail Notification from " . $workspace->getName() . "</em></p>

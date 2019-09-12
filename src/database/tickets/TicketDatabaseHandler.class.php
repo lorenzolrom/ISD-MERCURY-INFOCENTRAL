@@ -84,14 +84,17 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @param string|null $desiredEnd
      * @param string|null $scheduledStart
      * @param string|null $scheduledEnd
+     * @param string|null $description
      * @return Ticket[]
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function select(int $workspace, string $number = '%', string $title = '%',
                                   string $contact = '%', ?array $type = array(), ?array $category = array(),
                                   ?array $status = array(), ?array $closureCode = array(), ?array $severity = array(), ?string $desiredStart = NULL,
-                                  ?string $desiredEnd = NULL, ?string $scheduledStart = NULL, ?string $scheduledEnd = NULL): array
+                                  ?string $desiredEnd = NULL, ?string $scheduledStart = NULL, ?string $scheduledEnd = NULL, ?string $description = NULL, ?array $assignees = NULL): array
     {
+        $searchUpdates = FALSE;
+
         // Sanitize Dates
         if($scheduledStart === NULL OR !Validator::validDate($scheduledStart))
             $scheduledStart = '1000-01-01';
@@ -103,20 +106,76 @@ class TicketDatabaseHandler extends DatabaseHandler
             $desiredEnd = '9999-12-31';
 
         $query = "SELECT `id` FROM `Tickets_Ticket` WHERE `workspace` = :workspace AND `number` LIKE :number 
-                                    AND `title` LIKE :title AND IFNULL(`contact`, '') LIKE :contact AND `scheduledDate` BETWEEN :scheduleStart AND :scheduleEnd 
-                                    AND `desiredDate` BETWEEN :desiredStart AND :desiredEnd";
+                                    AND `title` LIKE :title AND IFNULL(`contact`, '') LIKE :contact AND IFNULL(`scheduledDate`, '1000-01-02') BETWEEN CAST(:scheduleStart AS DATE) AND CAST(:scheduleEnd AS DATE) 
+                                    AND IFNULL(`desiredDate`, '1000-01-02') BETWEEN CAST(:desiredStart AS DATE) AND CAST(:desiredEnd AS DATE)";
 
         // Array values
-        if($type !== NULL AND !empty($type))
+        if(is_array($type) AND !empty($type))
             $query .= ' AND `type` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($type) . '))';
-        if($category !== NULL AND !empty($category))
+        if(is_array($category) AND !empty($category))
             $query .= ' AND `category` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($category) . '))';
-        if($status !== NULL AND !empty($status))
-            $query .= ' AND `status` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($status) . '))';
-        if($closureCode !== NULL AND !empty($closureCode))
-            $query .= ' AND `closureCode` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($status) . '))';
-        if($severity !== NULL AND !empty($severity))
+        if(is_array($status) AND !empty($status))
+            $query .= ' AND `status` IN (' . self::getAttributeCodeString($status) . ')';
+        if(is_array($closureCode) AND !empty($closureCode))
+            $query .= ' AND `closureCode` IS NOT NULL AND `closureCode` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($closureCode) . '))';
+        if(is_array($severity) AND !empty($severity))
             $query .= ' AND `severity` IN (SELECT `id` FROM `Tickets_Attribute` WHERE `code` IN (' . self::getAttributeCodeString($severity) . '))';
+
+        // Search ticket updates
+        if($description !== NULL AND strlen($description) !== 0)
+        {
+            $query .= ' AND `id` IN (SELECT `ticket` FROM `Tickets_Update` WHERE `description` LIKE :description)';
+            $searchUpdates = TRUE;
+        }
+
+        // Assignees
+        if(is_array($assignees) AND !empty($assignees))
+        {
+            $assigneeQuery = '';
+            $assigneeQueries = array();
+
+            $teamAloneAssigned = array(); // What teams have been assigned without users
+            $userInTeam = array(); // What teams have had users assigned to them already
+
+            $count = 0;
+
+            foreach($assignees as $assignee)
+            {
+                if(sizeof($assignee) === 2) // User in team
+                {
+                    $assigneeQueries[] = ' (`team` = ' . (int)$assignee[0] . ' AND `user` = ' . (int)$assignee[1] . ')';
+                    $userInTeam[] = (int)$assignee[0];
+
+                    if(in_array((int)$assignee[0], array_keys($teamAloneAssigned))) // team has been assigned previously without a user
+                    {
+                        unset($assigneeQueries[$teamAloneAssigned[(int)$assignee[0]]]);
+                    }
+                }
+                else
+                {
+                    if(in_array((int)$assignee[0], $userInTeam))
+                        continue;
+
+                    $teamAloneAssigned[(int)$assignee[0]] = $count;
+
+                    $assigneeQueries[] = ' (`team` = ' . (int)$assignee[0] . ' AND `user` IS NULL)';
+                }
+
+                $count++;
+            }
+
+            if(!empty($assigneeQueries))
+            {
+                foreach($assigneeQueries as $queryPart)
+                {
+                    $assigneeQuery .= ' OR ' . $queryPart;
+                }
+
+                $assigneeQuery = ' AND `id` IN (SELECT `ticket` FROM `Tickets_Assignee` WHERE ' . substr($assigneeQuery, strlen(' OR ')) . ')';
+
+                $query .= $assigneeQuery;
+            }
+        }
 
         $handler = new DatabaseConnection();
 
@@ -129,6 +188,10 @@ class TicketDatabaseHandler extends DatabaseHandler
         $select->bindParam('scheduleEnd', $scheduledEnd, DatabaseConnection::PARAM_STR);
         $select->bindParam('desiredStart', $desiredStart, DatabaseConnection::PARAM_STR);
         $select->bindParam('desiredEnd', $desiredEnd, DatabaseConnection::PARAM_STR);
+
+        if($searchUpdates)
+            $select->bindParam('description', $description, DatabaseConnection::PARAM_STR);
+
         $select->execute();
 
         $handler->close();

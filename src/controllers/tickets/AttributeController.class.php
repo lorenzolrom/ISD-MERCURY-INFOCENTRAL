@@ -39,7 +39,7 @@ class AttributeController extends Controller
      */
     public function __construct(?string $workspace, HTTPRequest $request)
     {
-        $this->workspace = WorkspaceOperator::getWorkspace((string)$workspace);
+        $this->workspace = WorkspaceOperator::getWorkspace((int)$workspace);
 
         parent::__construct($request);
     }

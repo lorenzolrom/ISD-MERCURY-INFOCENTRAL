@@ -127,7 +127,7 @@ class NotificationOperator extends Operator
      * @return int
      * @throws \exceptions\DatabaseException
      */
-    private static function bulkSendToUsers(string $title, string $message, int $important, bool $email, array $users): int
+    public static function bulkSendToUsers(string $title, string $message, int $important, bool $email, array $users): int
     {
         if(empty($users))
             return 0;

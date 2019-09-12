@@ -176,6 +176,16 @@ class Ticket extends Model
     }
 
     /**
+     * @return Update
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public function getLastUpdate(): Update
+    {
+        return UpdateDatabaseHandler::selectLastByTicket($this->getId());
+    }
+
+    /**
      * @return array
      * @throws \exceptions\DatabaseException
      */

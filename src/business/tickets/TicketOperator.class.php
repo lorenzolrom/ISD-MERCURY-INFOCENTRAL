@@ -15,6 +15,7 @@ namespace business\tickets;
 
 
 use business\HistoryOperator;
+use business\NotificationOperator;
 use business\Operator;
 use business\UserOperator;
 use controllers\CurrentUserController;
@@ -32,7 +33,7 @@ use utilities\Validator;
 
 class TicketOperator extends Operator
 {
-    public const FIELDS = array('title', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredDate', 'scheduledDate', 'description', 'assignees');
+    public const FIELDS = array('title', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredDate', 'scheduledDate', 'description', 'assignees', 'notifyAssignees', 'notifyContact');
     public const SEARCH_FIELDS = array('title', 'number', 'contact', 'type', 'category', 'status', 'closureCode', 'severity', 'desiredStart', 'desiredEnd', 'scheduledStart', 'scheduledEnd');
 
     private const FIELD_NAMES = array(
@@ -137,6 +138,18 @@ class TicketOperator extends Operator
             TicketOperator::addAssignees($ticket, $vals['assignees'], TRUE, $history);
         }
 
+        if($vals['notifyAssignees'] == 'true')
+        {
+            self::notifyAssignees($ticket);
+            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Assignee Notification Sent')));
+        }
+
+        if($vals['notifyContact'] == 'true')
+        {
+            self::notifyContact($ticket);
+            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Contact Notification Sent')));
+        }
+
         return $ticket;
     }
 
@@ -171,6 +184,18 @@ class TicketOperator extends Operator
         if(is_array($vals['assignees']))
         {
             TicketOperator::addAssignees($ticket, $vals['assignees'], TRUE, $history);
+        }
+
+        if($vals['notifyAssignees'] == 'true')
+        {
+            self::notifyAssignees($ticket);
+            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Assignee Notification Sent')));
+        }
+
+        if($vals['notifyContact'] == 'true')
+        {
+            self::notifyContact($ticket);
+            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Contact Notification Sent')));
         }
 
         return $ticket;
@@ -786,5 +811,110 @@ class TicketOperator extends Operator
             $vals['closureCode'] = NULL;
 
         return $vals;
+    }
+
+    /**
+     * @param Ticket $ticket
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private static function notifyAssignees(Ticket $ticket)
+    {
+        $workspace = WorkspaceOperator::getWorkspace($ticket->getWorkspace());
+        $requestor = '';
+
+        if(strlen($ticket->getContact()) !== 0)
+        {
+            $contact = UserOperator::getUserByUsername($ticket->getContact());
+            $requestor = $contact->getFirstName() . ' ' . $contact->getLastName() . ' (' . $contact->getUsername() . ')';
+        }
+
+        $title = $ticket->getTitle() . ' [TICKET=' . $ticket->getNumber() . ' WORKSPACE=' . $ticket->getWorkspace() . ']';
+        $update = $ticket->getLastUpdate();
+
+        $message = "<p style='color: #888888;'><em>E-Mail Notification from " . $workspace->getName() . "</em></p>
+
+        <p>You are receiving this e-mail because a ticket in your queue has been updated</p>
+        
+        <p><strong>Title: </strong>{$ticket->getTitle()}</p>
+        <p><strong>Ticket Number: </strong><a href='" . \Config::OPTIONS['serviceCenterAgentURL'] . $ticket->getNumber() . "'>{$ticket->getNumber()}</a></p>
+        <p><strong>Requestor: </strong> $requestor</p>
+        
+        <p><strong>Last Update:</strong> Entered {$update->getTime()} by " . UserOperator::usernameFromId($update->getUser()) . "</p>
+        <div style='background-color: #e3e3e3;'>
+            {$update->getDescription()}
+        </div>";
+
+        // if user is assigned, only add them once (if they are assigned as multiple teams)
+        // if team is assigned, add all members of team ensuring they are not duplicated
+
+        $userIds = array();
+
+        foreach($ticket->getAssignees() as $assignee)
+        {
+            $teamId = (int)$assignee['team'];
+            $userId = (int)$assignee['user'];
+
+            if(strlen($userId) === 0) // Only team is assigned
+            {
+                $team = TeamOperator::getTeam((int)$teamId);
+                foreach($team->getUsers() as $user)
+                {
+                    if(!in_array($user->getId(), $userIds))
+                        $userIds[] = $user->getId();
+                }
+            }
+            else
+            {
+                if(!in_array($userId, $userIds))
+                    $userIds[] = $userId;
+            }
+        }
+
+        $users = array();
+
+        foreach($userIds as $userId)
+        {
+            $users[] = UserOperator::getUser($userId);
+        }
+
+        NotificationOperator::bulkSendToUsers($title, $message, 0, TRUE, $users);
+
+    }
+
+    /**
+     * @param Ticket $ticket
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private static function notifyContact(Ticket $ticket)
+    {
+        if(strlen($ticket->getContact()) === 0) // no contact
+            return;
+
+        $user = UserOperator::getUserByUsername($ticket->getContact());
+
+        if(strlen($user->getEmail()) === 0) // no email
+            return;
+
+        $workspace = WorkspaceOperator::getWorkspace($ticket->getWorkspace());
+
+        $title = $ticket->getTitle() . ' [TICKET=' . $ticket->getNumber() . ' WORKSPACE=' . $ticket->getWorkspace() . ']';
+        $action = 'updated';
+
+        if($ticket->getStatus() == 'new')
+            $action = 'opened';
+        else if($ticket->getStatus() == 'clo')
+            $action = 'closed';
+
+        $message = "<p style='color: #888888;'><em>E-Mail Notification from " . $workspace->getName() . "</em></p>
+
+        <p>Your support ticket <a href='" . \Config::OPTIONS['serviceCenterRequestURL'] . "{$ticket->getNumber()}'>{$ticket->getNumber()}</a> (<span style='color: red; font-weight: bold;'>{$ticket->getTitle()}</span>) has been <strong>$action</strong> with the following details:</p>
+        
+        <div style='background-color: #e3e3e3;'>
+            {$ticket->getLastUpdate()->getDescription()}
+        </div>";
+
+        NotificationOperator::bulkSendToUsers($title, $message, 0, TRUE, array($user));
     }
 }

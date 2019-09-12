@@ -44,6 +44,17 @@ class UserOperator extends Operator
 
     /**
      * @param string $username
+     * @return User
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     */
+    public static function getUserByUsername(string $username): User
+    {
+        return UserDatabaseHandler::selectByUsername($username);
+    }
+
+    /**
+     * @param string $username
      * @param string $firstName
      * @param string $lastName
      * @param array $disabled

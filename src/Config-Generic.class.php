@@ -47,7 +47,11 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
 
         // Specify paths allowed for web roots and logs
         'validWebRootPaths' => array(),
-        'validWebLogPaths' => array()
+        'validWebLogPaths' => array(),
+
+        // Link to be included in the ServiceCenter emails
+        'serviceCenterAgentURL' => '', // For agent emails
+        'serviceCenterRequestURL' => '' // For customer emails
 
     );
 }

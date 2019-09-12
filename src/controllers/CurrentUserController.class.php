@@ -261,7 +261,7 @@ class CurrentUserController extends Controller
                 'id' => $notification->getId(),
                 'title' => $notification->getTitle(),
                 'time' => $notification->getTime(),
-                'data' => $notification->getData()
+                'data' => strip_tags($notification->getData()) // Strip tags just for cosmetic purposes
             );
         }
 
@@ -285,7 +285,7 @@ class CurrentUserController extends Controller
                 'id' => $notification->getId(),
                 'title' => $notification->getTitle(),
                 'time' => $notification->getTime(),
-                'data' => $notification->getData()
+                'data' => strip_tags($notification->getData()) // Strip tags just for cosmetic purposes
             );
         }
 

@@ -70,6 +70,25 @@ class UpdateDatabaseHandler
 
     /**
      * @param int $ticket
+     * @return Update
+     * @throws \exceptions\DatabaseException
+     * @throws EntryNotFoundException
+     */
+    public static function selectLastByTicket(int $ticket): Update
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Update` WHERE `ticket` = ? ORDER BY `time` DESC LIMIT 1');
+        $select->bindParam(1, $ticket, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return self::selectById($select->fetchColumn());
+    }
+
+    /**
+     * @param int $ticket
      * @param int $user
      * @param string $description
      * @return Update

@@ -243,6 +243,7 @@ class TicketController extends Controller
         $ticket = TicketOperator::getTicket($this->workspace, $number);
 
         TicketOperator::updateTicket($ticket, self::getFormattedBody(TicketOperator::FIELDS, TRUE));
+
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 

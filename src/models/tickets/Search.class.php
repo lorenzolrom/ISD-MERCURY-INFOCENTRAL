@@ -15,9 +15,16 @@ namespace models\tickets;
 
 
 use models\Model;
+use utilities\Validator;
 
 class Search extends Model
 {
+    public const NAME_RULES = array(
+        'name' => 'Name',
+        'lower' => 1,
+        'alnumds' => TRUE
+    );
+
     private $id;
     private $workspace;
     private $user;
@@ -36,49 +43,6 @@ class Search extends Model
     private $scheduledDateStart;
     private $scheduledDateEnd;
     private $description;
-
-    /**
-     * Search constructor.
-     * @param $id
-     * @param $workspace
-     * @param $user
-     * @param $name
-     * @param $number
-     * @param $title
-     * @param $contact
-     * @param $assignees
-     * @param $severity
-     * @param $type
-     * @param $category
-     * @param $status
-     * @param $closureCode
-     * @param $desiredDateStart
-     * @param $desiredDateEnd
-     * @param $scheduledDateStart
-     * @param $scheduledDateEnd
-     * @param $description
-     */
-    public function __construct(int $id, int $workspace, int $user, string $name, ?string $number, ?string $title, ?string $contact, ?string $assignees, ?string $severity, ?string $type, ?string $category, ?string $status, ?string $closureCode, ?string $desiredDateStart, ?string $desiredDateEnd, ?string $scheduledDateStart, ?string $scheduledDateEnd, ?string $description)
-    {
-        $this->id = $id;
-        $this->workspace = $workspace;
-        $this->user = $user;
-        $this->name = $name;
-        $this->number = $number;
-        $this->title = $title;
-        $this->contact = $contact;
-        $this->assignees = $assignees;
-        $this->severity = $severity;
-        $this->type = $type;
-        $this->category = $category;
-        $this->status = $status;
-        $this->closureCode = $closureCode;
-        $this->desiredDateStart = $desiredDateStart;
-        $this->desiredDateEnd = $desiredDateEnd;
-        $this->scheduledDateStart = $scheduledDateStart;
-        $this->scheduledDateEnd = $scheduledDateEnd;
-        $this->description = $description;
-    }
 
     /**
      * @return int
@@ -224,7 +188,14 @@ class Search extends Model
         return $this->description;
     }
 
-
-
-
+    /**
+     * @param string|null $name
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateName(?string $name): bool
+    {
+        return Validator::validate(self::NAME_RULES, $name);
+    }
 }

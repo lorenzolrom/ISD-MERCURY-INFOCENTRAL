@@ -70,6 +70,28 @@ class SearchDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $user
+     * @param int $workspace
+     * @return string[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectNamesByUserWorkspace(int $user, int $workspace): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `name` FROM `Tickets_Search` WHERE `user` = :user AND `workspace` = :workspace');
+        $select->bindParam('user', $user, DatabaseConnection::PARAM_INT);
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        $searches = array();
+
+        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
+
+    /**
      * @param int $id
      * @return bool
      * @throws \exceptions\DatabaseException
@@ -171,5 +193,62 @@ class SearchDatabaseHandler extends DatabaseHandler
         $handler->close();
 
         return self::selectById((int)$id);
+    }
+
+    /**
+     * @param int $id
+     * @param string|null $number
+     * @param string|null $title
+     * @param string|null $contact
+     * @param string|null $assignees
+     * @param string|null $severity
+     * @param string|null $type
+     * @param string|null $category
+     * @param string|null $status
+     * @param string|null $closureCode
+     * @param string|null $desiredDateStart
+     * @param string|null $desiredDateEnd
+     * @param string|null $scheduledDateStart
+     * @param string|null $scheduledDateEnd
+     * @param string|null $description
+     * @return Search
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(int $id, ?string $number, ?string $title,
+                                  ?string $contact, ?string $assignees, ?string $severity, ?string $type,
+                                  ?string $category, ?string $status, ?string $closureCode, ?string $desiredDateStart,
+                                  ?string $desiredDateEnd, ?string $scheduledDateStart, ?string $scheduledDateEnd,
+                                  ?string $description): Search
+    {
+        $handler = new DatabaseConnection();
+
+        $update = $handler->prepare('UPDATE `Tickets_Search` SET `number` = :number, `title` = :title, 
+                            `contact` = :contact, `assignees` = :assignees, `severity` = :severity, `type` = :type, 
+                            `category` = :category, `status` = :status, `closureCode` = :closureCode, 
+                            `desiredDateStart` = :desiredDateStart, `desiredDateEnd` = :desiredDateEnd, 
+                            `scheduledDateStart` = :scheduledDateStart, `scheduledDateEnd` = :scheduledDateEnd, 
+                            `description` = :description WHERE `id` = :id');
+
+        $update->bindParam('number', $number, DatabaseConnection::PARAM_STR);
+        $update->bindParam('title', $title, DatabaseConnection::PARAM_STR);
+        $update->bindParam('contact', $contact, DatabaseConnection::PARAM_STR);
+        $update->bindParam('assignees', $assignees, DatabaseConnection::PARAM_STR);
+        $update->bindParam('severity', $severity, DatabaseConnection::PARAM_STR);
+        $update->bindParam('type', $type, DatabaseConnection::PARAM_STR);
+        $update->bindParam('category', $category, DatabaseConnection::PARAM_STR);
+        $update->bindParam('status', $status, DatabaseConnection::PARAM_STR);
+        $update->bindParam('closureCode', $closureCode, DatabaseConnection::PARAM_STR);
+        $update->bindParam('desiredDateStart', $desiredDateStart, DatabaseConnection::PARAM_STR);
+        $update->bindParam('desiredDateEnd', $desiredDateEnd, DatabaseConnection::PARAM_STR);
+        $update->bindParam('scheduledDateStart', $scheduledDateStart, DatabaseConnection::PARAM_STR);
+        $update->bindParam('scheduledDateEnd', $scheduledDateEnd, DatabaseConnection::PARAM_STR);
+        $update->bindParam('description', $description, DatabaseConnection::PARAM_STR);
+        $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $update->execute();
+
+        $handler->close();
+
+        return self::selectById($id);
     }
 }

@@ -51,6 +51,11 @@ class WorkspaceController extends Controller
             $t = new TicketController($param, $this->request);
             return $t->getResponse();
         }
+        else if($param !== NULL AND $subject == 'searches')
+        {
+            $s = new SearchController($param, $this->request);
+            return $s->getResponse();
+        }
 
         if($this->request->method() === HTTPRequest::GET)
         {

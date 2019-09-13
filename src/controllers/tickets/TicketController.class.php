@@ -68,8 +68,6 @@ class TicketController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('tickets-agent'); // ALL AGENTS
-
         $param = $this->request->next();
 
         if($this->request->method() === HTTPRequest::GET)

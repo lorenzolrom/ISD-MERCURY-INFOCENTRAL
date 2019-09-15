@@ -86,8 +86,6 @@ class SearchDatabaseHandler extends DatabaseHandler
 
         $handler->close();
 
-        $searches = array();
-
         return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
     }
 

@@ -19,10 +19,8 @@ use business\Operator;
 use business\UserOperator;
 use database\AttributeDatabaseHandler;
 use database\itsm\ApplicationDatabaseHandler;
-use database\itsm\ApplicationUpdateDatabaseHandler;
 use models\Attribute;
 use models\itsm\Application;
-use models\itsm\ApplicationUpdate;
 use models\itsm\Host;
 use models\itsm\VHost;
 use utilities\HistoryRecorder;
@@ -67,26 +65,6 @@ class ApplicationOperator extends Operator
     {
         return ApplicationDatabaseHandler::select($number, $name, $description, $ownerUsername, $type, $publicFacing, $lifeExpectancy,
             $dataVolume, $authType, $port, $host, $vhost, $status);
-    }
-
-    /**
-     * @param Application $application
-     * @return ApplicationUpdate[]
-     * @throws \exceptions\DatabaseException
-     */
-    public static function getApplicationUpdates(Application $application): array
-    {
-        return ApplicationUpdateDatabaseHandler::selectByApplication($application->getId());
-    }
-
-    /**
-     * @param Application $application
-     * @return ApplicationUpdate
-     * @throws \exceptions\DatabaseException
-     */
-    public static function getLastUpdate(Application $application): ApplicationUpdate
-    {
-        return ApplicationUpdateDatabaseHandler::selectByApplication($application->getId(), 1)[0];
     }
 
     /**

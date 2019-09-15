@@ -49,21 +49,6 @@ CREATE TABLE `ITSM_Application_Host` (
   CONSTRAINT `ITSM_Application_Host_ibfk_2` FOREIGN KEY (`host`) REFERENCES `ITSM_Host` (`id`) ON UPDATE CASCADE
 );
 
--- App Dev Update
-CREATE TABLE `ITSM_ApplicationUpdate` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `application` int(11) NOT NULL,
-  `status` int(11) NOT NULL,
-  `time` datetime NOT NULL,
-  `user` int(11) NOT NULL,
-  `description` text NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `application` (`application`),
-  KEY `user` (`user`),
-  CONSTRAINT `ITSM_ApplicationUpdate_ibfk_1` FOREIGN KEY (`application`) REFERENCES `ITSM_Application` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `ITSM_ApplicationUpdate_ibfk_2` FOREIGN KEY (`user`) REFERENCES `User` (`id`) ON UPDATE CASCADE
-);
-
 --
 -- DEFAULT DATA
 --

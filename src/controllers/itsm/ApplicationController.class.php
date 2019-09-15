@@ -19,7 +19,6 @@ use business\itsm\ApplicationOperator;
 use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
-use database\itsm\ApplicationUpdateDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
 use models\HTTPResponse;
@@ -62,10 +61,6 @@ class ApplicationController extends Controller
                 default:
                     switch($this->request->next())
                     {
-                        case 'updates':
-                            return $this->getUpdates($param);
-                        case 'lastUpdate':
-                            return $this->getLastUpdate($param);
                         default:
                             return $this->getByNumber($param);
                     }
@@ -196,51 +191,6 @@ class ApplicationController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $results);
-    }
-
-    /**
-     * @param string|null $param
-     * @return HTTPResponse
-     * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
-     */
-    private function getUpdates(?string $param): HTTPResponse
-    {
-        $app = ApplicationOperator::getApplication((int) $param, TRUE);
-
-        $data = array();
-
-        foreach(ApplicationUpdateDatabaseHandler::selectByApplication($app->getId()) as $update)
-        {
-            $data[] = array(
-                'status' => AttributeOperator::nameFromId($update->getStatus()),
-                'time' => $update->getTime(),
-                'user' => UserOperator::usernameFromId($update->getUser()),
-                'description' => $update->getDescription()
-            );
-        }
-
-        return new HTTPResponse(HTTPResponse::OK, $data);
-    }
-
-    /**
-     * @param string|null $param
-     * @return HTTPResponse
-     * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
-     */
-    private function getLastUpdate(?string $param): HTTPResponse
-    {
-        $app = ApplicationOperator::getApplication((int) $param, TRUE);
-
-        $update = ApplicationUpdateDatabaseHandler::selectByApplication($app->getId(), 1)[0];
-
-        return new HTTPResponse(HTTPResponse::OK, array(
-            'status' => AttributeOperator::nameFromId($update->getStatus()),
-            'time' => $update->getTime(),
-            'user' => UserOperator::usernameFromId($update->getUser()),
-            'description' => $update->getDescription()
-        ));
     }
 
     /**

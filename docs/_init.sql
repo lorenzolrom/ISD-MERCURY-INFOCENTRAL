@@ -187,17 +187,9 @@ INSERT INTO `Permission` (`code`) VALUES
   ('itsm_web-vhosts-r'),
   ('itsm_web-vhosts-w'),
   ('itsm_weblogs'),
-  ('servicenter'),
-  ('servicenter_admin'),
-  ('servicenter_desk-r'),
-  ('servicenter_desk-w'),
-  ('servicenter_requests'),
   ('settings'),
   ('api-settings'),
   ('tickets'),
   ('tickets-customer'),
   ('tickets-agent'),
-  ('tickets-admin'),
-  ('lockshop'),
-  ('lockshop-r'),
-  ('lockshop-w');
+  ('tickets-admin');

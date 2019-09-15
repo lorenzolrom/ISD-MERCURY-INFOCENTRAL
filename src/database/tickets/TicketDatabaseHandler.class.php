@@ -85,6 +85,7 @@ class TicketDatabaseHandler extends DatabaseHandler
      * @param string|null $scheduledStart
      * @param string|null $scheduledEnd
      * @param string|null $description
+     * @param array|null $assignees
      * @return Ticket[]
      * @throws DatabaseException
      */
@@ -712,5 +713,60 @@ class TicketDatabaseHandler extends DatabaseHandler
         }
 
         return $tickets;
+    }
+
+    /**
+     * @param string $contact Contact username
+     * @param bool $closed If true, only closed requests will be selected, if false only open tickets
+     * @return array
+     * @throws DatabaseException
+     */
+    public static function selectByContactAndStatus(string $contact, bool $closed = FALSE): array
+    {
+        $handler = new DatabaseConnection();
+
+        $status = $closed ? (" = '" . Ticket::CLOSED . "'") : (" != '" . Ticket::CLOSED . "'");
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `contact` = :contact AND `status` ' . $status);
+        $select->bindParam('contact', $contact, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        $tickets = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) AS $id)
+        {
+            try{$tickets[] = self::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $tickets;
+    }
+
+    /**
+     * @param int $workspace
+     * @param int $number
+     * @param string $contact
+     * @return Ticket
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     */
+    public static function selectByWorkspaceNumberContact(int $workspace, int $number, string $contact)
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `workspace` = :workspace AND `number` = :number AND `contact` = :contact LIMIT 1');
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->bindParam('number', $number, DatabaseConnection::PARAM_INT);
+        $select->bindParam('contact', $contact, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() === 0)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+
+        return self::selectById($select->fetchColumn());
     }
 }

@@ -28,6 +28,7 @@ use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use models\tickets\Ticket;
 use models\tickets\Workspace;
+use models\User;
 use utilities\HistoryRecorder;
 use utilities\Validator;
 
@@ -229,9 +230,17 @@ class TicketOperator extends Operator
     {
         // Determine customer request workspace
         $workspace = WorkspaceOperator::getRequestPortal();
+        $user = CurrentUserController::currentUser();
 
+        // Set default values
         $vals['status'] = Ticket::NEW; // New
-        $vals['severity'] = NULL;
+        $vals['closureCode'] = NULL; // No closure code
+        $vals['severity'] = NULL; // No assigned severity
+        $vals['contact'] = $user->getUsername(); // Submitting user is contact
+        $vals['scheduledDate'] = NULL; // No scheduled date
+        $vals['assignees'] = NULL; // No assignees
+        $vals['notifyAssignees'] = 'true'; // Send email to assignees
+        $vals['notifyContact'] = 'false';
 
         return self::createTicket($workspace, $vals, TRUE);
     }
@@ -252,16 +261,43 @@ class TicketOperator extends Operator
 
         if($ticket->getStatus() == Ticket::CLOSED) // If ticket is closed
             $vals['status'] = Ticket::REOPENED; // Re-Opened
+        else if($ticket->getStatus() == Ticket::REOPENED)
+            $vals['status'] = $ticket::REOPENED;
         else
             $vals['status'] = Ticket::RESPONDED; // Customer responded
 
+        $vals['severity'] = $ticket->getSeverity();
+
         $history = HistoryRecorder::writeHistory('Tickets_Ticket', HistoryRecorder::MODIFY, $ticket->getId(), $ticket, $vals, array('severity', 'desiredDate', 'scheduledDate'));
-        $ticket = TicketDatabaseHandler::update($ticket->getId(), $ticket->getTitle(), $ticket->getContact(), $ticket->getType(), $ticket->getCategory(), 'res', $ticket->getClosureCode(), $ticket->getSeverity(), $ticket->getDesiredDate(), $ticket->getScheduledDate());
+        $ticket = TicketDatabaseHandler::update($ticket->getId(), $ticket->getTitle(), $ticket->getContact(), $ticket->getType(), $ticket->getCategory(), Ticket::RESPONDED, $ticket->getClosureCode(), $ticket->getSeverity(), $ticket->getDesiredDate(), $ticket->getScheduledDate());
 
         UpdateDatabaseHandler::insert($ticket->getId(), CurrentUserController::currentUser()->getId(), $description);
         HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Appended Description')));
+        HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Assignee Notification Sent')));
+
+        self::notifyAssignees($ticket); // Notify assignees
 
         return $ticket;
+    }
+
+    /**
+     * @param User $user
+     * @return Ticket[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getOpenRequests(User $user): array
+    {
+        return TicketDatabaseHandler::selectByContactAndStatus($user->getUsername());
+    }
+
+    /**
+     * @param User $user
+     * @return Ticket[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getClosedRequests(User $user): array
+    {
+        return TicketDatabaseHandler::selectByContactAndStatus($user->getUsername(), TRUE);
     }
 
     /**
@@ -855,6 +891,7 @@ class TicketOperator extends Operator
         <p><strong>Title: </strong>{$ticket->getTitle()}</p>
         <p><strong>Ticket Number: </strong><a href='" . \Config::OPTIONS['serviceCenterAgentURL'] . $ticket->getNumber() . "'>{$ticket->getNumber()}</a></p>
         <p><strong>Requestor: </strong> $requestor</p>
+        <p><strong>Status: </strong> " . TicketOperator::getTicketStatusName($ticket) . "</p>
         
         <p><strong>Last Update:</strong> Entered {$update->getTime()} by " . UserOperator::usernameFromId($update->getUser()) . "</p>
         <div style='background-color: #e3e3e3;'>
@@ -865,13 +902,27 @@ class TicketOperator extends Operator
         // if team is assigned, add all members of team ensuring they are not duplicated
 
         $userIds = array();
+        $assignees = $ticket->getAssignees();
 
-        foreach($ticket->getAssignees() as $assignee)
+        if(empty($assignees)) // If nobody is assigned
+        {
+            foreach($workspace->getTeams() as $team) // Assign everyone in workspace
+            {
+                $assignee = array();
+                $assignee['team'] = $team->getId();
+                $assignee['user'] = '';
+
+                $assignees[] = $assignee;
+            }
+        }
+
+        foreach($assignees as $assignee)
         {
             $teamId = (int)$assignee['team'];
             $userId = (int)$assignee['user'];
 
-            if(strlen($userId) === 0) // Only team is assigned
+            // user is not empty (probably doesn't work), user type exactly equal to null (also, probably not), casted user ID is zero (what trips this condition)
+            if(strlen($userId) === 0 OR $userId === NULL OR (int)$userId === 0) // Only team is assigned
             {
                 $team = TeamOperator::getTeam((int)$teamId);
                 foreach($team->getUsers() as $user)
@@ -891,7 +942,7 @@ class TicketOperator extends Operator
 
         foreach($userIds as $userId)
         {
-            $users[] = UserOperator::getUser($userId);
+            $users[] = UserOperator::getUser((int)$userId);
         }
 
         NotificationOperator::bulkSendToUsers($title, $message, 0, TRUE, $users);
@@ -932,5 +983,38 @@ class TicketOperator extends Operator
         </div>";
 
         NotificationOperator::bulkSendToUsers($title, $message, 0, TRUE, array($user));
+    }
+
+    /**
+     * @param Ticket $ticket
+     * @return string|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getTicketStatusName(Ticket $ticket)
+    {
+        $status = NULL;
+
+        if(in_array($ticket->getStatus(), array_keys(Ticket::STATIC_STATUSES)))
+            $status = Ticket::STATIC_STATUSES[$ticket->getStatus()];
+        else
+        {
+            try{$status = AttributeOperator::getByCode(WorkspaceOperator::getWorkspace($ticket->getWorkspace()), 'status', $ticket->getStatus())->getName();}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $status;
+    }
+
+    /**
+     * @param User $user
+     * @param int $workspace
+     * @param int $number
+     * @return Ticket
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getRequest(User $user, int $workspace, int $number): Ticket
+    {
+        return TicketDatabaseHandler::selectByWorkspaceNumberContact($workspace, $number, $user->getUsername());
     }
 }

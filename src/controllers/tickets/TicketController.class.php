@@ -191,15 +191,7 @@ class TicketController extends Controller
 
         foreach($tickets as $ticket)
         {
-            $status = NULL;
-
-            if(in_array($ticket->getStatus(), array_keys(Ticket::STATIC_STATUSES)))
-                $status = Ticket::STATIC_STATUSES[$ticket->getStatus()];
-            else
-            {
-                try{$status = AttributeOperator::getByCode(WorkspaceOperator::getWorkspace($ticket->getWorkspace()), 'status', $ticket->getStatus())->getName();}
-                catch(EntryNotFoundException $e){}
-            }
+            $status = TicketOperator::getTicketStatusName($ticket);
 
             $data[] = array(
                 'number' => $ticket->getNumber(),
@@ -255,15 +247,7 @@ class TicketController extends Controller
     {
         $ticket = TicketOperator::getTicket($this->workspace, $number);
 
-        $statusName = NULL;
-
-        if(in_array($ticket->getStatus(), array_keys(Ticket::STATIC_STATUSES)))
-            $statusName = Ticket::STATIC_STATUSES[$ticket->getStatus()];
-        else
-        {
-            try{$statusName = AttributeOperator::getByCode(WorkspaceOperator::getWorkspace($ticket->getWorkspace()), 'status', $ticket->getStatus())->getName();}
-            catch(EntryNotFoundException $e){}
-        }
+        $statusName = TicketOperator::getTicketStatusName($ticket);
 
         $data = array(
             'workspace' => WorkspaceOperator::getWorkspace($ticket->getWorkspace())->getName(),
@@ -279,7 +263,7 @@ class TicketController extends Controller
             'closureCode' => AttributeOperator::codeFromId($ticket->getClosureCode()),
             'closureCodeName' => ($ticket->getClosureCode() == NULL) ? NULL : AttributeOperator::nameFromId((int)$ticket->getClosureCode()),
             'severity' => AttributeOperator::codeFromId($ticket->getSeverity()),
-            'severityName' => AttributeOperator::nameFromId($ticket->getSeverity()),
+            'severityName' => ($ticket->getSeverity() == NULL) ? NULL : AttributeOperator::nameFromId((int)$ticket->getSeverity()),
             'desiredDate' => $ticket->getDesiredDate(),
             'scheduledDate' => $ticket->getScheduledDate(),
             'assignees' => $ticket->getAssigneeCodes()

@@ -46,6 +46,9 @@ class TicketsController extends Controller
 
         switch($param)
         {
+            case 'requests':
+                $r = new RequestController($this->request);
+                return $r->getResponse();
             case 'workspaces':
                 $w = new WorkspaceController($this->request);
                 return $w->getResponse();

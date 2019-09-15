@@ -36,7 +36,7 @@ class CommodityController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission(array('itsm_inventory-commodities-r', 'itsm_inventory-assets-r'));
+        CurrentUserController::validatePermission(array('itsm_inventory-purchaseorders-w', 'itsm_inventory-commodities-r', 'itsm_inventory-assets-r'));
 
         $param = $this->request->next();
 
@@ -56,18 +56,15 @@ class CommodityController extends Controller
                             return $this->getAssetType($param);
                     }
                 case null:
-                    CurrentUserController::validatePermission('itsm_inventory-commodities-r');
                     return $this->getSearchResult();
                 default:
-                    CurrentUserController::validatePermission('itsm_inventory-commodities-r');
                     return $this->getById($param);
             }
         }
 
-        CurrentUserController::validatePermission('itsm_inventory-commodities-r');
-
         if($this->request->method() === HTTPRequest::PUT)
         {
+            CurrentUserController::validatePermission('itsm_inventory-commodities-w');
             switch($param)
             {
                 case "assetTypes":
@@ -83,13 +80,16 @@ class CommodityController extends Controller
                 case "search":
                     return $this->getSearchResult(TRUE);
                 case "assetTypes":
+                    CurrentUserController::validatePermission('itsm_inventory-commodities-w');
                     return $this->createAssetType();
                 case null:
+                    CurrentUserController::validatePermission('itsm_inventory-commodities-w');
                     return $this->createCommodity();
             }
         }
         else if($this->request->method() === HTTPRequest::DELETE)
         {
+            CurrentUserController::validatePermission('itsm_inventory-commodities-w');
             switch($param)
             {
                 case "assetTypes":

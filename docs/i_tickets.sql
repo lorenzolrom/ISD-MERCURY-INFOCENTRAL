@@ -113,3 +113,14 @@ CREATE TABLE `Tickets_Link` (
   FOREIGN KEY (`ticket1`) REFERENCES `Tickets_Ticket`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (`ticket2`) REFERENCES `Tickets_Ticket`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+CREATE TABLE `Tickets_Widget` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user` int(11) NOT NULL,
+  `workspace` int(11) NOT NULL,
+  `search` int (11) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (`workspace`) REFERENCES `Tickets_Workspace`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (`search`) REFERENCES `Tickets_Search`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);

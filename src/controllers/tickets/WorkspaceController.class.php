@@ -41,20 +41,31 @@ class WorkspaceController extends Controller
         $param = $this->request->next();
         $subject = $this->request->next();
 
-        if($param !== NULL AND $subject == 'attributes')
+        if($param !== NULL)
         {
-            $a = new AttributeController($param, $this->request);
-            return $a->getResponse();
-        }
-        else if($param !== NULL AND $subject == 'tickets')
-        {
-            $t = new TicketController($param, $this->request);
-            return $t->getResponse();
-        }
-        else if($param !== NULL AND $subject == 'searches')
-        {
-            $s = new SearchController($param, $this->request);
-            return $s->getResponse();
+            if($subject == 'attributes')
+            {
+                $a = new AttributeController($param, $this->request);
+                return $a->getResponse();
+            }
+            else if($subject == 'tickets')
+            {
+                CurrentUserController::validatePermission('tickets-agent'); // ALL AGENTS
+                $t = new TicketController($param, $this->request);
+                return $t->getResponse();
+            }
+            else if($subject == 'searches')
+            {
+                CurrentUserController::validatePermission('tickets-agent'); // ALL AGENTS
+                $s = new SearchController($param, $this->request);
+                return $s->getResponse();
+            }
+            else if($subject == 'widgets')
+            {
+                CurrentUserController::validatePermission('tickets-agent'); // ALL AGENTS
+                $w = new WidgetController($param, $this->request);
+                return $w->getResponse();
+            }
         }
 
         if($this->request->method() === HTTPRequest::GET)

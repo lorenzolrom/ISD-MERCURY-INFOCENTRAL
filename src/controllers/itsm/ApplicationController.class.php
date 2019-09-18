@@ -302,6 +302,8 @@ class ApplicationController extends Controller
      */
     private function createApplication(): HTTPResponse
     {
+        CurrentUserController::validatePermission('itsm_ait-apps-w');
+
         $args = self::getFormattedBody(self::FIELDS);
 
         return new HTTPResponse(HTTPResponse::CREATED, ApplicationOperator::createApplication($args));
@@ -317,6 +319,8 @@ class ApplicationController extends Controller
      */
     private function updateApplication(?string $param): HTTPResponse
     {
+        CurrentUserController::validatePermission('itsm_ait-apps-w');
+
         $app = ApplicationOperator::getApplication((int) $param, TRUE);
         $args = self::getFormattedBody(self::FIELDS);
         ApplicationOperator::updateApplication($app, $args);

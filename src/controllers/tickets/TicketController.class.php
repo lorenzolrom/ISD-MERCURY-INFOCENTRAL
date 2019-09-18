@@ -48,6 +48,8 @@ class TicketController extends Controller
      */
     public function __construct(string $workspace, HTTPRequest $request)
     {
+        CurrentUserController::validatePermission('tickets-agent');
+
         $this->workspace = WorkspaceOperator::getWorkspace((int)$workspace);
 
         // User must be in a team assigned to workspace

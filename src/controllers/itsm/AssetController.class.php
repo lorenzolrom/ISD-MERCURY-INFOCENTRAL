@@ -354,6 +354,8 @@ class AssetController extends Controller
      */
     private function setLocation(?string $param): HTTPResponse
     {
+        CurrentUserController::validatePermission('itsm_inventory-assets-w');
+
         $asset = AssetOperator::getAsset((string)$param);
 
         $args = self::getFormattedBody(array('buildingCode', 'locationCode'));
@@ -375,6 +377,8 @@ class AssetController extends Controller
      */
     private function setWarehouse(?string $param): HTTPResponse
     {
+        CurrentUserController::validatePermission('itsm_inventory-assets-w');
+
         $asset = AssetOperator::getAsset((string) $param);
 
         $args = self::getFormattedBody(array('warehouseCode'));

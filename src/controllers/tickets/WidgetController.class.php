@@ -35,9 +35,12 @@ class WidgetController extends Controller
      * @param HTTPRequest $request
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public function __construct(?string $param, HTTPRequest $request)
     {
+        CurrentUserController::validatePermission('tickets-agent');
+
         $this->workspace = WorkspaceOperator::getWorkspace((int)$param);
         parent::__construct($request);
     }

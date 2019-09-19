@@ -17,9 +17,6 @@ namespace controllers\itsm;
 use business\itsm\DHCPLogOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
-use exceptions\EntryInUseException;
-use exceptions\EntryNotFoundException;
-use exceptions\ValidationError;
 use models\HTTPRequest;
 use models\HTTPResponse;
 
@@ -46,6 +43,6 @@ class DHCPLogController extends Controller
     {
         $log = DHCPLogOperator::getDHCPLog();
 
-        return new HTTPResponse(HTTPResponse::OK, array($log));
+        return new HTTPResponse(HTTPResponse::OK, $log);
     }
 }

@@ -29,7 +29,7 @@ class Host extends Model
         'IP_ADDRESS_IN_USE' => 'I.P. address is already in use',
         'IP_ADDRESS_INVALID' => 'I.P. address is not valid',
         'MAC_ADDRESS_LENGTH' => 'MAC address must be 17 characters',
-        'MAC_ADDRESS_FORMAT' => 'MAC address must consist of letters, numbers, and - only',
+        'MAC_ADDRESS_FORMAT' => 'MAC address must consist of letters, numbers, and : only',
         'MAC_ADDRESS_IN_USE' => 'MAC address is already in use',
         'SYSTEM_NAME' => 'System name must be no greater than 64 characters',
         'SYSTEM_CPU' => 'System CPU must be no greater than 64 characters',

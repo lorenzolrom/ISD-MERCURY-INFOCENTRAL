@@ -44,7 +44,7 @@ class Validator
      */
     public static function validMACAddress(string $mac): bool
     {
-        return preg_match("/^[A-Za-z0-9-]+$/", $mac) == 1;
+        return preg_match("/^[A-Za-z0-9:]+$/", $mac) == 1;
     }
 
     /**

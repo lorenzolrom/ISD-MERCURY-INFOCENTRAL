@@ -53,6 +53,9 @@ class ControllerFactory
         // AIT
         'applications' => 'controllers\itsm\ApplicationController',
 
+        // DHCP Logs
+        'dhcplogs' => 'controllers\itsm\DHCPLogController',
+
         // Facilities
         'buildings' => 'controllers\facilities\BuildingController',
         'locations' => 'controllers\facilities\LocationController',

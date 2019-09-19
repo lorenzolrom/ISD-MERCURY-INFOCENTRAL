@@ -51,7 +51,11 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
 
         // Link to be included in the ServiceCenter emails
         'serviceCenterAgentURL' => '', // For agent emails
-        'serviceCenterRequestURL' => '' // For customer emails
+        'serviceCenterRequestURL' => '', // For customer emails
 
+        'dhcpServer' => '', // IP to get DHCP logs from
+        'dhcpUser' => '', // Username to remote into dhcp server
+        'dhcpSSHKeyPath' => '', // Path to SSH key for dhcp server
+        'dhcpLogPath' => '' // Log to path on remote dhcp server
     );
 }

@@ -166,6 +166,7 @@ INSERT INTO `Permission` (`code`) VALUES
   ('itsm_devices'),
   ('itsm_devices-hosts-r'),
   ('itsm_devices-hosts-w'),
+  ('itsm_dhcplogs-r'),
   ('itsm_inventory'),
   ('itsm_inventory-assets-r'),
   ('itsm_inventory-assets-w'),

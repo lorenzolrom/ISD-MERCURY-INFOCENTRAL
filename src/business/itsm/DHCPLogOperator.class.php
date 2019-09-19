@@ -35,6 +35,7 @@ class DHCPLogOperator extends Operator
         foreach($logLines as $line)
         {
             $parts = explode(' ', trim($line));
+
             $type = $parts[0];
 
             $entry = array();
@@ -66,6 +67,10 @@ class DHCPLogOperator extends Operator
             // Remaining parts should be: interface Month Date Timestamp DHCPServer
             $parts = explode(' ', trim($parts[1]));
             $entry['interface'] = $parts[0];
+
+            if(sizeof($parts) < 5) // Not a valid entry
+                continue;
+
             $entry['date'] = $parts[1] . ' ' . $parts[2] . ' ' . $parts[3];
             $entry['server'] = $parts[4];
 

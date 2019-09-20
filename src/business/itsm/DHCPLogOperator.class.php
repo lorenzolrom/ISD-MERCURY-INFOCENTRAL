@@ -25,7 +25,7 @@ class DHCPLogOperator extends Operator
     {
         $rawLog = shell_exec('bash ' . dirname(__FILE__) . '/../../utilities/dhcplog.sh ' .
             \Config::OPTIONS['dhcpUser'] . ' ' . \Config::OPTIONS['dhcpServer'] . ' ' .
-            \Config::OPTIONS['dhcpSSHKeyPath'] . ' ' . \Config::OPTIONS['dhcpLogPath']);
+            \Config::OPTIONS['sshKeyPath'] . ' ' . \Config::OPTIONS['dhcpLogPath']);
 
         $logLines = explode('dhcpd:', $rawLog);
         array_shift($logLines);

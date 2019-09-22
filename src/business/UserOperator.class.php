@@ -260,12 +260,13 @@ class UserOperator extends Operator
     /**
      * @param string $username
      * @param string $password
+     * @param string $remoteAddr
      * @return Token
-     * @throws SecurityException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      * @throws LDAPException
+     * @throws SecurityException
      */
-    public static function loginUser(string $username, string $password): Token
+    public static function loginUser(string $username, string $password, string $remoteAddr): Token
     {
         try
         {
@@ -279,7 +280,7 @@ class UserOperator extends Operator
                 TokenDatabaseHandler::markExpiredForUser($user->getId());
             }
 
-            return TokenOperator::generateNewToken($user->getId());
+            return TokenOperator::generateNewToken($user->getId(), $remoteAddr);
         }
         catch(EntryNotFoundException $e)
         {

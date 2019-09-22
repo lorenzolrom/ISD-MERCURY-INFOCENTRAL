@@ -35,19 +35,19 @@ class TokenOperator extends Operator
 
     /**
      * @param int $user
+     * @param string $remoteAddr
      * @return Token
+     * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
      */
-    public static function generateNewToken(int $user): Token
+    public static function generateNewToken(int $user, string $remoteAddr): Token
     {
         $token = hash('SHA512', openssl_random_pseudo_bytes(2048));
-        $ipAddress = $_SERVER['REMOTE_ADDR'];
         $expired = 0;
         $issueTime = date('Y-m-d H:i:s');
         $expireTime = self::getOneHourFromNow();
 
-        return TokenDatabaseHandler::insert($token, $user, $issueTime, $expireTime, $expired, $ipAddress);
+        return TokenDatabaseHandler::insert($token, $user, $issueTime, $expireTime, $expired, $remoteAddr);
     }
 
     /**

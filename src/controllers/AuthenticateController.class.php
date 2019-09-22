@@ -29,7 +29,7 @@ use models\HTTPResponse;
  */
 class AuthenticateController extends Controller
 {
-    const LOGIN_FIELDS = array('username', 'password');
+    const LOGIN_FIELDS = array('username', 'password', 'remoteAddr');
 
     /**
      * @return HTTPResponse|null
@@ -73,8 +73,10 @@ class AuthenticateController extends Controller
             $credentials['username'] = "";
         if($credentials['password'] == NULL)
             $credentials['password'] = "";
+        if($credentials['remoteAddr'] == NULL)
+            $credentials['remoteAddr'] = $_SERVER['REMOTE_ADDR'];
 
-        return new HTTPResponse(HTTPResponse::CREATED, array('token' => UserOperator::loginUser($credentials['username'], $credentials['password'])->getToken()));
+        return new HTTPResponse(HTTPResponse::CREATED, array('token' => UserOperator::loginUser($credentials['username'], $credentials['password'], $credentials['remoteAddr'])->getToken()));
     }
 
     /**

@@ -41,7 +41,6 @@ class Asset extends Model
     private $discardDate;
     private $verified;
     private $verifyDate;
-    private $verifyUser;
 
     /**
      * @return int
@@ -161,14 +160,6 @@ class Asset extends Model
     public function getVerifyDate(): ?string
     {
         return $this->verifyDate;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getVerifyUser(): ?int
-    {
-        return $this->verifyUser;
     }
 
     /**

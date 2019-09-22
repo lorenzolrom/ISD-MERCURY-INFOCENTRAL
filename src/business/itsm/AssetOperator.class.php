@@ -15,7 +15,6 @@ namespace business\itsm;
 
 use business\facilities\LocationOperator;
 use business\Operator;
-use controllers\CurrentUserController;
 use database\itsm\AssetDatabaseHandler;
 use database\itsm\AssetWorksheetDatabaseHandler;
 use exceptions\EntryNotFoundException;
@@ -159,13 +158,12 @@ class AssetOperator extends Operator
 
         $vals = array(
             'verified' => 1,
-            'verifyUser' => CurrentUserController::currentUser()->getId(),
             'verifyDate' => $verifyDate
         );
 
         HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals);
 
-        AssetDatabaseHandler::updateVerified($asset->getId(), 1, $verifyDate, CurrentUserController::currentUser()->getId());
+        AssetDatabaseHandler::updateVerified($asset->getId(), 1, $verifyDate);
 
         return $errors;
     }
@@ -186,13 +184,12 @@ class AssetOperator extends Operator
 
         $vals = array(
             'verified' => 0,
-            'verifyUser' => NULL,
             'verifyDate' => NULL
         );
 
-        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals, array('verifyUser','verifyDate'));
+        HistoryRecorder::writeHistory('ITSM_Asset', HistoryRecorder::MODIFY, $asset->getId(), $asset, $vals, array('verifyDate'));
 
-        AssetDatabaseHandler::updateVerified($asset->getId(), 0, NULL, NULL);
+        AssetDatabaseHandler::updateVerified($asset->getId(), 0, NULL);
 
         return $errors;
     }
@@ -292,8 +289,7 @@ class AssetOperator extends Operator
 
         AssetDatabaseHandler::fullUpdate($asset->getId(), NULL, $asset->getAssetTag(), $asset->getParent(),
             $location->getId(), $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(),
-            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate(),
-            $asset->getVerifyUser());
+            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate());
 
         // Also move children
         foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)
@@ -332,8 +328,7 @@ class AssetOperator extends Operator
 
         AssetDatabaseHandler::fullUpdate($asset->getId(), $warehouse, $asset->getAssetTag(), $asset->getParent(),
             NULL, $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(),
-            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate(),
-            $asset->getVerifyUser());
+            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate());
 
         // Also move children
         foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)
@@ -499,19 +494,17 @@ class AssetOperator extends Operator
             'warehouse' => NULL,
             'verified' => 0,
             'verifyDate' => NULL,
-            'verifyUser' => NULL,
             'parent' => NULL,
         ), array(
             'location',
             'warehouse',
             'verifyDate',
-            'verifyUser',
             'parent'
         ));
 
         AssetDatabaseHandler::fullUpdate($asset->getId(), NULL, $asset->getAssetTag(), NULL,
             NULL, $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(), 1, $date,
-            0, NULL, NULL);
+            0, NULL);
 
         // Remove reference in child assets
         foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)

@@ -22,7 +22,6 @@ use business\itsm\CommodityOperator;
 use business\itsm\DiscardOrderOperator;
 use business\itsm\PurchaseOrderOperator;
 use business\itsm\WarehouseOperator;
-use business\UserOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
@@ -160,8 +159,7 @@ class AssetController extends Controller
             'discardDate' => $asset->getDiscardDate(),
             'discardOrder' => DiscardOrderOperator::numberFromId((int)$asset->getDiscardOrder()),
             'verified' => $asset->getVerified(),
-            'verifyDate' => $asset->getVerifyDate(),
-            'verifyUser' => ($asset->getVerifyUser() !== NULL) ? UserOperator::usernameFromId($asset->getVerifyUser()) : NULL
+            'verifyDate' => $asset->getVerifyDate()
         ));
     }
 

@@ -33,7 +33,7 @@ class AssetDatabaseHandler extends DatabaseHandler
 
         $select = $handler->prepare("SELECT `id`, `commodity`, `warehouse`, `assetTag`, `parent`, `location`, `serialNumber`, 
                                             `manufactureDate`, `purchaseOrder`, `notes`, `discardOrder`, `discarded`, `discardDate`, 
-                                            `verified`, `verifyDate`, `verifyUser` FROM 
+                                            `verified`, `verifyDate` FROM 
                                             `ITSM_Asset` WHERE `assetTag` = ? LIMIT 1");
 
         $select->bindParam(1, $assetTag, DatabaseConnection::PARAM_INT);
@@ -348,22 +348,21 @@ class AssetDatabaseHandler extends DatabaseHandler
      * @param string|null $discardDate
      * @param int $verified
      * @param string|null $verifyDate
-     * @param int|null $verifyUser
      * @return Asset
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
     public static function fullUpdate(int $id, ?int $warehouse, string $assetTag, ?int $parent, ?int $location,
                                       ?string $serialNumber, ?string $manufactureDate, ?string $notes, int $discarded,
-                                      ?string $discardDate, int $verified, ?string $verifyDate, ?int $verifyUser): Asset
+                                      ?string $discardDate, int $verified, ?string $verifyDate): Asset
     {
         $handler = new DatabaseConnection();
 
         $update = $handler->prepare('UPDATE `ITSM_Asset` SET `warehouse` = :warehouse, `assetTag` = :assetTag, 
                         `parent` = :parent, `location` = :location, `serialNumber` = :serialNumber, 
                         `manufactureDate` = :manufactureDate, `notes` = :notes, `discarded` = :discarded, 
-                        `discardDate` = :discardDate, `verified` = :verified, `verifyDate` = :verifyDate, 
-                        `verifyUser` = :verifyUser WHERE `id` = :id');
+                        `discardDate` = :discardDate, `verified` = :verified, `verifyDate` = :verifyDate 
+                        WHERE `id` = :id');
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->bindParam('warehouse', $warehouse, DatabaseConnection::PARAM_INT);
         $update->bindParam('assetTag', $assetTag, DatabaseConnection::PARAM_STR);
@@ -376,7 +375,6 @@ class AssetDatabaseHandler extends DatabaseHandler
         $update->bindParam('discardDate', $discardDate, DatabaseConnection::PARAM_STR);
         $update->bindParam('verified', $verified, DatabaseConnection::PARAM_INT);
         $update->bindParam('verifyDate', $verifyDate, DatabaseConnection::PARAM_STR);
-        $update->bindParam('verifyUser', $verifyUser, DatabaseConnection::PARAM_INT);
         $update->execute();
 
         $handler->close();
@@ -388,19 +386,17 @@ class AssetDatabaseHandler extends DatabaseHandler
      * @param int $id
      * @param int $verified
      * @param string|null $verifyDate
-     * @param int|null $verifyUser
      * @return bool
      * @throws \exceptions\DatabaseException
      */
-    public static function updateVerified(int $id, int $verified, ?string $verifyDate, ?int $verifyUser): bool
+    public static function updateVerified(int $id, int $verified, ?string $verifyDate): bool
     {
         $handler = new DatabaseConnection();
 
-        $update = $handler->prepare('UPDATE `ITSM_Asset` SET `verified` = :verified, `verifyDate` = :verifyDate, `verifyUser` = :verifyUser WHERE `id` = :id');
+        $update = $handler->prepare('UPDATE `ITSM_Asset` SET `verified` = :verified, `verifyDate` = :verifyDate WHERE `id` = :id');
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
         $update->bindParam('verified', $verified, DatabaseConnection::PARAM_INT);
         $update->bindParam('verifyDate', $verifyDate, DatabaseConnection::PARAM_STR);
-        $update->bindParam('verifyUser', $verifyUser, DatabaseConnection::PARAM_INT);
         $update->execute();
 
         $handler->close();

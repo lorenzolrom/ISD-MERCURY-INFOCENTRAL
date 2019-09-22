@@ -201,8 +201,7 @@ class AssetController extends Controller
                 'serialNumber' => $asset->getSerialNumber(),
                 'location' => LocationOperator::getFullLocationCode($asset->getLocation()),
                 'warehouse' => WarehouseOperator::codeFromId($asset->getWarehouse()),
-                'verified' => $asset->getVerified(),
-                'returnOrderNumber' => '' // TODO: check for current return order
+                'verified' => $asset->getVerified()
             );
         }
 

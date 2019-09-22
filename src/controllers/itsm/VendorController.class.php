@@ -34,7 +34,7 @@ class VendorController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission("itsm_inventory-vendors-r");
+        CurrentUserController::validatePermission(array("itsm_inventory-vendors-r", 'itsm_inventory-purchaseorders-w'));
 
         $param = $this->request->next();
 

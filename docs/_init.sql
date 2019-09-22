@@ -194,3 +194,14 @@ INSERT INTO `Permission` (`code`) VALUES
   ('tickets-customer'),
   ('tickets-agent'),
   ('tickets-admin');
+
+-- DEFAULT USER
+INSERT INTO `User` (`id`, `username`, `firstName`, `lastName`, `email`, `password`, `disabled`, `authType`)
+  VALUES (1, 'local', 'Built-In', 'User', '', '$argon2id$v=19$m=1024,t=2,p=2$Y3o0NDhGOGM1emMxenVIeg$tT1HRlNRE+be0X3Lgn6iyIkq+rbNuqOQB0EgY/JOjUA', 0, 'loca');
+
+-- ADMINISTRATOR ROLE
+INSERT INTO `Role` (`id`, `name`) VALUES (1, 'Administrator');
+INSERT INTO `Role_Permission` (`role`, `permission`) VALUES (1, 'settings'), (1, 'api-settings');
+
+-- ADD DEFAULT USER TO ADMIN. ROLE
+INSERT INTO `User_Role` (`user`, `role`) VALUES (1, 1);

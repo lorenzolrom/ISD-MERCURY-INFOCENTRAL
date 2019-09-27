@@ -13,9 +13,8 @@
 
 namespace models\itsm;
 
-
-use database\HostCategoryDatabaseHandler;
 use exceptions\ValidationException;
+use database\itsm\HostCategoryDatabaseHandler;
 use models\Model;
 use utilities\Validator;
 

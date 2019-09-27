@@ -15,9 +15,9 @@ namespace business\itsm;
 
 
 use business\Operator;
-use database\HostCategoryDatabaseHandler;
 use exceptions\ValidationError;
 use exceptions\ValidationException;
+use database\itsm\HostCategoryDatabaseHandler;
 use models\itsm\HostCategory;
 use utilities\HistoryRecorder;
 

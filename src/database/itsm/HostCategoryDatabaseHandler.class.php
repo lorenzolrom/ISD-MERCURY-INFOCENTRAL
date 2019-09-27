@@ -11,10 +11,12 @@
  */
 
 
-namespace database;
+namespace database\itsm;
 
 
 use business\itsm\HostOperator;
+use database\DatabaseConnection;
+use database\DatabaseHandler;
 use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use models\itsm\Host;

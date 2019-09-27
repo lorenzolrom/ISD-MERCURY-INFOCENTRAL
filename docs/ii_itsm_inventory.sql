@@ -153,14 +153,14 @@ CREATE TABLE `ITSM_Asset`
   KEY `commodity` (`commodity`),
   KEY `warehouse` (`warehouse`),
   KEY `purchaseOrder` (`purchaseOrder`),
-  KEY `parent` (`parent`),
   CONSTRAINT `ITSM_Asset_ibfk_1` FOREIGN KEY (`location`) REFERENCES `FacilitiesCore_Location` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_Asset_ibfk_3` FOREIGN KEY (`commodity`) REFERENCES `ITSM_Commodity` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_Asset_ibfk_4` FOREIGN KEY (`warehouse`) REFERENCES `ITSM_Warehouse` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_Asset_ibfk_5` FOREIGN KEY (`purchaseOrder`) REFERENCES `ITSM_PurchaseOrder` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `ITSM_Asset_ibfk_7` FOREIGN KEY (`parent`) REFERENCES `ITSM_Asset` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  FOREIGN KEY (`discardOrder`) REFERENCES `ITSM_DiscardOrder` (`id`) ON UPDATE CASCADE
+  CONSTRAINT `ITSM_Asset_ibfk_6` FOREIGN KEY (`discardOrder`) REFERENCES `ITSM_DiscardOrder` (`id`) ON UPDATE CASCADE
 );
+
+ALTER TABLE `ITSM_Asset` ADD FOREIGN KEY (`parent`) REFERENCES `ITSM_Asset` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- Asset Worksheet
 CREATE TABLE `ITSM_Asset_Worksheet`

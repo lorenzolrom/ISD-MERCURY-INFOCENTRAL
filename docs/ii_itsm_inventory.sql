@@ -33,6 +33,25 @@ CREATE TABLE `ITSM_Commodity`
   CONSTRAINT `ITSM_Commodity_ibfk_2` FOREIGN KEY (`assetType`) REFERENCES `Attribute` (`id`) ON UPDATE CASCADE
 );
 
+-- Warehouse
+
+CREATE TABLE `ITSM_Warehouse` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(32) NOT NULL,
+  `name` varchar(64) NOT NULL,
+  `createDate` date DEFAULT NULL,
+  `createUser` int(11) DEFAULT NULL,
+  `closed` tinyint(1) NOT NULL DEFAULT '0',
+  `lastModifyDate` date DEFAULT NULL,
+  `lastModifyUser` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`),
+  KEY `lastModifyUser` (`lastModifyUser`),
+  KEY `createUser` (`createUser`),
+  CONSTRAINT `ITSM_Warehouse_ibfk_1` FOREIGN KEY (`lastModifyUser`) REFERENCES `User` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_Warehouse_ibfk_2` FOREIGN KEY (`createUser`) REFERENCES `User` (`id`) ON UPDATE CASCADE
+);
+
 -- Purchase Order
 
 CREATE TABLE `ITSM_PurchaseOrder`

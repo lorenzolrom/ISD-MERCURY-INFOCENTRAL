@@ -967,4 +967,5 @@ The following breakdown (attempts to) follow this notation:
     * GET /dhcplogs
         * returns 200{array(logLine)}
 
-#### Tickets * /tickets
+#### Tickets
+* /tickets []

@@ -125,8 +125,8 @@ CREATE TABLE `ITSM_DiscardOrder_Asset`
   `order` int(11) NOT NULL,
   `asset` int(11) NOT NULL,
   PRIMARY KEY (`asset`),
-  FOREIGN KEY (`order`) REFERENCES `ITSM_DiscardOrder` (`id`) ON UPDATE CASCADE ON DELETE CASCADE,
-  FOREIGN KEY (`asset`) REFERENCES `ITSM_Asset` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `ITSM_DiscardOrder_Asset_ibfk_1` FOREIGN KEY (`order`) REFERENCES `ITSM_DiscardOrder` (`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `ITSM_DiscardOrder_Asset_ibfk_2` FOREIGN KEY (`asset`) REFERENCES `ITSM_Asset` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 -- Asset

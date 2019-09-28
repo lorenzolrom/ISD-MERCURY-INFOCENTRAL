@@ -94,6 +94,15 @@ unintended parts of the application.  If one virtual host is desired, with diffe
 it is recommended to use symbolic links from the single DocumentRoot to the 'public' directory of the MAP applications, 
 which should be installed outside this folder.  
 
+When both applications are set up, navigate to the InfoCentral URL, followed by 'setup.php' 
+(e.g. 'https://mercury.test.com/infocentral/setup.php').  This will show a table with possible default values for
+your Mercury installation.  The first is a random 2048 character SALT that will be needed for your IC Config, the 
+second is a password ('MercuryPassword') generated with that SALT that must be updated for the default user in 
+your database, and the third is a random Secret that should be inserted into your 'Secret' table.
+
+Perform the latter two operations, and record the SALT and Secret somewhere, it will be needed later.  Setup.php can
+be left where it is; it generates different values with every run and is not tied in any way to your Mercury instance.
+
 With this setup in place, both applications can now be configured.
 
 ## Configuration
@@ -110,7 +119,7 @@ as '/'
 
 * databaseHost, Name, User, Password all refer to your database server, database name, and user account
 
-* salt, a SALT that will be used when encrypting passwords
+* salt, a SALT that will be used when encrypting passwords, use the one generated in setup.php
 
 * allowMultipleSessions, if true, logging in from another location will not invalidate a User session
 
@@ -165,7 +174,7 @@ This file contains the following options in the OPTIONS constant array:
 
 * icURL, the full path (including protocol) to the InfoCentral server
 
-* icSecret, the InfoCentral-issued API key
+* icSecret, the InfoCentral-issued API key, use the secret generated in setup.php
 
 * ipWhitelist, an optional array to specify IP addresses and networks (e.g. 10.10.1.11, 10.10.0.1/16) that are allowed
 to access PublicDocuments set to filter traffic

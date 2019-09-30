@@ -77,6 +77,8 @@ class WorkspaceController extends Controller
 
             if($param === NULL)
                 return $this->getAll();
+            else if($param === 'all')
+                return $this->getAll(TRUE);
 
             if($subject == 'assignees')
                 return $this->getAssignees($param);
@@ -110,17 +112,22 @@ class WorkspaceController extends Controller
     }
 
     /**
+     * @param bool $showAll
      * @return HTTPResponse
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      */
-    private function getAll(): HTTPResponse
+    private function getAll(bool $showAll = FALSE): HTTPResponse
     {
-        $showAll = TRUE;
-
         // Only show workspace memberships if the user does not have admin permission
-        try{CurrentUserController::validatePermission('tickets-admin');}
-        catch(SecurityException $e){$showAll = FALSE;}
+        try
+        {
+            CurrentUserController::validatePermission('tickets-admin');
+        }
+        catch(SecurityException $e)
+        {
+            $showAll = FALSE;
+        }
 
         $data = array();
 

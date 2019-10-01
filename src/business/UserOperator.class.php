@@ -336,6 +336,7 @@ class UserOperator extends Operator
      * @throws DatabaseException
      * @throws LDAPException
      * @throws EntryNotFoundException
+     * @throws SecurityException
      */
     public static function changePassword(User $user, string $oldPassword, string $newPassword, string $confirmPassword): array
     {
@@ -371,6 +372,9 @@ class UserOperator extends Operator
             default:
                 self::changeLocalUserPassword($user, $newPassword);
         }
+
+        $hist = HistoryRecorder::writeHistory('User', HistoryRecorder::MODIFY, $user->getId(), $user);
+        HistoryRecorder::writeAssocHistory($hist, array('systemEntry' => array('Self-Updated Password')));
 
         return $errors;
     }

@@ -18,6 +18,22 @@ use business\Operator;
 
 class DHCPLogOperator extends Operator
 {
+    // Used to convert month abbreviations from log file into two-digit numbers
+    private const MONTH_CONVERSIONS = array(
+        'Jan' => '01',
+        'Feb' => '02',
+        'Mar' => '03',
+        'Apr' => '04',
+        'May' => '05',
+        'Jun' => '06',
+        'Jul' => '07',
+        'Aug' => '08',
+        'Sep' => '09',
+        'Oct' => '10',
+        'Nov' => '11',
+        'Dec' => '12'
+    );
+
     /**
      * @return string[]
      */
@@ -71,7 +87,7 @@ class DHCPLogOperator extends Operator
             if(sizeof($parts) < 5) // Not a valid entry
                 continue;
 
-            $entry['date'] = $parts[1] . ' ' . $parts[2] . ' ' . $parts[3];
+            $entry['date'] = self::MONTH_CONVERSIONS[$parts[1]] . '-' . str_pad($parts[2], 2, '0', STR_PAD_LEFT) . ' ' . $parts[3];
             $entry['server'] = $parts[4];
 
             $log[] = $entry;

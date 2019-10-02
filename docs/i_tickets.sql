@@ -66,8 +66,8 @@ CREATE TABLE `Tickets_Assignee` (
   `team` int(11) NOT NULL,
   `user` int(11),
   FOREIGN KEY (`ticket`) REFERENCES `Tickets_Ticket`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
-  FOREIGN KEY (`user`) REFERENCES `Tickets_Team_User`(`user`) ON UPDATE CASCADE ON DELETE CASCADE,
-  FOREIGN KEY (`team`) REFERENCES `Tickets_Team_User`(`team`) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (`user`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (`team`) REFERENCES `Tickets_Team`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE `Tickets_Update` (

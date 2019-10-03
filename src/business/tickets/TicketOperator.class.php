@@ -889,7 +889,7 @@ class TicketOperator extends Operator
         <p>You are receiving this e-mail because a ticket in your queue has been updated</p>
         
         <p><strong>Title: </strong>{$ticket->getTitle()}</p>
-        <p><strong>Ticket Number: </strong><a href='" . \Config::OPTIONS['serviceCenterAgentURL'] . $ticket->getNumber() . "'>{$ticket->getNumber()}</a></p>
+        <p><strong>Ticket Number: </strong><a href='" . \Config::OPTIONS['serviceCenterAgentURL'] . $ticket->getNumber() . "?w=" . $ticket->getWorkspace() . "'>{$ticket->getNumber()}</a></p>
         <p><strong>Requestor: </strong> $requestor</p>
         <p><strong>Status: </strong> " . TicketOperator::getTicketStatusName($ticket) . "</p>
         

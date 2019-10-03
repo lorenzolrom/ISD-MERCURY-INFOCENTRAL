@@ -1,3 +1,5 @@
+![logo](docs/man_img/merlot_logo_black.png)
+ 
 # MERLOT Technical Manual  
 LLR Technologies & Associated Services  
 Information Systems Development

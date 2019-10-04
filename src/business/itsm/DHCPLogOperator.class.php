@@ -15,6 +15,7 @@ namespace business\itsm;
 
 
 use business\Operator;
+use utilities\Validator;
 
 class DHCPLogOperator extends Operator
 {
@@ -35,13 +36,18 @@ class DHCPLogOperator extends Operator
     );
 
     /**
+     * @param string $query
      * @return string[]
      */
-    public static function getDHCPLog(): array
+    public static function getDHCPLog(string $query): array
     {
+        // Only allow alnum, :, and .
+        if(!Validator::alnumColonDotOnly($query) AND strlen($query) !== 0)
+            return array();
+
         $rawLog = shell_exec('bash ' . dirname(__FILE__) . '/../../utilities/dhcplog.sh ' .
             \Config::OPTIONS['dhcpUser'] . ' ' . \Config::OPTIONS['dhcpServer'] . ' ' .
-            \Config::OPTIONS['sshKeyPath'] . ' ' . \Config::OPTIONS['dhcpLogPath']);
+            \Config::OPTIONS['sshKeyPath'] . ' ' . \Config::OPTIONS['dhcpLogPath'] . ' \'' . $query . '\'');
 
         $logLines = explode('dhcpd:', $rawLog);
         array_shift($logLines);

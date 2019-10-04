@@ -29,6 +29,11 @@ class Validator
         return preg_match("/^[A-Za-z0-9-]+$/", $value);
     }
 
+    public static function alnumColonDotOnly(string $value): bool
+    {
+        return preg_match("/^[A-Za-z0-9:\.]+$/", $value);
+    }
+
     /**
      * @param string $value
      * @return bool

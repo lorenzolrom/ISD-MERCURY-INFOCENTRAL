@@ -31,7 +31,7 @@ class DHCPLogController extends Controller
     {
         CurrentUserController::validatePermission('itsm_dhcplogs-r');
 
-        if($this->request->method() === HTTPRequest::GET)
+        if($this->request->method() === HTTPRequest::POST)
         {
             return $this->getDHCPLog();
         }
@@ -41,7 +41,7 @@ class DHCPLogController extends Controller
 
     private function getDHCPLog(): HTTPResponse
     {
-        $log = DHCPLogOperator::getDHCPLog();
+        $log = DHCPLogOperator::getDHCPLog((string)self::getFormattedBody(array('query'), TRUE)['query']);
 
         return new HTTPResponse(HTTPResponse::OK, $log);
     }

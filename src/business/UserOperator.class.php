@@ -101,6 +101,9 @@ class UserOperator extends Operator
 
         if(isset($vals['authType']) AND $vals['authType'] == 'ldap') // LDAP user
         {
+            if(!\Config::OPTIONS['ldapEnabled']) // LDAP is not enabled
+                throw new ValidationError(array('LDAP is not enabled'));
+
             $ldap = new LDAPConnection();
             $ldap->bind();
 
@@ -176,6 +179,9 @@ class UserOperator extends Operator
 
         if(isset($vals['authType']) AND $vals['authType'] == 'ldap') // LDAP user
         {
+            if(!\Config::OPTIONS['ldapEnabled']) // LDAP is not enabled
+                throw new ValidationError(array('LDAP is not enabled'));
+
             $ldap = new LDAPConnection();
             $ldap->bind();
 

@@ -41,9 +41,13 @@ class DHCPLogOperator extends Operator
      */
     public static function getDHCPLog(string $query): array
     {
+        $query = trim($query); // Remove whitespace
+
         // Only allow alnum, :, and .
         if(!Validator::alnumColonDotOnly($query) AND strlen($query) !== 0)
             return array();
+
+        $query = strtolower($query); // Convert MACs to lower-case.
 
         $rawLog = shell_exec('bash ' . dirname(__FILE__) . '/../../utilities/dhcplog.sh ' .
             \Config::OPTIONS['dhcpUser'] . ' ' . \Config::OPTIONS['dhcpServer'] . ' ' .

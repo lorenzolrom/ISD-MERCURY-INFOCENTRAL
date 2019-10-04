@@ -19,6 +19,8 @@ use utilities\Validator;
 
 class DHCPLogOperator extends Operator
 {
+    private const DEFAULT_LINES = 1000; // Because of how TAIL works this will return 1000 lines..
+
     // Used to convert month abbreviations from log file into two-digit numbers
     private const MONTH_CONVERSIONS = array(
         'Jan' => '01',
@@ -37,11 +39,15 @@ class DHCPLogOperator extends Operator
 
     /**
      * @param string $query
+     * @param string|null $lines
      * @return string[]
      */
-    public static function getDHCPLog(string $query): array
+    public static function getDHCPLog(string $query, ?string $lines = NULL): array
     {
         $query = trim($query); // Remove whitespace
+
+        if($lines === NULL)
+            $lines = self::DEFAULT_LINES;
 
         // Only allow alnum, :, and .
         if(!Validator::alnumColonDotOnly($query) AND strlen($query) !== 0)
@@ -51,7 +57,7 @@ class DHCPLogOperator extends Operator
 
         $rawLog = shell_exec('bash ' . dirname(__FILE__) . '/../../utilities/dhcplog.sh ' .
             \Config::OPTIONS['dhcpUser'] . ' ' . \Config::OPTIONS['dhcpServer'] . ' ' .
-            \Config::OPTIONS['sshKeyPath'] . ' ' . \Config::OPTIONS['dhcpLogPath'] . ' \'' . $query . '\'');
+            \Config::OPTIONS['sshKeyPath'] . ' ' . \Config::OPTIONS['dhcpLogPath'] . ' \'' . $query . '\' ' . ((int)$lines + 1));
 
         $logLines = explode('dhcpd:', $rawLog);
         array_shift($logLines);

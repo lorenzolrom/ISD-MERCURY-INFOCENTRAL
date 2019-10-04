@@ -41,7 +41,8 @@ class DHCPLogController extends Controller
 
     private function getDHCPLog(): HTTPResponse
     {
-        $log = DHCPLogOperator::getDHCPLog((string)self::getFormattedBody(array('query'), TRUE)['query']);
+        $args = self::getFormattedBody(array('query', 'lines'), TRUE);
+        $log = DHCPLogOperator::getDHCPLog((string)$args['query'], $args['lines']);
 
         return new HTTPResponse(HTTPResponse::OK, $log);
     }

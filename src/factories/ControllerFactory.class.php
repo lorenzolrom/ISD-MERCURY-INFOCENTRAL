@@ -27,36 +27,6 @@ use models\HTTPRequest;
 class ControllerFactory
 {
     private const CONTROLLERS = array(
-        // Tickets
-        'tickets' => 'controllers\tickets\TicketsController',
-
-        // Devices
-        'hosts' => 'controllers\itsm\HostController',
-        'hostCategories' => 'controllers\itsm\HostCategoryController',
-
-        // Inventory
-        'commodities' => 'controllers\itsm\CommodityController',
-        'warehouses' => 'controllers\itsm\WarehouseController',
-        'vendors' => 'controllers\itsm\VendorController',
-        'assets' => 'controllers\itsm\AssetController',
-        'purchaseorders' => 'controllers\itsm\PurchaseOrderController',
-        'discardorders' => 'controllers\itsm\DiscardOrderController',
-
-        // Web
-        'vhosts' => 'controllers\itsm\VHostController',
-        'registrars' => 'controllers\itsm\RegistrarController',
-        'urlaliases' => 'controllers\itsm\URLAliasController',
-
-        // AIT
-        'applications' => 'controllers\itsm\ApplicationController',
-
-        // DHCP Logs
-        'dhcplogs' => 'controllers\itsm\DHCPLogController',
-
-        // Facilities
-        'buildings' => 'controllers\facilities\BuildingController',
-        'locations' => 'controllers\facilities\LocationController',
-
         // Core
         'history' => 'controllers\HistoryController',
         'users' => 'controllers\UserController',
@@ -79,10 +49,12 @@ class ControllerFactory
     {
         $route = $request->next();
 
-        if(!in_array($route, array_keys(self::CONTROLLERS)))
+        $controllers = array_merge(self::CONTROLLERS, \Config::OPTIONS['additionalRoutes']);
+
+        if(!in_array($route, array_keys($controllers)))
             throw new ControllerNotFoundException($route);
 
-        $controller = self::CONTROLLERS[$route];
+        $controller = $controllers[$route];
 
         return new $controller($request);
     }

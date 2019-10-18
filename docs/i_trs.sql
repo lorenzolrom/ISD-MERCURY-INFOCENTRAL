@@ -107,3 +107,6 @@ CREATE TABLE `TRS_OrderItem`(
   CONSTRAINT `TRS_OrderItem_ibfk_2` FOREIGN KEY (`commodity`) REFERENCES `TRS_Commodity`(`id`) ON UPDATE CASCADE,
   CONSTRAINT `TRS_OrderItem_ibfk_3` FOREIGN KEY (`warehouse`) REFERENCES `TRS_Warehouse`(`id`) ON UPDATE CASCADE
 );
+
+-- Permissions
+INSERT INTO `Permission`(`code`) VALUES ('trs');

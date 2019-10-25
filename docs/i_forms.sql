@@ -3,8 +3,7 @@ CREATE TABLE `Forms_Form` (
   `title` TEXT NOT NULL,
   `owner` int(11) NOT NULL,
   `active` TINYINT(1) UNSIGNED DEFAULT 1,
-  `submitterEmailRequired` TINYINT(1) UNSIGNED DEFAULT 0, -- Should form require an e-mail address
-  `submitterEmail` TEXT DEFAULT NULL, -- this will store e-mail if submitted
+  `emailRequired` TINYINT(1) UNSIGNED DEFAULT 0, -- Should form require an e-mail address
   `sendConfirmationEmail` TINYINT(1) UNSIGNED DEFAULT 0, -- Should a confirmation e-mail be sent
   PRIMARY KEY (`id`),
   CONSTRAINT `Forms_Form_ibfk_1` FOREIGN KEY (`owner`) REFERENCES `User`(`id`) ON UPDATE CASCADE
@@ -29,12 +28,12 @@ CREATE TABLE `Forms_Validation` (
 CREATE TABLE `Forms_Field` (
   `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `form` int(11) UNSIGNED NOT NULL,
-  `sequence` int(11) UNSIGNED DEFAULT 0,
-  `private` tinyint(1) UNSIGNED DEFAULT 0, -- will this field only be available to back office user
+  `sequence` int(11) UNSIGNED NOT NULL DEFAULT 0,
+  `private` tinyint(1) UNSIGNED NOT NULL DEFAULT 0, -- will this field only be available to back office user
   `type` enum('text', 'select', 'upload') NOT NULL DEFAULT 'text',
   `title` varchar(64) NOT NULL,
   `placeholder` TEXT DEFAULT NULL,
-  `required` TINYINT(1) UNSIGNED DEFAULT 0,
+  `required` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
   `validation` int(11) UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY (`form`, `title`),
@@ -57,6 +56,7 @@ CREATE TABLE `Forms_Submission` (
   `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `form` int(11) UNSIGNED NOT NULL,
   `number` int(11) UNSIGNED NOT NULL,
+  `email` TEXT DEFAULT NULL, -- required if form submitterEmailRequired is TRUE
   PRIMARY KEY (`id`),
   UNIQUE KEY (`form`, `number`),
   CONSTRAINT `Forms_Submission_ibfk_1` FOREIGN KEY (`form`) REFERENCES `Forms_Form`(`id`) ON UPDATE CASCADE ON DELETE CASCADE

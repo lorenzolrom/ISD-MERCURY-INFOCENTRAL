@@ -21,6 +21,7 @@ class Submission extends Model
     private $id;
     private $form;
     private $number;
+    private $email;
 
     /**
      * @return int
@@ -45,6 +46,16 @@ class Submission extends Model
     {
         return $this->number;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+
 
     /**
      * @return array List of submitted fields for this submission

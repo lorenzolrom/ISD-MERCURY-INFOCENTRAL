@@ -22,8 +22,7 @@ class Form extends Model
     private $title;
     private $owner;
     private $active;
-    private $submitterEmailRequired;
-    private $submitterEmail;
+    private $emailRequired;
     private $sendConfirmationEmail;
 
     /**
@@ -61,17 +60,9 @@ class Form extends Model
     /**
      * @return int
      */
-    public function getSubmitterEmailRequired(): int
+    public function getEmailRequired(): int
     {
-        return $this->submitterEmailRequired;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getSubmitterEmail(): ?string
-    {
-        return $this->submitterEmail;
+        return $this->emailRequired;
     }
 
     /**

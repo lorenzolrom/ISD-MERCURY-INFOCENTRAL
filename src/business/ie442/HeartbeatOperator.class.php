@@ -11,12 +11,13 @@
  */
 
 
-namespace business\chat;
+namespace business\ie442;
 
 
 use business\Operator;
 use business\UserOperator;
-use database\chat\HeartbeatDatabaseHandler;
+use database\ie442\HeartbeatDatabaseHandler;
+use database\PermissionDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use models\User;
 
@@ -43,7 +44,7 @@ class HeartbeatOperator extends Operator
      */
     public static function getActiveUsers(): array
     {
-        $userIds = HeartbeatDatabaseHandler::selectActive(3);
+        $userIds = HeartbeatDatabaseHandler::selectActive(10);
 
         $users = array();
 
@@ -54,5 +55,14 @@ class HeartbeatOperator extends Operator
         }
 
         return $users;
+    }
+
+    /**
+     * @return User[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getChatUsers(): array
+    {
+        return PermissionDatabaseHandler::selectUsersByPermission('chat');
     }
 }

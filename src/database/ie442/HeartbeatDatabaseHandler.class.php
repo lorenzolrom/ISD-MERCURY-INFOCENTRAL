@@ -11,7 +11,7 @@
  */
 
 
-namespace database\chat;
+namespace database\ie442;
 
 
 use database\DatabaseConnection;
@@ -29,7 +29,7 @@ class HeartbeatDatabaseHandler extends DatabaseHandler
         $c = new DatabaseConnection();
 
         // Delete any existing heartbeats
-        $u = $c->prepare('UPDATE `Chat_Heartbeat` SET `lastCheckIn` = NOW() WHERE `user` = ?');
+        $u = $c->prepare('UPDATE `442_Heartbeat` SET `lastCheckIn` = NOW() WHERE `user` = ?');
         $u->bindParam(1, $userId, DatabaseConnection::PARAM_INT);
         $u->execute();
 
@@ -47,7 +47,7 @@ class HeartbeatDatabaseHandler extends DatabaseHandler
     {
         $c = new DatabaseConnection();
 
-        $i = $c->prepare('INSERT INTO `Chat_Heartbeat` (`user`, `lastCheckIn`) VALUES (?, NOW())');
+        $i = $c->prepare('INSERT INTO `442_Heartbeat` (`user`, `lastCheckIn`) VALUES (?, NOW())');
         $i->bindParam(1, $userId, DatabaseConnection::PARAM_INT);
         $i->execute();
 
@@ -65,7 +65,7 @@ class HeartbeatDatabaseHandler extends DatabaseHandler
     {
         $c = new DatabaseConnection();
 
-        $s = $c->prepare('SELECT `user` FROM `Chat_Heartbeat` WHERE `lastCheckIn` > NOW() - INTERVAL ? SECOND');
+        $s = $c->prepare('SELECT `user` FROM `442_Heartbeat` WHERE `lastCheckIn` > NOW() - INTERVAL ? SECOND');
         $s->bindParam(1, $seconds, DatabaseConnection::PARAM_INT);
         $s->execute();
 

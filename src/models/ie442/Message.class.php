@@ -11,7 +11,7 @@
  */
 
 
-namespace models\chat;
+namespace models\ie442;
 
 
 use models\Model;
@@ -41,9 +41,9 @@ class Message extends Model
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getRoom(): int
+    public function getRoom(): ?int
     {
         return $this->room;
     }

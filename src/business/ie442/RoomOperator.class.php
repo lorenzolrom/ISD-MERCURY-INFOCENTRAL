@@ -11,12 +11,12 @@
  */
 
 
-namespace business\chat;
+namespace business\ie442;
 
 
 use business\Operator;
 
-class MessageOperator extends Operator
+class RoomOperator extends Operator
 {
 
 }

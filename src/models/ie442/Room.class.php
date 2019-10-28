@@ -11,7 +11,7 @@
  */
 
 
-namespace models\chat;
+namespace models\ie442;
 
 
 use models\Model;
@@ -19,9 +19,8 @@ use models\Model;
 class Room extends Model
 {
     private $id;
-    private $title;
-    private $private;
-    private $archived;
+    private $user1;
+    private $user2;
 
     /**
      * @return int
@@ -32,27 +31,19 @@ class Room extends Model
     }
 
     /**
-     * @return string|null
+     * @return int
      */
-    public function getTitle(): ?string
+    public function getUser1(): int
     {
-        return $this->title;
+        return $this->user1;
     }
 
     /**
      * @return int
      */
-    public function getPrivate(): int
+    public function getUser2(): int
     {
-        return $this->private;
-    }
-
-    /**
-     * @return int
-     */
-    public function getArchived(): int
-    {
-        return $this->archived;
+        return $this->user2;
     }
 
 

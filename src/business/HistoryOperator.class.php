@@ -14,10 +14,10 @@
 namespace business;
 
 
-use business\itsm\ApplicationOperator;
-use business\itsm\AssetOperator;
-use business\itsm\DiscardOrderOperator;
-use business\itsm\PurchaseOrderOperator;
+use extensions\itsm\business\ApplicationOperator;
+use extensions\itsm\business\AssetOperator;
+use extensions\itsm\business\DiscardOrderOperator;
+use extensions\itsm\business\PurchaseOrderOperator;
 use controllers\CurrentUserController;
 use database\HistoryDatabaseHandler;
 use exceptions\EntryNotFoundException;

@@ -28,36 +28,11 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
         'salt' => 'your_salt_here',
         'allowMultipleSessions' => FALSE,
 
-        'additionalRoutes' => array(
-            // Tickets
-            'tickets' => 'controllers\tickets\TicketsController',
-
-            // Devices
-            'hosts' => 'controllers\itsm\HostController',
-            'hostCategories' => 'controllers\itsm\HostCategoryController',
-
-            // Inventory
-            'commodities' => 'controllers\itsm\CommodityController',
-            'warehouses' => 'controllers\itsm\WarehouseController',
-            'vendors' => 'controllers\itsm\VendorController',
-            'assets' => 'controllers\itsm\AssetController',
-            'purchaseorders' => 'controllers\itsm\PurchaseOrderController',
-            'discardorders' => 'controllers\itsm\DiscardOrderController',
-
-            // Web
-            'vhosts' => 'controllers\itsm\VHostController',
-            'registrars' => 'controllers\itsm\RegistrarController',
-            'urlaliases' => 'controllers\itsm\URLAliasController',
-
-            // AIT
-            'applications' => 'controllers\itsm\ApplicationController',
-
-            // DHCP Logs
-            'dhcplogs' => 'controllers\itsm\DHCPLogController',
-
-            // Facilities
-            'buildings' => 'controllers\facilities\BuildingController',
-            'locations' => 'controllers\facilities\LocationController',
+        // Define extensions to be enabled
+        'enabledExtensions' => array(
+            'facilities',
+            'itsm',
+            'tickets'
         ),
 
         'ldapEnabled' => FALSE,

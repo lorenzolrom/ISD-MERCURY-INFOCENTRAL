@@ -26,8 +26,8 @@ use models\HTTPRequest;
  */
 class ControllerFactory
 {
+    // Core controller routes
     private const CONTROLLERS = array(
-        // Core
         'history' => 'controllers\HistoryController',
         'users' => 'controllers\UserController',
         'roles' => 'controllers\RoleController',
@@ -47,9 +47,27 @@ class ControllerFactory
      */
     public static function getController(HTTPRequest $request): Controller
     {
-        $route = $request->next();
+        // Hold all controllers
+        $controllers = self::CONTROLLERS;
 
-        $controllers = array_merge(self::CONTROLLERS, \Config::OPTIONS['additionalRoutes']);
+        // Import routes from extensions
+        foreach(\Config::OPTIONS['enabledExtensions'] as $extension)
+        {
+            // Check for ExtConfig.class inside extension
+            $extConfig = "extensions\\$extension\\ExtConfig";
+
+            // If it doesn't exist, skip the extension
+            if(!class_exists($extConfig))
+                continue;
+
+            // Merge ROUTES from ExtConfig into $controllers
+            $extConfig = new $extConfig();
+
+            $controllers = array_merge($controllers, $extConfig::ROUTES);
+        }
+
+        // Find controller
+        $route = $request->next();
 
         if(!in_array($route, array_keys($controllers)))
             throw new ControllerNotFoundException($route);

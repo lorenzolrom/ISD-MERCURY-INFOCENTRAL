@@ -26,6 +26,7 @@ use extensions\tickets\database\UpdateDatabaseHandler;
 use extensions\tickets\database\WorkspaceDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
+use extensions\tickets\ExtConfig;
 use extensions\tickets\models\Ticket;
 use extensions\tickets\models\Workspace;
 use models\User;
@@ -889,7 +890,7 @@ class TicketOperator extends Operator
         <p>You are receiving this e-mail because a ticket in your queue has been updated</p>
         
         <p><strong>Title: </strong>{$ticket->getTitle()}</p>
-        <p><strong>Ticket Number: </strong><a href='" . \Config::OPTIONS['serviceCenterAgentURL'] . $ticket->getNumber() . "?w=" . $ticket->getWorkspace() . "'>{$ticket->getNumber()}</a></p>
+        <p><strong>Ticket Number: </strong><a href='" . ExtConfig::OPTIONS['serviceCenterAgentURL'] . $ticket->getNumber() . "?w=" . $ticket->getWorkspace() . "'>{$ticket->getNumber()}</a></p>
         <p><strong>Requestor: </strong> $requestor</p>
         <p><strong>Status: </strong> " . TicketOperator::getTicketStatusName($ticket) . "</p>
         
@@ -976,7 +977,7 @@ class TicketOperator extends Operator
 
         $message = "<p style='color: #888888;'><em>E-Mail Notification from " . $workspace->getName() . "</em></p>
 
-        <p>Your support ticket <a href='" . \Config::OPTIONS['serviceCenterRequestURL'] . "{$ticket->getNumber()}'>{$ticket->getNumber()}</a> (<span style='color: red; font-weight: bold;'>{$ticket->getTitle()}</span>) has been <strong>$action</strong> with the following details:</p>
+        <p>Your support ticket <a href='" . ExtConfig::OPTIONS['serviceCenterRequestURL'] . "{$ticket->getNumber()}'>{$ticket->getNumber()}</a> (<span style='color: red; font-weight: bold;'>{$ticket->getTitle()}</span>) has been <strong>$action</strong> with the following details:</p>
         
         <div style='background-color: #e3e3e3;'>
             {$ticket->getLastUpdate()->getDescription()}

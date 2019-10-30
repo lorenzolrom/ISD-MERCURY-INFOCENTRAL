@@ -11,7 +11,7 @@
  */
 
 
-namespace utilities;
+namespace extensions\itsm\utilities;
 
 
 class Pinger

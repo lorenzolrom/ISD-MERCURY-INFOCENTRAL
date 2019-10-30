@@ -23,7 +23,7 @@ use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
 use models\HTTPRequest;
 use models\HTTPResponse;
-use utilities\WebLogFileRetriever;
+use extensions\itsm\utilities\WebLogFileRetriever;
 
 class VHostController extends Controller
 {

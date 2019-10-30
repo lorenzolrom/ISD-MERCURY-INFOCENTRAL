@@ -18,7 +18,7 @@ use extensions\itsm\database\AssetDatabaseHandler;
 use extensions\itsm\database\HostDatabaseHandler;
 use exceptions\ValidationException;
 use models\Model;
-use utilities\Pinger;
+use extensions\itsm\utilities\Pinger;
 use utilities\Validator;
 
 class Host extends Model

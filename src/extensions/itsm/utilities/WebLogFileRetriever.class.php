@@ -11,7 +11,9 @@
  */
 
 
-namespace utilities;
+namespace extensions\itsm\utilities;
+
+use extensions\itsm\ExtConfig;
 
 /**
  * Class WebLogFileRetriever
@@ -74,7 +76,7 @@ class WebLogFileRetriever
         if(strpos($path, '..') !== FALSE)
             return FALSE;
 
-        foreach(\Config::OPTIONS['validWebLogPaths'] as $validPath)
+        foreach(ExtConfig::OPTIONS['validWebLogPaths'] as $validPath)
         {
             if(substr($path, 0, strlen($validPath)) === $validPath)
                 return TRUE;

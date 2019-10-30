@@ -15,6 +15,7 @@ namespace extensions\itsm\business;
 
 
 use business\Operator;
+use extensions\itsm\ExtConfig;
 use utilities\Validator;
 
 class DHCPLogOperator extends Operator
@@ -55,9 +56,9 @@ class DHCPLogOperator extends Operator
 
         $query = strtolower($query); // Convert MACs to lower-case.
 
-        $rawLog = shell_exec('bash ' . dirname(__FILE__) . '/../../../utilities/dhcplog.sh ' .
-            \Config::OPTIONS['dhcpUser'] . ' ' . \Config::OPTIONS['dhcpServer'] . ' ' .
-            \Config::OPTIONS['sshKeyPath'] . ' ' . \Config::OPTIONS['dhcpLogPath'] . ' \'' . $query . '\' ' . ((int)$lines + 1));
+        $rawLog = shell_exec('bash ' . dirname(__FILE__) . '/../utilities/dhcplog.sh ' .
+            ExtConfig::OPTIONS['dhcpUser'] . ' ' . ExtConfig::OPTIONS['dhcpServer'] . ' ' .
+            \Config::OPTIONS['sshKeyPath'] . ' ' . ExtConfig::OPTIONS['dhcpLogPath'] . ' \'' . $query . '\' ' . ((int)$lines + 1));
 
         $logLines = explode('dhcpd:', $rawLog);
         array_shift($logLines);

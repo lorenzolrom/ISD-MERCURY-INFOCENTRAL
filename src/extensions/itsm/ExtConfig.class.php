@@ -40,4 +40,14 @@ class ExtConfig
         // DHCP Logs
         'dhcplogs' => 'extensions\itsm\controllers\DHCPLogController',
     );
+
+    public const OPTIONS = array(
+        // Specify paths allowed for web roots and logs
+        'validWebRootPaths' => array(),
+        'validWebLogPaths' => array(),
+
+        'dhcpServer' => '', // IP to get DHCP logs from
+        'dhcpUser' => '', // Username to remote into dhcp server
+        'dhcpLogPath' => '' // Log to path on remote dhcp server
+    );
 }

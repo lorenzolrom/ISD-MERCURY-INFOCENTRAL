@@ -26,7 +26,7 @@ use exceptions\ValidationException;
 use models\Attribute;
 use extensions\itsm\models\VHost;
 use utilities\HistoryRecorder;
-use utilities\WebLogFileRetriever;
+use extensions\itsm\utilities\WebLogFileRetriever;
 
 class VHostOperator extends Operator
 {

@@ -52,18 +52,6 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
         'emailFromAddress' => 'some@email.com',
         'emailFromName' => 'Some Name',
 
-        // Specify paths allowed for web roots and logs
-        'validWebRootPaths' => array(),
-        'validWebLogPaths' => array(),
-
-        // Link to be included in the ServiceCenter emails
-        'serviceCenterAgentURL' => '', // For agent emails
-        'serviceCenterRequestURL' => '', // For customer emails
-
         'sshKeyPath' => '', // Path to SSH key for remote servers
-
-        'dhcpServer' => '', // IP to get DHCP logs from
-        'dhcpUser' => '', // Username to remote into dhcp server
-        'dhcpLogPath' => '' // Log to path on remote dhcp server
     );
 }

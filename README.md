@@ -1,6 +1,6 @@
-![logo](docs/man_img/merlot_logo_black.png)
+![logo](docs/man_img/mercury_logo.png)
  
-# MERLOT Technical Manual  
+# MERCURY Technical Manual  
 LLR Technologies & Associated Services  
 Information Systems Development
 
@@ -24,30 +24,13 @@ programming interface
 
 * MAP DoorWay, an interface for web browsers to be re-directed to other sites based on information in InfoCentral
 
-## About MERLOT
-
-MERLOT stands for "Mercury Logistics & Operations Tools"; it is an ever expanding suite of information management 
-utilities programmed into the MAP applications.   MERLOT is presently divided into five different modules:
-
-1. Network Central (NetCenter)
-
-2. Service Center
-
-3. Facilities Management
-
-4. Configuration
-
-5. Self-Service
-
-The specific use-cases and functions of each will be covered in a later section.
-
 ## Installation
 
 ### Database
 
-MERLOT was written for MySQL-compatible databases, including MariaDB.  The 'docs' folder in the InfoCentral source code 
+Mercury was written for MySQL-compatible databases, including MariaDB.  The 'docs' folder in the InfoCentral source code 
 contains several SQL scripts that need to be executed in a database, either newly created or existing.  It is recommended 
-to run MERLOT in its own database.
+to run Mercury in its own database.
 
 The SQL script named '_init.sql' __must__ be run first.  Other scripts must be run in the order of roman numerals prefixing 
 the script name; if one or more scripts have the same numeral, they can be run in any order amongst one another.  
@@ -81,7 +64,7 @@ the following associative tables:
 
 * Secret_Permission
 
-and imports a list of Permission objects that MERLOT will need to operate.  
+and imports a list of Permission objects that Mercury will need to operate.  
 
 You will need to configure a user, or have one configured already, in the database to allow InfoCentral (and whatever host 
 it will be running on) to perform create, insert, update, and delete operations on any table in this database.
@@ -125,6 +108,8 @@ as '/'
 
 * allowMultipleSessions, if true, logging in from another location will not invalidate a User session
 
+* enabledExtensions, an array of extension names that should be enabled
+
 * ldapEnabled, allow LDAP accounts to be created
 
 * ldapDomainController, the FQDN of your authoritative domain controller
@@ -142,22 +127,6 @@ as '/'
 * emailFromAddress, the address emails will be marked as sent from
 
 * emailFromName, the name that will show up for the 'from' address
-
-* validWebRootPaths, an array of allowed paths for the web root of a VHost object
-
-* validWebLogPaths, an array of allowed paths for the log file of a VHost
-
-* serviceCenterAgentURL, the URL to be attached to an email when notifying a ticket agent of an update
-
-* serviceCenterRequestURL, the URL to be attached to an email when notifying a ticket contact of an update
-
-* sshKeyPath, the directory path of a private key to be used to connect via SSH to other hosts
-
-* dhcpServer, an optional DHCP server to pull log files from
-
-* dhcpUser, the user to authenticate with to the above DHCP server
-
-* dhcpLogPath, the path to the DHCP log file on remote server
 
 ### InfoScape
 
@@ -181,31 +150,46 @@ This file contains the following options in the OPTIONS constant array:
 * ipWhitelist, an optional array to specify IP addresses and networks (e.g. 10.10.1.11, 10.10.0.1/16) that are allowed
 to access PublicDocuments set to filter traffic
 
-## Accessing MERLOT
+* enabledExtensions, an array of extension names that should be enabled
 
-Navigate to the URL you specified in InfoScape's Config.php.  This will bring you to the MERLOT login page:
+### Extensions
+
+Additional extensions are available that add functionality to Mercury.  The current extensions are:
+
+* Facilities Management (facilities)
+
+* Network Central (netcenter)
+
+* Service Center (tickets)
+
+Extensions are containers of their own class files and resources located in the 'extensions' directory of both InfoCentral
+and InfoScape.  Extensions will need to be enabled in the configurations of both applications.  This will be covered later.
+
+## Accessing Mercury
+
+Navigate to the URL you specified in InfoScape's Config.php.  This will bring you to the Mercury login page:
 
 ![login page](docs/man_img/login.png) 
 
-This page will display the current version of Mercury InfoScape you are running.  By default, the username is 'local' 
+By default, the username is 'local' 
 and the password is 'MercuryPassword'; this user has been assigned to a role called 'Administrator'.
 
 After logging in you will see the Application Portal:
 
 ![app portal](docs/man_img/portal.png) 
 
-This is where all 'applications' (or modules of MERLOT) will be displayed.  By default 'local' will only see 
+This is where all modules and active extensions will be shown.  By default 'local' will only see 
 Configuration, Self-Service (My Account), and the Logout button.
 
-## MERLOT Interface
+## Mercury Interface
 
-The default MERLOT document, regardless of section or page, will include the Navigation Header.  This header will display 
+The default Mercury document, regardless of section or page, will include the Navigation Header.  This header will display 
 the currently logged in operator in the upper right, and links to Inbox (with a count of new notifications) and the 
 Operator menu.  The Operator menu contains the following options:
 
 * My Account, go to the user account information page, with an option to change password
 
-* About MERLOT, information about the current installation of the application
+* About Mercury, information about the current installation of the application
 
 * Return To Portal, which will bring you back to the Application Portal
 
@@ -214,9 +198,8 @@ Operator menu.  The Operator menu contains the following options:
 * Logout, which will return the user to the login page
 
 ## In-App Configuration
- ![configuration](docs/man_img/configuration.png)
  
- Clicking on 'Configuration' in the Application Portal will bring you to the MERLOT Configuration module.  This module
+ Clicking on 'Configuration' in the Application Portal will bring you to the Mercury Configuration module.  This module
  has the following sections, which will now appear on the navigation header:
  
  * Users
@@ -250,7 +233,7 @@ To create a user, click on 'New User'.  This will bring up the new user form tha
 information:
 
 * Username, a unique account identifier
-* Roles, a multi-select of all roles currently configured in MERLOT
+* Roles, a multi-select of all roles currently configured in Mercury
 * Auth Type, LDAP or Local, if LDAP is selected, the following fields will be greyed out and auto-completed by your
 LDAP server
 * First Name
@@ -266,13 +249,11 @@ To search all current users, click on 'Search Users'.  This will allow you to en
 * First Name, user's authentication first name
 * Last Name, user's authentication last name
 * Username, user's username
-* Disabled, whether the user object has been disabled through MERLOT
+* Disabled, whether the user object has been disabled through Mercury
 
 #### Modifying Users
 
 To edit a user, click on their username from the search results.
-
-![user edit](docs/man_img/user_edit.png)
 
 This will be identical to the form shown when creating the user.  If the user authenticated with LDAP, you will not be
 able to change certain fields; saving the user will update information from LDAP.
@@ -313,8 +294,6 @@ of configured permission codes.
 
 #### Modifying a role
 
-![role edit](docs/man_img/role_edit.png)
-
 Select a role from the search results, make any changes to the form and save.
 
 #### Deleting a role
@@ -328,8 +307,6 @@ A role may be deleted at any time, it will be unlinked from any users and permis
 Click 'Issue API Key' and give the key a name and optional permissions; anything typed into 'Issued Key' will be 
 overwritten on creation.
 
-![key issue](docs/man_img/key_issue.png)
-
 Permissions are only required if the API key will be used by a user-less client, when a user authenticated with an
 application issued an API key, the user's permissions will be used, not the key's.
 
@@ -340,17 +317,11 @@ assigned roles; a user will only receive the notification once, regardless of if
 were selected.  Clicking 'Send E-Mail' will also send an email to the account they have on file, if one exists and if
 emailing has been enabled and configured in the Config.
 
-![send notification](docs/man_img/send_notification.png)
-
 ### Bulletins
 
 Bulletins are messages that appear on the Application Portal above 'Module Status':
 
-![bulletin](docs/man_img/bulletin.png)
-
 To create a bulletin, click 'New Bulletin' and fill in the following:
-
-![bulletin form](docs/man_img/bulletin_new.png)
 
 * Title, the title to be displayed in the bulletin header
 * Type, Info will be green, Alert will be red
@@ -360,15 +331,18 @@ To create a bulletin, click 'New Bulletin' and fill in the following:
 * Roles, what roles will see the bulletin (will not be duplicated if a user is a member of multiple roles)
 * Disabled, manually shut the bulletin off, regardless of End Date
 
-## MERLOT Modules
+## Mercury Extensions
 
-MERLOT's core functionality is divided into modules: Net Center, Service Center, Facilities Management, Configuration 
-(which was already covered), and User Self-Service.  The following sections will detail each module in-depth.
+In addition to core modules (Configuration and User Self-Service), Mercury can be extended to add features and
+functionality.
 
-Before continuing, it is recommended that you set up Roles that will assign access to the various parts of MERLOT. 
+Mercury currently has three official extensions: Net Center, Service Center, Facilities Management, Configuration.
+The following sections will detail each extension in-depth.
+
+Before continuing, it is recommended that you set up Roles that will assign access to the various parts of Mercury. 
 At the very least, you should give the 'Administrator' role all permissions, which will let you see everything.
 
-## Net Center
+## Network Center (netcenter)
 
 Network Central (Net Center) is a suite of ITSM and CMDB utilities useful for tracking information about your 
 organization's network setup.  NetCenter is divided into the following sections:
@@ -394,7 +368,7 @@ organization's network setup.  NetCenter is divided into the following sections:
 
 * Monitor
 
-## Service Center
+## Service Center (tickets)
 
 Service Center is a ticketing system that supports separate workspaces and teams.  It is divided into the following
 sections:
@@ -407,7 +381,7 @@ sections:
     * Workspaces
     * Teams
 
-## Facilities Management
+## Facilities Management (facilities)
 
 Facilities Management stores information on buildings and locations within those buildings, these locations are 
 currently used by Net Center's asset system to determine where an asset is located.  It is divided into the following
@@ -417,11 +391,92 @@ sections:
     * Search Buildings
     * New Building
 
-## User Self-Service (My Account)
-
 ## Application Structure
 
+### InfoCentral
+The core code of InfoCentral is located in 'src'.  Beneath 'src' are the following directories:
+
+* business - Classes (ending in 'Operator') that perform logical operations on data
+* controllers - Classes (ending in 'Controller') that route user requests and validate permissions
+* database - Classes (ending in 'DatabaseHandler') that interact with the database
+* exceptions - Classes (ending in 'Exception') that are thrown if errors occur
+* extensions - A folder to place extensions
+* factories -  A single class, ControllerFactory, that will load the correct controller for a user request
+* models - Classes representing data used by the core application
+* public - .htaccess, a file used to re-write URLs, the 'doorway' index page, and a setup script
+* sshkeys - The directory to put ssh keys if using a feature that requires one
+* uploaded - A directory where uploaded files will be stored if a feature uses it
+* utilities - Miscellaneous classes that perform various operations
+
+#### Extensions
+
+Extensions must be placed in a directory with a unique name under 'extensions'.  The structure of an extension mimics 
+the core code:
+
+* business
+* controllers
+* database
+* models
+* utilities
+
+Directly inside the extension folder must be a class named 'ExtConfig'.  This class must include two public constants:
+
+* ROUTES - mappings of (unique) URI paths to the fully qualified name of the controller that handles the request
+* OPTIONS - extra options that will be used by classes within the extension
+
+When extensions are loaded, these 'extended configurations' are loaded and used to build a master list of all
+routes.  If route names conflict, the last loaded will be the only route used.
+
+### InfoScape
+
+The core code of InfoScape is located in 'src'.  Beneath 'src' are the following directories:
+
+* controllers - Classes (ending in 'Controller') that route user requests to the proper view
+* exceptions - Classes (ending in 'Exception') that are thrown if errors occur 
+* factories -  A single class, ControllerFactory, that will load the correct controller for a user request
+* html - Source HTML files that will be used to construct pages for the user
+* models - HTTP Request and response objects, and a user object
+* public - Images and other media files needed by the browser, the 'doorway' index page, and .htaccess, a file used to re-write URLs
+* scripts - Javascript files
+* stylesheets - CSS files
+* utilities - Miscellaneous classes that perform various operations
+* views - Classes (of type 'Form', 'Element', 'Page', and 'Content') representing all or part of a page
+
+#### Extensions
+
+Extensions must be placed in a directory with a unique name under 'extensions'.  The structure of an extension mimics
+the core code:
+
+* controllers
+* html
+* scripts
+* stylesheets
+* views
+
+When accessing stylesheets or scripts from your HTML templates, you must include the proper name of the extension 
+(the name of the directory containing it) in the URI.
+
+Like InfoCentral, InfoScape extensions must have the class ExtConfig.  Instead of OPTIONS, InfoScape extensions must have
+the public constant MENU.  This is used to add the extension to the Portal Menu users see when the first log in. The
+structure of MENU is:
+
+```php
+    public const MENU = array(
+        'extensionName' => array(
+            'title' => 'Your Extension',
+            'permission' => 'code',
+            'icon' => 'image.png',
+            'link' => 'extensionName'
+        ),
+    );
+```
+
+The image name used for 'icon' must be available in the public/media/menu directory.
+
 ## Glossary
+
+* Module - a discrete group of pages or routes built into the core code of Mercury
+* Extension - additional classes, scripts, stylesheets, media, etc. that is included on top of Mercury
 
 ### Objects
 
@@ -455,14 +510,17 @@ A record of state change of an object, tied to the User who performed it.
 1. HistoryItem  
 An entry in a History object detailing the change in a specific attribute of an object.
 
-### Permissions (as of InfoCentral 1.1.2)
+### Permissions (as of InfoCentral 1.2.0)
 
-Permission codes are (typically) laid out as <module>_<feature>-<subfeature>-<r/w/rw>.
+Permission codes are (typically) laid out as <extension>_<feature>-<subfeature>-<r/w/rw>.
 
 * api-settings, perform all operations dealing with Secrets
+* settings, configure users, roles, bulletins, and send notifications
+
 * facilities, access the facilities portal
 * facilitiescore_facilities-r, view buildings and locations
 * facilitiescore_facilities-w, create,update,delete buildings and locations
+
 * itsm, access the netcenter portal
 * itsmmonitor, see the monitor tab
 * itsmmonitor-hosts-r, view the network monitor
@@ -495,13 +553,13 @@ Permission codes are (typically) laid out as <module>_<feature>-<subfeature>-<r/
 * itsm_web-vhosts-r, view virtual hosts
 * itsm_web-vhosts-w, create/update/delete virtual hosts, view host devices 
 * itsm_weblogs, view web logs for a virtual host
-* settings, configure users, roles, bulletins, and send notifications
+
 * tickets, view the ticket portal
 * tickets-admin, configure workspaces and teams
 * tickets-agent, view the agent tab, service desk, and workspaces the agent is assigned to
 * tickets-customer, view the request portal and use it to submit request tickets
 
-### InfoCentral Routes (as of InfoCentral 1.1.2)
+### InfoCentral Routes (as of InfoCentral 1.2.0)
 
 This is a breakdown of all API routes currently in InfoCentral.  If a requesting agent does not have permission to 
 use a route, InfoCentral will typically return response code 401, if an object is not found 404, and if a form submission
@@ -979,4 +1037,64 @@ The following breakdown (attempts to) follow this notation:
         * returns 200{array(logLine)}
 
 #### Tickets
-* /tickets []
+* /tickets [tickets]
+    * /tickets/requests [tickets-customer]
+        * GET /tickets/requests/attributes
+        * GET /tickets/requests/open
+        * GET /tickets/requests/closed
+        * GET /tickets/requests/$workspace/$number
+        * POST /tickets/requests
+        * PUT /tickets/requests/$workspace/$id
+        
+    * /tickets/workspaces [tickets]
+        * tickets/workspaces/$id/attributes
+            * GET /tickets/workspaces/$id/attributes
+            * GET /tickets/workspaces/$id/attributes/$type
+            * POST /tickets/workspaces/$id/attributes [tickets-admin]
+            * PUT /tickets/workspaces/$id/attributes/$id [tickets-admin]
+            * DELETE /tickets/workspaces/$id/attributes/$id [tickets-admin]
+            
+        * tickets/workspaces/$id/tickets [tickets-agent]
+            * GET /tickets/workspaces/$id/tickets/myAssignments
+            * GET /tickets/workspaces/$id/tickets/open
+            * GET /tickets/workspaces/$id/tickets/closed
+            * GET /tickets/workspaces/$id/tickets/$id
+            * GET /tickets/workspaces/$id/tickets/$id/updates
+            * GET /tickets/workspaces/$id/tickets/$id/history
+            * GET /tickets/workspaces/$id/tickets/$id/assignees
+            * GET /tickets/workspaces/$id/tickets/$id/linked
+            * POST /tickets/workspaces/$id/tickets/search
+            * POST /tickets/workspaces/$id/tickets/quickSearch
+            * POST /tickets/workspaces/$id/tickets/$id/link
+            * POST /tickets/workspaces/$id/tickets
+            * PUT /tickets/workspaces/$id/tickets/$id
+            * PUT /tickets/workspaces/$id/tickets/$id/assignees
+            * DELETE/tickets/workspaces/$id/tickets/$id/assignee
+            * DELETE/tickets/workspaces/$id/tickets/$id/link
+        
+        * tickets/workspaces/$id/searches [tickets-agent]
+            * GET /tickets/workspaces/$id/searches
+            * GET /tickets/workspaces/$id/searches/$id
+            * POST /tickets/workspaces/$id/searches
+            * DELETE /tickets/workspaces/$id/searches/$id
+        
+        * tickets/workspaces/$id/widgets [tickets-agent]
+            * GET /tickets/workspaces/$id/widgets
+            * POST /tickets/workspaces/$id/widgets
+            * DELETE /tickets/workspaces/$id/widgets/$id
+        
+        * GET /tickets/workspaces/requestPortal
+        * GET /tickets/workspaces [tickets-agent]
+        * GET /tickets/workspaces/all [tickets-agent]
+        * GET /tickets/workspaces/$id [tickets-agent]
+        * GET /tickets/workspaces/$id/assignees [tickets-agent]
+        * POST /tickets/workspaces [tickets-admin]
+        * PUT /tickets/workspaces/$id [tickets-admin]
+        * DELETE /tickets/workspaces/$id [tickets-admin]
+    
+    * /tickets/teams [tickets-admin]
+        * GET /tickets/teams
+        * GET /tickets/teams/$id
+        * POST /tickets/teams
+        * PUT /tickets/teams
+        * DELETE /tickets/teams

@@ -43,6 +43,11 @@ class Validator
         return preg_match("/^[A-Za-z0-9- ]+$/", $value);
     }
 
+    public static function alnumDashSpaceSlashOnly(string $value): bool
+    {
+        return preg_match("/^[A-Za-z0-9- \/]+$/", $value);
+    }
+
     /**
      * @param string $mac
      * @return bool
@@ -167,7 +172,11 @@ class Validator
 
         // alnumds
         if(isset($rules['alnumds']) AND !self::alnumDashSpaceOnly($value))
-            throw new ValidationException("{$rules['name']} must consist of letters, numbers, dashes, and spaces only", ValidationException::VALUE_IS_NOT_VALID);
+            throw new ValidationException("{$rules['name']} must consist of letters, numbers, '-', and spaces only", ValidationException::VALUE_IS_NOT_VALID);
+
+        // alnumdss
+        if(isset($rules['alnumdss']) AND !self::alnumDashSpaceSlashOnly($value))
+            throw new ValidationException("{$rules['name']} must consist of letters, numbers, '-', '/', and spaces only", ValidationException::VALUE_IS_NOT_VALID);
 
         return TRUE;
     }

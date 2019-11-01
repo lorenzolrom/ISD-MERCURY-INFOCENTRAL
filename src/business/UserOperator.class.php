@@ -31,6 +31,8 @@ use utilities\LDAPConnection;
 
 class UserOperator extends Operator
 {
+    public const LDAP_ATTRIBUTES = array('givenname', 'sn', 'mail');
+
     /**
      * @param int $id
      * @return User
@@ -152,14 +154,15 @@ class UserOperator extends Operator
     /**
      * @param User $user
      * @param array $vals
+     * @param bool $resync Add a system entry to the history record indicating this update is part of a resync
      * @return array
      * @throws DatabaseException
      * @throws EntryNotFoundException
      * @throws LDAPException
      * @throws SecurityException
-     * @throws \exceptions\ValidationError
+     * @throws ValidationError
      */
-    public static function updateUser(User $user, array $vals): array
+    public static function updateUser(User $user, array $vals, bool $resync = FALSE): array
     {
         $errors = array();
 
@@ -226,6 +229,11 @@ class UserOperator extends Operator
 
         $history = HistoryRecorder::writeHistory('User', HistoryRecorder::MODIFY, $user->getId(), $user, $vals);
         $user = UserDatabaseHandler::update($user->getId(), $vals['username'], $vals['firstName'], $vals['lastName'], $vals['email'], $vals['disabled'], $vals['authType']);
+
+        // Add resync history entry if this is part of an LDAP resync
+        if($resync)
+            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('LDAP Re-sync')));
+
 
         // Wipe password if user is LDAP
         if($vals['authType'] === 'ldap')
@@ -403,6 +411,25 @@ class UserOperator extends Operator
     public static function idFromUsername(?string $username): ?int
     {
         return UserDatabaseHandler::selectIdFromUsername((string)$username);
+    }
+
+    /**
+     * @return array
+     * @throws DatabaseException
+     */
+    public static function reSyncLdapUsers(): array
+    {
+        $data = array();
+
+        foreach(UserDatabaseHandler::select() as $user)
+        {
+            if($user->getAuthType() !== 'ldap')
+                continue;
+
+
+        }
+
+        return $data;
     }
 
     /**

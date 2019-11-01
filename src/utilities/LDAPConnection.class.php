@@ -116,4 +116,30 @@ class LDAPConnection
 
         return FALSE;
     }
+
+    /**
+     * @param string $username
+     * @param string $attrName
+     * @param string $value
+     * @return bool
+     */
+    public function setAttribute(string $username, string $attrName, string $value): bool
+    {
+        $this->bind(\Config::OPTIONS['ldapUsername'], \Config::OPTIONS['ldapPassword']);
+
+        $attributes = array("uid");
+        $user = $this->searchByUsername($username, $attributes);
+
+        if($user['count'] != 1)
+            return FALSE;
+
+        $resultUserDN = $user[0]['dn'];
+
+        $newLDAPEntry = array($attrName => $value);
+
+        if(ldap_mod_replace($this->connection, $resultUserDN, $newLDAPEntry))
+            return TRUE;
+
+        return FALSE;
+    }
 }

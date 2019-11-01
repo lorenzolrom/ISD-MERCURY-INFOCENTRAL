@@ -39,7 +39,7 @@ class Attribute extends Model
     public const NAME_RULES = array(
         'name' => 'Name',
         'lower' => 1,
-        'alnumds' => TRUE
+        'alnumdss' => TRUE
     );
 
     private $id;

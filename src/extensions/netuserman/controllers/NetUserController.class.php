@@ -16,7 +16,6 @@ namespace extensions\netuserman\controllers;
 
 use controllers\Controller;
 use controllers\CurrentUserController;
-use exceptions\RouteException;
 use exceptions\ValidationError;
 use extensions\netuserman\business\NetUserOperator;
 use models\HTTPRequest;
@@ -32,7 +31,6 @@ class NetUserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\LDAPException
      * @throws \exceptions\SecurityException
-     * @throws RouteException
      * @throws ValidationError
      */
     public function getResponse(): ?HTTPResponse
@@ -42,7 +40,7 @@ class NetUserController extends Controller
         $param = $this->request->next();
         $next = $this->request->next();
 
-        if($this->request->method() == HTTPRequest::GET)
+        if($this->request->method() === HTTPRequest::GET)
         {
             CurrentUserController::validatePermission('netuserman-read');
 
@@ -54,14 +52,23 @@ class NetUserController extends Controller
                     return $this->getSingleUser((string)$param);
             }
         }
-        else if($this->request->method() == HTTPRequest::POST)
+        else if($this->request->method() === HTTPRequest::POST)
         {
-            CurrentUserController::validatePermission('netuserman-edit-details');
-
-            if($next === 'photo')
+            if($param === 'search' AND $next === NULL)
             {
+                CurrentUserController::validatePermission('netuserman-read');
+                return $this->searchUsers();
+            }
+            else if($next === 'photo')
+            {
+                CurrentUserController::validatePermission('netuserman-edit-details');
                 return $this->updateUserImage((string)$param);
             }
+        }
+        else if($this->request->method() === HTTPRequest::PUT)
+        {
+            CurrentUserController::validatePermission('netuserman-edit-details');
+            return $this->updateUser((string)$param);
         }
 
         return NULL;
@@ -118,12 +125,74 @@ class NetUserController extends Controller
 
             // Set LDAP user thumbnailphoto
             $ldap = new LDAPConnection();
-            if($ldap->setAttribute($username, 'thumbnailphoto', $imageContents))
+            if($ldap->updateLDAPEntry($username, array('thumbnailphoto' => $imageContents)))
                 return new HTTPResponse(HTTPResponse::NO_CONTENT);
             else
                 throw new ValidationError(array('Could not change photo'));
         }
 
         throw new ValidationError(array('Photo required'));
+    }
+
+    /**
+     * @param string $username
+     * @return HTTPResponse
+     * @throws ValidationError
+     * @throws \exceptions\LDAPException
+     */
+    private function updateUser(string $username): HTTPResponse
+    {
+        $details = $this->request->body();
+
+        if(NetUserOperator::updateUser($username, $details))
+            return new HTTPResponse(HTTPResponse::NO_CONTENT);
+
+        throw new ValidationError(array('User could not be updated'));
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\LDAPException
+     */
+    private function searchUsers(): HTTPResponse
+    {
+        $results = NetUserOperator::searchUsers(self::getFormattedBody(NetUserOperator::SEARCH_ATTRIBUTES, TRUE));
+
+        $users = array();
+
+        for($i = 0; $i < $results['count']; $i++)
+        {
+            $user = array();
+
+            foreach(array_keys($results[$i]) as $attr)
+            {
+                if(is_numeric($attr)) // Skip integer indexes
+                    continue;
+
+                if(is_array($results[$i][$attr])) // Attribute has details
+                {
+                    if((int)$results[$i][$attr]['count'] == 1) // Only one detail in this attribute
+                        $user[$attr] = $results[$i][$attr][0];
+                    else // Many details in this attribute
+                    {
+                        $subData = array();
+                        for($j = 0; $j < (int)$results[$i][$attr]['count']; $j++)
+                        {
+                            $subData[] = $results[$i][$attr][$j];
+                        }
+
+                        $user[$attr] = $subData;
+                    }
+                }
+                else
+                {
+                    $user[$attr] = ''; // No attribute data, leave blank
+                }
+            }
+
+            $users[] = $user;
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $users);
     }
 }

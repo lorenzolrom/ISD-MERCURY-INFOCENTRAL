@@ -25,23 +25,42 @@ use utilities\LDAPConnection;
  */
 class NetUserOperator extends Operator
 {
+    // Settings for user accounts
+    public const USER_ACCOUNT_CONTROL = array(
+        'disabled' => '514',
+        'enabled' => '512',
+        'disabled_password_never_expires' => '66050',
+        'enabled_password_never_expires' => '66048',
+        '514' => 'disabled',
+        '512' => 'enabled',
+        '66050' => 'disabled_password_never_expires',
+        '66048' => 'enabled_password_never_expires'
+    );
+
     public const DEFAULT_ATTRIBUTES = array(
-        'givenName', // First Name
+        'givenname', // First Name
         'initials', // Middle Name / Initials
         'sn', // Last Name
         'cn', // Common Name
-        'userPrincipalName', // Login Name
-        'sAMAccountName', // Login Name (Pre-Windows 2000)
-        'displayName', // Display Name
+        'distinguishedname',
+        'userprincipalname', // Login Name
+        'displayname', // Display Name
         'name', // Full Name
         'description', // Description
-        'physicalDeliveryOfficeName', // Office
-        'telephoneNumber', // Telephone Number
+        'physicaldeliveryofficename', // Office
+        'telephonenumber', // Telephone Number
         'mail', // Email
-        'wWWHomePage', // Web Page
-        'memberOf', // Add to Groups
-        'accountExpires', // Account Expires (use same date format as server)
+        'memberof', // Add to Groups
+        'accountexpires', // Account Expires (use same date format as server)
         'title', // Title
+        'removememberof', // Remove group membership,
+        'useraccountcontrol' // Disable and password expire status
+    );
+
+    public const SEARCH_ATTRIBUTES = array(
+        'samaccountname',
+        'givenname',
+        'sn'
     );
 
     /**
@@ -108,6 +127,59 @@ class NetUserOperator extends Operator
                 $formatted[$key] = '';
         }
 
+        // Check for user account control
+        if(isset($formatted['useraccountcontrol']))
+        {
+            if(!in_array($formatted['useraccountcontrol'], self::USER_ACCOUNT_CONTROL)) // If not valid, ignore
+                unset($formatted['useraccountcontrol']);
+            else // Translate to code
+                $formatted['useraccountcontrol'] = self::USER_ACCOUNT_CONTROL[$formatted['useraccountcontrol']];
+        }
+
         return $formatted;
+    }
+
+    /**
+     * @param string $username
+     * @param array $vals
+     * @return bool
+     * @throws \exceptions\LDAPException
+     */
+    public static function updateUser(string $username, array $vals): bool
+    {
+        foreach(array_keys($vals) as $attr)
+        {
+            // Remove non-allowed attributes
+            if(!in_array($attr, self::DEFAULT_ATTRIBUTES))
+                unset($vals[$attr]);
+            else if(strlen($vals[$attr]) === 0) // Blank attributes must be empty arrays
+                $vals[$attr] = array();
+        }
+
+        // Check for user account control
+        if(isset($vals['useraccountcontrol']))
+        {
+            if(!in_array($vals['useraccountcontrol'], self::USER_ACCOUNT_CONTROL)) // If not valid, ignore
+                unset($vals['useraccountcontrol']);
+            else // Translate to code
+                $vals['useraccountcontrol'] = self::USER_ACCOUNT_CONTROL[$vals['useraccountcontrol']];
+        }
+
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+        return $ldap->updateLDAPEntry($username, $vals);
+    }
+
+    /**
+     * @param $filterAttrs
+     * @return array
+     * @throws \exceptions\LDAPException
+     */
+    public static function searchUsers($filterAttrs): array
+    {
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+
+        return $ldap->searchUsers($filterAttrs, array('userprincipalname', 'sn', 'givenname'));
     }
 }

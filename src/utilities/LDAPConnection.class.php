@@ -91,6 +91,35 @@ class LDAPConnection
     }
 
     /**
+     * @param array $filterAttrs Attributes to search by
+     * @param array $attributes Attributes to obtain
+     * @return array
+     */
+    public function searchUsers(array $filterAttrs, array $attributes): array
+    {
+        $filter = '(&'; // Search for all filters (e.g. Filter AND Filter AND...)
+
+        // Build filter
+        foreach(array_keys($filterAttrs) as $attr)
+        {
+            if($filterAttrs[$attr] === NULL)
+                $filterAttrs[$attr] = '';
+
+            $filter .= "($attr=*{$filterAttrs[$attr]}*)";
+        }
+
+        $filter .= '(objectClass=user)(objectCategory=person))'; // Limit to user accounts
+
+        $filter = str_replace('**', '*', $filter); // Double ** is a bad filter
+
+        $search = ldap_search($this->connection, $this->domainDN, $filter, $attributes);
+
+        $results = ldap_get_entries($this->connection, $search);
+
+        return is_array($results) ? $results : array();
+    }
+
+    /**
      * Attempts to update an LDAP user's password
      *
      * @param $username
@@ -119,11 +148,10 @@ class LDAPConnection
 
     /**
      * @param string $username
-     * @param string $attrName
-     * @param string $value
+     * @param $newEntry
      * @return bool
      */
-    public function setAttribute(string $username, string $attrName, string $value): bool
+    public function updateLDAPEntry(string $username, $newEntry): bool
     {
         $this->bind(\Config::OPTIONS['ldapUsername'], \Config::OPTIONS['ldapPassword']);
 
@@ -135,9 +163,7 @@ class LDAPConnection
 
         $resultUserDN = $user[0]['dn'];
 
-        $newLDAPEntry = array($attrName => $value);
-
-        if(ldap_mod_replace($this->connection, $resultUserDN, $newLDAPEntry))
+        if(ldap_mod_replace($this->connection, $resultUserDN, $newEntry))
             return TRUE;
 
         return FALSE;

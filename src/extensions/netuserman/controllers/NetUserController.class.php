@@ -96,7 +96,7 @@ class NetUserController extends Controller
     {
         $photo = NetUserOperator::getUserDetails($username, array('thumbnailPhoto'));
 
-        if(!isset($photo['thumbnailphoto']))
+        if(!isset($photo['thumbnailphoto']) OR strlen($photo['thumbnailphoto']) === 0)
             $photo['thumbnailphoto'] = file_get_contents(dirname(__FILE__) . '/../media/no-photo-available.jpg');
 
         header('Content-Type: image/jpeg');

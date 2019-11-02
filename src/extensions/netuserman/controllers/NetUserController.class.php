@@ -69,6 +69,8 @@ class NetUserController extends Controller
         else if($this->request->method() === HTTPRequest::PUT)
         {
             CurrentUserController::validatePermission('netuserman-edit-details');
+            if($next === 'password')
+                return $this->resetPassword((string)$param);
             return $this->updateUser((string)$param);
         }
 
@@ -145,5 +147,19 @@ class NetUserController extends Controller
         $results = NetUserOperator::searchUsers(self::getFormattedBody(ExtConfig::OPTIONS['allowedSearchAttributes'], TRUE));
 
         return new HTTPResponse(HTTPResponse::OK, $results);
+    }
+
+    /**
+     * @param string $username
+     * @return HTTPResponse
+     * @throws LDAPException
+     * @throws ValidationError
+     */
+    private function resetPassword(string $username): HTTPResponse
+    {
+        if(NetUserOperator::resetPassword($username, self::getFormattedBody(array('password', 'confirm'), TRUE)))
+            return new HTTPResponse(HTTPResponse::NO_CONTENT);
+
+        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
     }
 }

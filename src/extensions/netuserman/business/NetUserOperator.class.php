@@ -15,6 +15,7 @@ namespace extensions\netuserman\business;
 
 use business\Operator;
 use exceptions\EntryNotFoundException;
+use exceptions\LDAPException;
 use exceptions\ValidationError;
 use extensions\netuserman\ExtConfig;
 use utilities\LDAPConnection;
@@ -177,7 +178,7 @@ class NetUserOperator extends Operator
             // Remove non-allowed attributes
             if(!in_array($attr, ExtConfig::OPTIONS['usedAttributes']))
                 unset($vals[$attr]);
-            else if(strlen($vals[$attr]) === 0) // Blank attributes must be empty arrays
+            else if(!is_array($vals[$attr]) AND strlen($vals[$attr]) === 0) // Blank attributes must be empty arrays
                 $vals[$attr] = array();
         }
 
@@ -239,6 +240,12 @@ class NetUserOperator extends Operator
             if(isset($user['useraccountcontrol']))
                 $user['useraccountcontrol'] = self::getUACFlags((int)$user['useraccountcontrol']);
 
+            foreach(ExtConfig::OPTIONS['returnedSearchAttributes'] as $attr)
+            {
+                if(!isset($user[$attr])) // Fill in the blanks
+                    $user[$attr] = '';
+            }
+
             $users[] = $user;
         }
 
@@ -272,6 +279,27 @@ class NetUserOperator extends Operator
         $ldap->bind();
 
         return $ldap->updateLDAPEntry($username, array('thumbnailphoto' => $imageContents));
+    }
+
+    /**
+     * @param string $username
+     * @param array $args // 'password' and 'confirm'
+     * @return bool
+     * @throws LDAPException
+     * @throws ValidationError
+     */
+    public static function resetPassword(string $username, array $args): bool
+    {
+        $password = (string)$args['password'];
+        $confirm = (string)$args['confirm'];
+
+        if($password != $confirm)
+            throw new ValidationError(array('Passwords do not match'));
+
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+
+        return $ldap->setPassword($username, $password);
     }
 
     /**

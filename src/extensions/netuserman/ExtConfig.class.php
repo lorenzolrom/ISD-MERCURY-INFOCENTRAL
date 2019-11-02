@@ -30,7 +30,9 @@ class ExtConfig
             'userprincipalname',
             'sn',
             'givenname',
-            'useraccountcontrol'
+            'useraccountcontrol',
+            'title',
+            'description'
         ),
         'usedAttributes' => array( // Defines default attributes returned for a user, and what attributes are allowed to be updated
             'givenname', // First Name

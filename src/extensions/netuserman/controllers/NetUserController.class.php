@@ -16,11 +16,12 @@ namespace extensions\netuserman\controllers;
 
 use controllers\Controller;
 use controllers\CurrentUserController;
+use exceptions\LDAPException;
 use exceptions\ValidationError;
 use extensions\netuserman\business\NetUserOperator;
+use extensions\netuserman\ExtConfig;
 use models\HTTPRequest;
 use models\HTTPResponse;
-use utilities\LDAPConnection;
 
 class NetUserController extends Controller
 {
@@ -111,34 +112,19 @@ class NetUserController extends Controller
      */
     private function updateUserImage(string $username):HTTPResponse
     {
-        if(!empty($_FILES['thumbnailphoto']))
-        {
-            $imageContents = file_get_contents($_FILES['thumbnailphoto']['tmp_name']);
+        if(empty($_FILES['thumbnailphoto']))
+            throw new ValidationError(array('Photo required'));
 
-            // File has content
-            if(strlen($imageContents) === 0)
-                throw new ValidationError(array('Photo required'));
+        if(NetUserOperator::updateUserImage($username, file_get_contents($_FILES['thumbnailphoto']['tmp_name'])))
+            return new HTTPResponse(HTTPResponse::NO_CONTENT);
 
-            // File is type jpeg or jpg
-            if(strtolower($_FILES['thumbnailphoto']['type']) !== 'image/jpeg')
-                throw new ValidationError(array('Photo must be a JPEG'));
-
-            // Set LDAP user thumbnailphoto
-            $ldap = new LDAPConnection();
-            if($ldap->updateLDAPEntry($username, array('thumbnailphoto' => $imageContents)))
-                return new HTTPResponse(HTTPResponse::NO_CONTENT);
-            else
-                throw new ValidationError(array('Could not change photo'));
-        }
-
-        throw new ValidationError(array('Photo required'));
+        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
     }
 
     /**
      * @param string $username
      * @return HTTPResponse
-     * @throws ValidationError
-     * @throws \exceptions\LDAPException
+     * @throws LDAPException
      */
     private function updateUser(string $username): HTTPResponse
     {
@@ -147,7 +133,7 @@ class NetUserController extends Controller
         if(NetUserOperator::updateUser($username, $details))
             return new HTTPResponse(HTTPResponse::NO_CONTENT);
 
-        throw new ValidationError(array('User could not be updated'));
+        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
     }
 
     /**
@@ -156,43 +142,8 @@ class NetUserController extends Controller
      */
     private function searchUsers(): HTTPResponse
     {
-        $results = NetUserOperator::searchUsers(self::getFormattedBody(NetUserOperator::SEARCH_ATTRIBUTES, TRUE));
+        $results = NetUserOperator::searchUsers(self::getFormattedBody(ExtConfig::OPTIONS['allowedSearchAttributes'], TRUE));
 
-        $users = array();
-
-        for($i = 0; $i < $results['count']; $i++)
-        {
-            $user = array();
-
-            foreach(array_keys($results[$i]) as $attr)
-            {
-                if(is_numeric($attr)) // Skip integer indexes
-                    continue;
-
-                if(is_array($results[$i][$attr])) // Attribute has details
-                {
-                    if((int)$results[$i][$attr]['count'] == 1) // Only one detail in this attribute
-                        $user[$attr] = $results[$i][$attr][0];
-                    else // Many details in this attribute
-                    {
-                        $subData = array();
-                        for($j = 0; $j < (int)$results[$i][$attr]['count']; $j++)
-                        {
-                            $subData[] = $results[$i][$attr][$j];
-                        }
-
-                        $user[$attr] = $subData;
-                    }
-                }
-                else
-                {
-                    $user[$attr] = ''; // No attribute data, leave blank
-                }
-            }
-
-            $users[] = $user;
-        }
-
-        return new HTTPResponse(HTTPResponse::OK, $users);
+        return new HTTPResponse(HTTPResponse::OK, $results);
     }
 }

@@ -15,6 +15,8 @@ namespace extensions\netuserman\business;
 
 use business\Operator;
 use exceptions\EntryNotFoundException;
+use exceptions\ValidationError;
+use extensions\netuserman\ExtConfig;
 use utilities\LDAPConnection;
 
 /**
@@ -25,7 +27,7 @@ use utilities\LDAPConnection;
  */
 class NetUserOperator extends Operator
 {
-    // Settings for user accounts
+    // These are two-way translations for useraccountcontrol codes
     public const USER_ACCOUNT_CONTROL = array(
         'disabled' => '514',
         'enabled' => '512',
@@ -37,30 +39,54 @@ class NetUserOperator extends Operator
         '66048' => 'enabled_password_never_expires'
     );
 
-    public const DEFAULT_ATTRIBUTES = array(
-        'givenname', // First Name
-        'initials', // Middle Name / Initials
-        'sn', // Last Name
-        'cn', // Common Name
-        'distinguishedname',
-        'userprincipalname', // Login Name
-        'displayname', // Display Name
-        'name', // Full Name
-        'description', // Description
-        'physicaldeliveryofficename', // Office
-        'telephonenumber', // Telephone Number
-        'mail', // Email
-        'memberof', // Add to Groups
-        'accountexpires', // Account Expires (use same date format as server)
-        'title', // Title
-        'removememberof', // Remove group membership,
-        'useraccountcontrol' // Disable and password expire status
+    public const UAC_FORWARD_LOOKUP = array(
+        'SCRIPT' => 1, // Running the login script
+        'ACCOUNTDISABLE' => 2, // The account id disabled
+        'HOMEDIR_REQUIRED' => 8, // The home folder is required
+        'LOCKOUT' => 16, // The account is locked
+        'PASSWD_NOTREQD' => 32, // No password required
+        'PASSWD_CANT_CHANGE' => 64, // Prevent user from changing password
+        'ENCRYPTED_TEXT_PWD_ALLOWED' => 128, // Store password using reversible encryption
+        'TEMP_DUPLICATE_ACCOUNT' => 256,
+        'NORMAL_ACCOUNT' => 512, // A default account, active
+        'INTERDOMAIN_TRUST_ACCOUNT' => 2048,
+        'WORKSTATION_TRUST_ACCOUNT' => 4096,
+        'SERVER_TRUST_ACCOUNT' => 8192,
+        'DONT_EXPIRE_PASSWORD' => 65536,
+        'MSN_LOGON_ACCOUNT' => 131072,
+        'SMARTCARD_REQUIRED' => 262144,
+        'TRUSTED_FOR_DELEGATION' => 524288,
+        'NOT_DELEGATED' => 1048576,
+        'USE_DES_KEY_ONLY' => 2097152,
+        'DONT_REQ_PREAUTH' => 4194304, // Kerberos pre-authentication is not required
+        'PASSWORD_EXPIRED'=> 8388608, // The user password has expired
+        'TRUSTED_TO_AUTH_FOR_DELEGATION' => 16777216,
+        'PARTIAL_SECRETS_ACCOUNT' => 67108864
     );
 
-    public const SEARCH_ATTRIBUTES = array(
-        'samaccountname',
-        'givenname',
-        'sn'
+    public const UAC_REVERSE_LOOKUP = array(
+        67108864 => 'PARTIAL_SECRETS_ACCOUNT',
+        16777216 => 'TRUSTED_TO_AUTH_FOR_DELEGATION',
+        8388608 => 'PASSWORD_EXPIRED',
+        4194304 => 'DONT_REQ_PREAUTH',
+        2097152 => 'USE_DES_KEY_ONLY',
+        1048576 => 'NOT_DELEGATED',
+        524288 => 'TRUSTED_FOR_DELEGATION',
+        262144 => 'SMARTCARD_REQUIRED',
+        131072 => 'MSN_LOGON_ACCOUNT',
+        65536 => 'DONT_EXPIRE_PASSWORD',
+        8192 => 'SERVER_TRUST_ACCOUNT',
+        4096 => 'WORKSTATION_TRUST_ACCOUNT',
+        2048 => 'INTERDOMAIN_TRUST_ACCOUNT',
+        512 => 'NORMAL_ACCOUNT',
+        256 => 'TEMP_DUPLICATE_ACCOUNT',
+        128 => 'ENCRYPTED_TEXT_PWD_ALLOWED',
+        64 => 'PASSWD_CANT_CHANGE',
+        32 => 'PASSWD_NOTREQD',
+        16 => 'LOCKOUT',
+        8 => 'HOMEDIR_REQUIRED',
+        2 => 'ACCOUNTDISABLE',
+        1 => 'SCRIPT'
     );
 
     /**
@@ -70,7 +96,7 @@ class NetUserOperator extends Operator
      * @throws EntryNotFoundException
      * @throws \exceptions\LDAPException
      */
-    public static function getUserDetails(string $username, array $attributes = self::DEFAULT_ATTRIBUTES): array
+    public static function getUserDetails(string $username, array $attributes = ExtConfig::OPTIONS['usedAttributes']): array
     {
         $ldap = new LDAPConnection();
         $ldap->bind();
@@ -95,6 +121,7 @@ class NetUserOperator extends Operator
 
         $formatted = array();
 
+        // Loop through returned values
         foreach(array_keys($results) as $attrName)
         {
             if(is_numeric($attrName)) // Skip numbered indexes
@@ -104,7 +131,7 @@ class NetUserOperator extends Operator
                 continue;
 
             // Single result
-            if($results[$attrName]['count'] == 1 AND $attrName != 'memberof')
+            if($results[$attrName]['count'] == 1 AND $attrName != 'memberof') // This ignores memberof, which should be treated as an array even if it only has one value
                 $formatted[$attrName] = $results[$attrName][0];
             else // Array of values
             {
@@ -119,7 +146,8 @@ class NetUserOperator extends Operator
             }
         }
 
-        foreach(self::DEFAULT_ATTRIBUTES as $key)
+        // Insert blank records if the attribute was requested but not returned by LDAP
+        foreach($attributes as $key)
         {
             $key = strtolower($key);
 
@@ -127,13 +155,10 @@ class NetUserOperator extends Operator
                 $formatted[$key] = '';
         }
 
-        // Check for user account control
+        // Check for user account control, if it exists convert it to an array of flags
         if(isset($formatted['useraccountcontrol']))
         {
-            if(!in_array($formatted['useraccountcontrol'], self::USER_ACCOUNT_CONTROL)) // If not valid, ignore
-                unset($formatted['useraccountcontrol']);
-            else // Translate to code
-                $formatted['useraccountcontrol'] = self::USER_ACCOUNT_CONTROL[$formatted['useraccountcontrol']];
+            $formatted['useraccountcontrol'] = self::getUACFlags((int)$formatted['useraccountcontrol']);
         }
 
         return $formatted;
@@ -150,19 +175,16 @@ class NetUserOperator extends Operator
         foreach(array_keys($vals) as $attr)
         {
             // Remove non-allowed attributes
-            if(!in_array($attr, self::DEFAULT_ATTRIBUTES))
+            if(!in_array($attr, ExtConfig::OPTIONS['usedAttributes']))
                 unset($vals[$attr]);
             else if(strlen($vals[$attr]) === 0) // Blank attributes must be empty arrays
                 $vals[$attr] = array();
         }
 
-        // Check for user account control
-        if(isset($vals['useraccountcontrol']))
+        // Translate useraccountcontrol, if present
+        if(isset($vals['useraccountcontrol']) AND is_array($vals['useraccountcontrol']))
         {
-            if(!in_array($vals['useraccountcontrol'], self::USER_ACCOUNT_CONTROL)) // If not valid, ignore
-                unset($vals['useraccountcontrol']);
-            else // Translate to code
-                $vals['useraccountcontrol'] = self::USER_ACCOUNT_CONTROL[$vals['useraccountcontrol']];
+            $vals['useraccountcontrol'] = self::flagsToUAC($vals['useraccountcontrol']);
         }
 
         $ldap = new LDAPConnection();
@@ -180,6 +202,129 @@ class NetUserOperator extends Operator
         $ldap = new LDAPConnection();
         $ldap->bind();
 
-        return $ldap->searchUsers($filterAttrs, array('userprincipalname', 'sn', 'givenname'));
+        $results = $ldap->searchUsers($filterAttrs, ExtConfig::OPTIONS['returnedSearchAttributes']);
+
+        $users = array();
+
+        for($i = 0; $i < $results['count']; $i++)
+        {
+            $user = array();
+
+            foreach(array_keys($results[$i]) as $attr)
+            {
+                if(is_numeric($attr)) // Skip integer indexes
+                    continue;
+
+                if(is_array($results[$i][$attr])) // Attribute has details
+                {
+                    if((int)$results[$i][$attr]['count'] == 1) // Only one detail in this attribute
+                        $user[$attr] = $results[$i][$attr][0];
+                    else // Many details in this attribute
+                    {
+                        $subData = array();
+                        for($j = 0; $j < (int)$results[$i][$attr]['count']; $j++)
+                        {
+                            $subData[] = $results[$i][$attr][$j];
+                        }
+
+                        $user[$attr] = $subData;
+                    }
+                }
+                else
+                {
+                    $user[$attr] = ''; // No attribute data, leave blank
+                }
+            }
+
+            if(isset($user['useraccountcontrol']))
+                $user['useraccountcontrol'] = self::getUACFlags((int)$user['useraccountcontrol']);
+
+            $users[] = $user;
+        }
+
+        return $users;
+    }
+
+    /**
+     * @param string $username
+     * @param string $imageContents
+     * @return bool
+     * @throws ValidationError
+     * @throws \exceptions\LDAPException
+     */
+    public static function updateUserImage(string $username, string $imageContents): bool
+    {
+        $errors = array();
+
+        // Check image length
+        if(strlen($imageContents) === 0)
+            $errors[] = 'Photo required';
+
+        // Check image type
+        if(strtolower($_FILES['thumbnailphoto']['type']) !== 'image/jpeg')
+            $errors[] = 'Photo must be a JPEG';
+
+        if(!empty($errors))
+            throw new ValidationError($errors);
+
+        // Change photo
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+
+        return $ldap->updateLDAPEntry($username, array('thumbnailphoto' => $imageContents));
+    }
+
+    /**
+     * Converts a useraccountcontrol integer into an array of flag names
+     * @param int $useraccountcontrol
+     * @return array
+     */
+    private static function getUACFlags(int $useraccountcontrol): array
+    {
+        $attributes = array();
+
+        while($useraccountcontrol > 0)
+        {
+            foreach(self::UAC_REVERSE_LOOKUP as $flag => $flagName)
+            {
+                $tmp = $useraccountcontrol - $flag; // Temporary store difference
+
+                if($tmp > 0)
+                {
+                    $attributes[] = $flagName;
+                    $useraccountcontrol = $tmp;
+                }
+
+                if($tmp == 0)
+                {
+                    if (isset(self::UAC_REVERSE_LOOKUP[$useraccountcontrol]))
+                    {
+                        $attributes[] = self::UAC_REVERSE_LOOKUP[$useraccountcontrol];
+                    }
+
+                    $useraccountcontrol = $tmp;
+                }
+            }
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * Converts an array of flags into a useraccountcontrol integer
+     * @param array $flags
+     * @return int
+     */
+    private static function flagsToUAC(array $flags): int
+    {
+        $uac = 0;
+
+        foreach($flags as $flag)
+        {
+            if(in_array($flag, array_keys(self::UAC_FORWARD_LOOKUP)))
+                $uac += (int)self::UAC_FORWARD_LOOKUP[$flag];
+        }
+
+        return $uac;
     }
 }

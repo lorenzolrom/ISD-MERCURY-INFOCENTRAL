@@ -19,10 +19,12 @@ class LDAPException extends MercuryException
     const FAILED_SET_LDAP_VERSION = 1200;
     const FAILED_DISABLE_REFERRALS = 1201;
     const FAILED_START_TLS = 1202;
+    const OPERATION_FAILED = 1203;
 
     const MESSAGES = array(
         self::FAILED_SET_LDAP_VERSION => "Failed to set LDAP protocol version",
         self::FAILED_DISABLE_REFERRALS => "Failed to disable LDAP referrals",
-        self::FAILED_START_TLS => "Failed to start TLS LDAP connection"
+        self::FAILED_START_TLS => "Failed to start TLS LDAP connection",
+        self::OPERATION_FAILED => "The LDAP operation failed"
     );
 }

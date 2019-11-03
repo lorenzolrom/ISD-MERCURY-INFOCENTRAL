@@ -39,6 +39,7 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
         'ldapDomainController' => 'domain.local',
         'ldapDomain' => 'DOMAIN', // Domain prefix for user accounts
         'ldapDomainDn' => 'dc=domain, dc=local',
+        'ldapPrincipalSuffix' => '@domain.local',
 
         'ldapUsername' => 'domain_admin',
         'ldapPassword' => 'domain_password',

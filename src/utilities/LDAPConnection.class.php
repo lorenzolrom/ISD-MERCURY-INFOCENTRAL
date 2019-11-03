@@ -85,7 +85,7 @@ class LDAPConnection
      */
     public function searchByUsername($username, array $attributes): array
     {
-        $filter = "(|(sAMAccountName=" . $username . "))";
+        $filter = "(|(userprincipalname=" . $username . \Config::OPTIONS['ldapPrincipalSuffix'] . "))";
         $search = ldap_search($this->connection, $this->domainDN, $filter, $attributes);
         return ldap_get_entries($this->connection, $search);
     }
@@ -102,8 +102,8 @@ class LDAPConnection
         // Build filter
         foreach(array_keys($filterAttrs) as $attr)
         {
-            if($filterAttrs[$attr] === NULL)
-                $filterAttrs[$attr] = '';
+            if($filterAttrs[$attr] === NULL OR strlen($filterAttrs[$attr]) === 0)
+                continue;
 
             $filter .= "($attr=*{$filterAttrs[$attr]}*)";
         }
@@ -151,7 +151,7 @@ class LDAPConnection
      * @param $newEntry
      * @return bool
      */
-    public function updateLDAPEntry(string $username, $newEntry): bool
+    public function updateUser(string $username, $newEntry): bool
     {
         $this->bind(\Config::OPTIONS['ldapUsername'], \Config::OPTIONS['ldapPassword']);
 
@@ -163,9 +163,123 @@ class LDAPConnection
 
         $resultUserDN = $user[0]['dn'];
 
+        // Check for DN changes
+        if(isset($newEntry['distinguishedname']))
+        {
+            $newDNParts = explode(',', $newEntry['distinguishedname']);
+            $newCN = array_shift($newDNParts);
+            unset($newEntry['distinguishedname']);
+
+            // Build new DN
+            $newDN = implode(',', $newDNParts);
+
+            if(ldap_rename($this->connection, $resultUserDN, $newCN, $newDN, TRUE))
+                $resultUserDN = $newCN . ',' . $newDN;
+        }
+
         if(ldap_mod_replace($this->connection, $resultUserDN, $newEntry))
             return TRUE;
 
         return FALSE;
+    }
+
+    /**
+     * @param string $dn
+     * @param array $newEntry
+     * @return bool
+     */
+    public function updateEntry(string $dn, array $newEntry): bool
+    {
+        if(isset($newEntry['distinguishedname']))
+        {
+            $newDNParts = explode(',', $newEntry['distinguishedname']);
+            $newCN = array_shift($newDNParts);
+            unset($newEntry['distinguishedname']);
+
+            // Build new DN
+            $newDN = implode(',', $newDNParts);
+
+            if(ldap_rename($this->connection, $dn, $newCN, $newDN, TRUE))
+                $dn = $newCN . ',' . $newDN;
+        }
+
+        if(ldap_mod_replace($this->connection, $dn, $newEntry))
+            return TRUE;
+
+        return FALSE;
+    }
+
+    /**
+     * Search for groups
+     * @param array $filterAttrs
+     * @param array $attributes
+     * @return array
+     */
+    public function searchGroups(array $filterAttrs, array $attributes): array
+    {
+        $filter = '(&'; // Search for all filters (e.g. Filter AND Filter AND...)
+
+        // Build filter
+        foreach(array_keys($filterAttrs) as $attr)
+        {
+            if($filterAttrs[$attr] === NULL OR strlen($filterAttrs[$attr]) === 0)
+                continue;
+
+            $filter .= "($attr=*{$filterAttrs[$attr]}*)";
+        }
+
+        $filter = str_replace('**', '*', $filter); // Double ** is a bad filter
+        $filter .= '(objectClass=group))'; // Limit to user accounts
+
+        $search = ldap_search($this->connection, $this->domainDN, $filter, $attributes);
+
+        $results = ldap_get_entries($this->connection, $search);
+
+        return is_array($results) ? $results : array();
+    }
+
+    /**
+     * @param string $cn
+     * @param $attributes
+     * @return array
+     */
+    public function getGroup(string $cn, $attributes): array
+    {
+        $filter = "(|(cn=" . $cn . "))";
+        $search = ldap_search($this->connection, $this->domainDN, $filter, $attributes);
+        return ldap_get_entries($this->connection, $search);
+    }
+
+    /**
+     * @param $dn
+     * @param $newCN
+     * @param $newOU
+     * @return bool
+     */
+    public function rename($dn, $newCN, $newOU): bool
+    {
+        return ldap_rename($this->connection, $dn, $newCN, $newOU, true);
+    }
+
+    /**
+     * @param $dn
+     * @param $attrName
+     * @param $newVal
+     * @return bool
+     */
+    public function addAttribute($dn, $attrName, $newVal): bool
+    {
+        return ldap_mod_add($this->connection, $dn, array($attrName => $newVal));
+    }
+
+    /**
+     * @param $dn
+     * @param $attrName
+     * @param $oldVal
+     * @return bool
+     */
+    public function delAttribute($dn, $attrName, $oldVal): bool
+    {
+        return ldap_mod_del($this->connection, $dn, array($attrName => $oldVal));
     }
 }

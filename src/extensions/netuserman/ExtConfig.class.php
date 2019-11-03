@@ -17,7 +17,8 @@ namespace extensions\netuserman;
 class ExtConfig
 {
     public const ROUTES = array(
-        'netuserman' => 'extensions\netuserman\controllers\NetUserController'
+        'netuserman' => 'extensions\netuserman\controllers\NetUserController',
+        'netgroupman' => 'extensions\netuserman\controllers\NetGroupController'
     );
 
     public const OPTIONS = array( // Attributes allowed to be used in search filter
@@ -26,6 +27,7 @@ class ExtConfig
             'givenname',
             'sn'
         ),
+
         'returnedSearchAttributes' => array( // List of attributes returned from a bulk search
             'userprincipalname',
             'sn',
@@ -34,6 +36,25 @@ class ExtConfig
             'title',
             'description'
         ),
+
+        'allowedSearchGroupAttributes' => array(
+            'cn',
+            'description',
+        ),
+
+        'returnedSearchGroupAttributes' => array(
+            'cn',
+            'description',
+            'distinguishedname'
+        ),
+
+        'usedGroupAttributes' => array(
+            'description',
+            'distinguishedname',
+            'member',
+            'cn'
+        ),
+
         'usedAttributes' => array( // Defines default attributes returned for a user, and what attributes are allowed to be updated
             'givenname', // First Name
             'initials', // Middle Name / Initials
@@ -49,7 +70,6 @@ class ExtConfig
             'mail', // Email
             'memberof', // Add to Groups
             'title', // Title
-            'removememberof', // Remove group membership,
             'useraccountcontrol' // Disable and password expire status
         )
     );

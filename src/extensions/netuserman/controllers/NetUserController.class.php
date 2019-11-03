@@ -71,6 +71,8 @@ class NetUserController extends Controller
             CurrentUserController::validatePermission('netuserman-edit-details');
             if($next === 'password')
                 return $this->resetPassword((string)$param);
+            else if($next === 'groups')
+                return $this->modifyGroups((string)$param);
             return $this->updateUser((string)$param);
         }
 
@@ -158,6 +160,19 @@ class NetUserController extends Controller
     private function resetPassword(string $username): HTTPResponse
     {
         if(NetUserOperator::resetPassword($username, self::getFormattedBody(array('password', 'confirm'), TRUE)))
+            return new HTTPResponse(HTTPResponse::NO_CONTENT);
+
+        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
+    }
+
+    /**
+     * @param string $username
+     * @return HTTPResponse
+     * @throws LDAPException
+     */
+    private function modifyGroups(string $username): HTTPResponse
+    {
+        if(NetUserOperator::modifyGroups($username, self::getFormattedBody(array('addGroups', 'removeGroups'), TRUE)))
             return new HTTPResponse(HTTPResponse::NO_CONTENT);
 
         throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);

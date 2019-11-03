@@ -190,7 +190,8 @@ class NetUserOperator extends Operator
 
         $ldap = new LDAPConnection();
         $ldap->bind();
-        return $ldap->updateLDAPEntry($username, $vals);
+
+        return $ldap->updateUser($username, $vals);
     }
 
     /**
@@ -278,7 +279,7 @@ class NetUserOperator extends Operator
         $ldap = new LDAPConnection();
         $ldap->bind();
 
-        return $ldap->updateLDAPEntry($username, array('thumbnailphoto' => $imageContents));
+        return $ldap->updateUser($username, array('thumbnailphoto' => $imageContents));
     }
 
     /**
@@ -300,6 +301,63 @@ class NetUserOperator extends Operator
         $ldap->bind();
 
         return $ldap->setPassword($username, $password);
+    }
+
+    /**
+     * @param string $username
+     * @param array $vals
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws LDAPException
+     */
+    public static function modifyGroups(string $username, array $vals): bool
+    {
+        $userDN = self::getUserDetails($username, array('distinguishedname'))['distinguishedname'];
+
+        $addGroups = is_array($vals['addGroups']) ? $vals['addGroups'] : array();
+        $removeGroups = is_array($vals['removeGroups']) ? $vals['removeGroups'] : array();
+
+        $addDNs = array();
+        $removeDNs = array();
+
+        foreach($addGroups as $group)
+        {
+            try
+            {
+                $addDNs[] = NetGroupOperator::getGroupDetails($group, array('distinguishedname'))['distinguishedname'];
+            }
+            catch (EntryNotFoundException $e)
+            {
+                // Ignore
+            }
+        }
+
+        foreach($removeGroups as $group)
+        {
+            try
+            {
+                $removeDNs[] = NetGroupOperator::getGroupDetails($group, array('distinguishedname'))['distinguishedname'];
+            }
+            catch(EntryNotFoundException $e)
+            {
+                // Ignore
+            }
+        }
+
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+
+        foreach($addDNs as $dn)
+        {
+            $ldap->addAttribute($dn, 'member', $userDN);
+        }
+
+        foreach($removeDNs as $dn)
+        {
+            $ldap->delAttribute($dn, 'member', $userDN);
+        }
+
+        return TRUE;
     }
 
     /**

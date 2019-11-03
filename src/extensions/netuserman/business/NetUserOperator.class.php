@@ -195,13 +195,17 @@ class NetUserOperator extends Operator
             // Remove domain '@' suffix from userprincipalname, if present
             $vals['userprincipalname'] = explode(\Config::OPTIONS['ldapPrincipalSuffix'], $vals['userprincipalname'])[0];
 
-            try
+            // If username has been changed, verify it is not in use elsewhere
+            if($username != $vals['userprincipalname'])
             {
-                // Check if username already exists
-                self::getUserDetails($vals['userprincipalname'], array('userprincipalname'));
-                throw new ValidationError(array('Login name already in use'));
+                try
+                {
+                    // Check if username already exists
+                    self::getUserDetails($vals['userprincipalname'], array('userprincipalname'));
+                    throw new ValidationError(array('Login name already in use'));
+                }
+                catch(EntryNotFoundException $e){} // Do nothing
             }
-            catch(EntryNotFoundException $e){} // Do nothing
 
             // Re-add domain '@'
             $vals['userprincipalname'] = $vals['userprincipalname'] . \Config::OPTIONS['ldapPrincipalSuffix'];
@@ -368,12 +372,20 @@ class NetUserOperator extends Operator
 
         foreach($addDNs as $dn)
         {
-            $ldap->addAttribute($dn, 'member', $userDN);
+            try
+            {
+                $ldap->addAttribute($dn, 'member', $userDN);
+            }
+            catch(LDAPException $e){} // Do nothing
         }
 
         foreach($removeDNs as $dn)
         {
-            $ldap->delAttribute($dn, 'member', $userDN);
+            try
+            {
+                $ldap->delAttribute($dn, 'member', $userDN);
+            }
+            catch(LDAPException $e){}
         }
 
         return TRUE;

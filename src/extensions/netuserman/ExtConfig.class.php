@@ -22,13 +22,37 @@ class ExtConfig
     );
 
     public const OPTIONS = array( // Attributes allowed to be used in search filter
-        'allowedSearchAttributes' => array(
+
+        'groupReturnedSearchAttributes' => array( // Attributes returned when searching for groups
+            'cn',
+            'description',
+            'distinguishedname'
+        ),
+
+        'groupReturnedAttributes' => array( // Attributes returned when getting a single group
+            'description',
+            'distinguishedname',
+            'member',
+            'cn'
+        ),
+
+        'groupEditableAttributes' => array( // Attributes allowed to be edited in a group
+            'distinguishedname',
+            'description'
+        ),
+
+        'groupSearchByAttributes' => array( // Attributes allowed to be searched by in a group
+            'cn',
+            'description',
+        ),
+
+        'userSearchByAttributes' => array( // Attributes allowed to be searched by in a user
             'samaccountname',
             'givenname',
             'sn'
         ),
 
-        'returnedSearchAttributes' => array( // List of attributes returned from a bulk search
+        'userReturnedSearchAttributes' => array( // Attributes returned when searching for users
             'userprincipalname',
             'sn',
             'givenname',
@@ -37,25 +61,7 @@ class ExtConfig
             'description'
         ),
 
-        'allowedSearchGroupAttributes' => array(
-            'cn',
-            'description',
-        ),
-
-        'returnedSearchGroupAttributes' => array(
-            'cn',
-            'description',
-            'distinguishedname'
-        ),
-
-        'usedGroupAttributes' => array(
-            'description',
-            'distinguishedname',
-            'member',
-            'cn'
-        ),
-
-        'usedAttributes' => array( // Defines default attributes returned for a user, and what attributes are allowed to be updated
+        'userReturnedAttributes' => array( // Attributes returned when getting a single user
             'givenname', // First Name
             'initials', // Middle Name / Initials
             'sn', // Last Name
@@ -69,6 +75,22 @@ class ExtConfig
             'telephonenumber', // Telephone Number
             'mail', // Email
             'memberof', // Add to Groups
+            'title', // Title
+            'useraccountcontrol' // Disable and password expire status
+        ),
+
+        'userEditableAttributes' => array( // Attributes allowed to be edited in a user
+            'givenname', // First Name
+            'initials', // Middle Name / Initials
+            'sn', // Last Name
+            'distinguishedname',
+            'userprincipalname', // Login Name
+            'displayname', // Display Name
+            'name', // Full Name
+            'description', // Description
+            'physicaldeliveryofficename', // Office
+            'telephonenumber', // Telephone Number
+            'mail', // Email
             'title', // Title
             'useraccountcontrol' // Disable and password expire status
         )

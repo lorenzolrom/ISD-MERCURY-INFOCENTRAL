@@ -78,7 +78,7 @@ class NetGroupController extends Controller
      */
     private function searchGroups(): HTTPResponse
     {
-        $results = NetGroupOperator::searchGroups(self::getFormattedBody(ExtConfig::OPTIONS['allowedSearchGroupAttributes'], TRUE));
+        $results = NetGroupOperator::searchGroups(self::getFormattedBody(ExtConfig::OPTIONS['groupSearchByAttributes'], TRUE));
 
         return new HTTPResponse(HTTPResponse::OK, $results);
     }
@@ -91,7 +91,7 @@ class NetGroupController extends Controller
      */
     private function getGroup(string $cn): HTTPResponse
     {
-        return new HTTPResponse(HTTPResponse::OK, NetGroupOperator::getGroupDetails($cn, ExtConfig::OPTIONS['usedGroupAttributes']));
+        return new HTTPResponse(HTTPResponse::OK, NetGroupOperator::getGroupDetails($cn));
     }
 
     /**
@@ -101,7 +101,7 @@ class NetGroupController extends Controller
      */
     private function updateGroup(string $cn): HTTPResponse
     {
-        NetGroupOperator::updateGroup($cn, self::getFormattedBody(ExtConfig::OPTIONS['usedGroupAttributes']));
+        NetGroupOperator::updateGroup($cn, self::getFormattedBody(ExtConfig::OPTIONS['groupEditableAttributes']));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
@@ -124,7 +124,7 @@ class NetGroupController extends Controller
      */
     private function createGroup(): HTTPResponse
     {
-        $result = NetGroupOperator::createGroup(self::getFormattedBody(ExtConfig::OPTIONS['usedGroupAttributes'], TRUE));
+        $result = NetGroupOperator::createGroup(self::getFormattedBody(ExtConfig::OPTIONS['groupEditableAttributes'], TRUE));
         return new HTTPResponse(HTTPResponse::CREATED, $result);
     }
 }

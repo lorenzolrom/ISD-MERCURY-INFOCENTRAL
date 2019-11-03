@@ -24,16 +24,17 @@ use utilities\LDAPConnection;
 class NetGroupOperator extends Operator
 {
     /**
-     * @param $filterAttrs
+     * @param array $filterAttrs
+     * @param array $getAttrs
      * @return array
-     * @throws \exceptions\LDAPException
+     * @throws LDAPException
      */
-    public static function searchGroups($filterAttrs): array
+    public static function searchGroups(array $filterAttrs, array $getAttrs = ExtConfig::OPTIONS['groupReturnedSearchAttributes']): array
     {
         $ldap = new LDAPConnection();
         $ldap->bind();
 
-        $results = $ldap->searchGroups($filterAttrs, ExtConfig::OPTIONS['returnedSearchGroupAttributes']);
+        $results = $ldap->searchGroups($filterAttrs, $getAttrs);
 
         $groups = array();
 
@@ -67,7 +68,7 @@ class NetGroupOperator extends Operator
                 }
             }
 
-            foreach(ExtConfig::OPTIONS['returnedSearchGroupAttributes'] as $attr)
+            foreach($getAttrs as $attr)
             {
                 if(!isset($group[$attr])) // Fill in the blanks
                     $group[$attr] = '';
@@ -81,12 +82,12 @@ class NetGroupOperator extends Operator
 
     /**
      * @param string $cn
-     * @param array $attributes
+     * @param array $getAttrs
      * @return array
      * @throws EntryNotFoundException
      * @throws \exceptions\LDAPException
      */
-    public static function getGroupDetails(string $cn, array $attributes = ExtConfig::OPTIONS['usedGroupAttributes']): array
+    public static function getGroupDetails(string $cn, array $getAttrs = ExtConfig::OPTIONS['groupReturnedAttributes']): array
     {
         // Decode URI characters
         $cn = urldecode($cn);
@@ -94,7 +95,7 @@ class NetGroupOperator extends Operator
         $ldap = new LDAPConnection();
         $ldap->bind();
 
-        $results = $ldap->getGroup($cn, $attributes);
+        $results = $ldap->getGroup($cn, $getAttrs);
 
         if($results['count'] !== 1)
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
@@ -127,7 +128,7 @@ class NetGroupOperator extends Operator
             }
 
             // Insert blank records if the attribute was requested but not returned by LDAP
-            foreach($attributes as $key)
+            foreach($getAttrs as $key)
             {
                 $key = strtolower($key);
 
@@ -143,29 +144,22 @@ class NetGroupOperator extends Operator
      * @param string $cn
      * @param array $vals
      * @return bool
-     * @throws \exceptions\LDAPException
+     * @throws EntryNotFoundException
+     * @throws LDAPException
      */
     public static function updateGroup(string $cn, array $vals): bool
     {
         foreach(array_keys($vals) as $attr)
         {
             // Remove non-allowed attributes
-            if(!in_array($attr, ExtConfig::OPTIONS['usedGroupAttributes']))
-                unset($vals[$attr]);
-            else if(!is_array($vals[$attr]) AND strlen($vals[$attr]) === 0) // Blank attributes must be empty arrays
+            if(!is_array($vals[$attr]) AND strlen($vals[$attr]) === 0) // Blank attributes must be empty arrays
                 $vals[$attr] = array();
         }
 
         $ldap = new LDAPConnection();
         $ldap->bind();
 
-        $dn = $ldap->getGroup($cn, array('distinguishedname'))[0]['distinguishedname'][0];
-
-        if(isset($vals['member'])) // Member update not allowed like this
-            unset($vals['member']);
-
-        if(isset($vals['cn'])) // Name update not allowed like this, must edit distinguished name
-            unset($vals['cn']);
+        $dn = self::getGroupDetails($cn, array('distinguishedname'))['distinguishedname'];
 
         return $ldap->updateEntry($dn, $vals);
     }
@@ -193,12 +187,6 @@ class NetGroupOperator extends Operator
      */
     public static function createGroup(array $attrs): ?array
     {
-        if(isset($attrs['cn'])) // Name set through DN instead
-            unset($attrs['cn']);
-
-        if(isset($attrs['members'])) // Members added through user
-            unset($attrs['members']);
-
         $errors = array();
 
         // Check DN is present

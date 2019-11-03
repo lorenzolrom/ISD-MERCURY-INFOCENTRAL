@@ -97,7 +97,7 @@ class NetUserOperator extends Operator
      * @throws EntryNotFoundException
      * @throws \exceptions\LDAPException
      */
-    public static function getUserDetails(string $username, array $attributes = ExtConfig::OPTIONS['usedAttributes']): array
+    public static function getUserDetails(string $username, array $attributes = ExtConfig::OPTIONS['userReturnedAttributes']): array
     {
         $ldap = new LDAPConnection();
         $ldap->bind();
@@ -176,10 +176,7 @@ class NetUserOperator extends Operator
     {
         foreach(array_keys($vals) as $attr)
         {
-            // Remove non-allowed attributes
-            if(!in_array($attr, ExtConfig::OPTIONS['usedAttributes']))
-                unset($vals[$attr]);
-            else if(!is_array($vals[$attr]) AND strlen($vals[$attr]) === 0) // Blank attributes must be empty arrays
+            if(!is_array($vals[$attr]) AND strlen($vals[$attr]) === 0) // Blank attributes must be empty arrays
                 $vals[$attr] = array();
         }
 
@@ -218,16 +215,17 @@ class NetUserOperator extends Operator
     }
 
     /**
-     * @param $filterAttrs
+     * @param array $filterAttrs
+     * @param array $getAttrs
      * @return array
-     * @throws \exceptions\LDAPException
+     * @throws LDAPException
      */
-    public static function searchUsers($filterAttrs): array
+    public static function searchUsers(array $filterAttrs, array $getAttrs = ExtConfig::OPTIONS['userReturnedSearchAttributes']): array
     {
         $ldap = new LDAPConnection();
         $ldap->bind();
 
-        $results = $ldap->searchUsers($filterAttrs, ExtConfig::OPTIONS['returnedSearchAttributes']);
+        $results = $ldap->searchUsers($filterAttrs, $getAttrs);
 
         $users = array();
 
@@ -264,7 +262,7 @@ class NetUserOperator extends Operator
             if(isset($user['useraccountcontrol']))
                 $user['useraccountcontrol'] = self::getUACFlags((int)$user['useraccountcontrol']);
 
-            foreach(ExtConfig::OPTIONS['returnedSearchAttributes'] as $attr)
+            foreach($getAttrs as $attr)
             {
                 if(!isset($user[$attr])) // Fill in the blanks
                     $user[$attr] = '';
@@ -414,20 +412,6 @@ class NetUserOperator extends Operator
      */
     public static function createUser(array $attrs): ?array
     {
-        // Extract passwords
-        $password = isset($attrs['password']) ? $attrs['password'] : '';
-        $confirm = isset($attrs['confirm']) ? $attrs['confirm'] : '';
-
-        // Remove invalid attributes
-        foreach(array_keys($attrs) as $attr)
-        {
-            if(!in_array($attr, ExtConfig::OPTIONS['usedAttributes']))
-                unset($attrs[$attr]);
-        }
-
-        if(isset($attrs['cn'])) // CN is not set this way, will use DN
-            unset($attrs['cn']);
-
         $errors = array();
 
         // Remove domain '@' suffix from userprincipalname, if present
@@ -453,9 +437,20 @@ class NetUserOperator extends Operator
         // Re-add domain '@'
         $attrs['userprincipalname'] = $attrs['userprincipalname'] . \Config::OPTIONS['ldapPrincipalSuffix'];
 
+        // Extract passwords
+        $password = isset($attrs['password']) ? $attrs['password'] : '';
+        $confirm = isset($attrs['confirm']) ? $attrs['confirm'] : '';
+
+        // Remove password and confirm, they are not LDAP attributes
+        unset($attrs['password']);
+        unset($attrs['confirm']);
+
         // Make sure passwords match
         if($password !== $confirm)
             $errors[] = 'Passwords do not match';
+
+        // Format password
+        $attrs['unicodePwd'] = LDAPConnection::getLDAPFormattedPassword($password);
 
         // Throw errors, if present
         if(!empty($errors))
@@ -475,8 +470,6 @@ class NetUserOperator extends Operator
         {
             $attrs['useraccountcontrol'] = self::flagsToUAC($attrs['useraccountcontrol']);
         }
-
-        $attrs['unicodePwd'] = LDAPConnection::getLDAPFormattedPassword($password);
 
         // Remove empty attributes
         foreach(array_keys($attrs) as $attr)

@@ -36,15 +36,13 @@ class NetUserController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission('netuserman');
+        CurrentUserController::validatePermission('netuserman-read');
 
         $param = $this->request->next();
         $next = $this->request->next();
 
         if($this->request->method() === HTTPRequest::GET)
         {
-            CurrentUserController::validatePermission('netuserman-read');
-
             if($param !== NULL)
             {
                 if($next === 'photo')
@@ -57,7 +55,6 @@ class NetUserController extends Controller
         {
             if($param === 'search' AND $next === NULL)
             {
-                CurrentUserController::validatePermission('netuserman-read');
                 return $this->searchUsers();
             }
             else if($next === 'photo')
@@ -154,7 +151,7 @@ class NetUserController extends Controller
      */
     private function searchUsers(): HTTPResponse
     {
-        $results = NetUserOperator::searchUsers(self::getFormattedBody(ExtConfig::OPTIONS['allowedSearchAttributes'], TRUE));
+        $results = NetUserOperator::searchUsers(self::getFormattedBody(ExtConfig::OPTIONS['userSearchByAttributes'], TRUE));
 
         return new HTTPResponse(HTTPResponse::OK, $results);
     }
@@ -202,7 +199,7 @@ class NetUserController extends Controller
      */
     private function createUser(): HTTPResponse
     {
-        $result = NetUserOperator::createUser(self::getFormattedBody(ExtConfig::OPTIONS['usedAttributes'], TRUE));
+        $result = NetUserOperator::createUser(self::getFormattedBody(array_merge(ExtConfig::OPTIONS['userEditableAttributes'], array('password', 'confirm')), TRUE));
         return new HTTPResponse(HTTPResponse::CREATED, $result);
     }
 }

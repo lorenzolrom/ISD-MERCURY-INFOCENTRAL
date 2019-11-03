@@ -27,10 +27,11 @@ class NetGroupController extends Controller
 
     /**
      * @return HTTPResponse|null
+     * @throws LDAPException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\LDAPException
      * @throws \exceptions\SecurityException
+     * @throws \exceptions\ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -44,6 +45,11 @@ class NetGroupController extends Controller
             {
                 return $this->searchGroups();
             }
+            else if($param === NULL)
+            {
+                CurrentUserController::validatePermission('netuserman-creategroups');
+                return $this->createGroup();
+            }
         }
         else if($this->request->method() === HTTPRequest::GET)
         {
@@ -52,8 +58,15 @@ class NetGroupController extends Controller
         }
         else if($this->request->method() === HTTPRequest::PUT)
         {
+            CurrentUserController::validatePermission('netuserman-editgroups');
             if($next === NULL AND $param !== NULL)
                 return $this->updateGroup((string)$param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            CurrentUserController::validatePermission('netuserman-deletegroups');
+            if($next === NULL AND $param !== NULL)
+                return $this->deleteGroup((string)$param);
         }
 
         return NULL;
@@ -88,9 +101,30 @@ class NetGroupController extends Controller
      */
     private function updateGroup(string $cn): HTTPResponse
     {
-        if(NetGroupOperator::updateGroup($cn, self::getFormattedBody(ExtConfig::OPTIONS['usedGroupAttributes'])))
-            return new HTTPResponse(HTTPResponse::NO_CONTENT);
+        NetGroupOperator::updateGroup($cn, self::getFormattedBody(ExtConfig::OPTIONS['usedGroupAttributes']));
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
 
-        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
+    /**
+     * @param string $cn
+     * @return HTTPResponse
+     * @throws LDAPException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function deleteGroup(string $cn): HTTPResponse
+    {
+        NetGroupOperator::deleteGroup($cn);
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws LDAPException
+     * @throws \exceptions\ValidationError
+     */
+    private function createGroup(): HTTPResponse
+    {
+        $result = NetGroupOperator::createGroup(self::getFormattedBody(ExtConfig::OPTIONS['usedGroupAttributes'], TRUE));
+        return new HTTPResponse(HTTPResponse::CREATED, $result);
     }
 }

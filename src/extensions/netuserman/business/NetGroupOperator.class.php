@@ -16,6 +16,8 @@ namespace extensions\netuserman\business;
 
 use business\Operator;
 use exceptions\EntryNotFoundException;
+use exceptions\LDAPException;
+use exceptions\ValidationError;
 use extensions\netuserman\ExtConfig;
 use utilities\LDAPConnection;
 
@@ -166,5 +168,67 @@ class NetGroupOperator extends Operator
             unset($vals['cn']);
 
         return $ldap->updateEntry($dn, $vals);
+    }
+
+    /**
+     * @param string $cn
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws LDAPException
+     */
+    public static function deleteGroup(string $cn): bool
+    {
+        $groupDN = self::getGroupDetails($cn, array('distinguishedname'))['distinguishedname'];
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+
+        return $ldap->deleteObject($groupDN);
+    }
+
+    /**
+     * @param array $attrs
+     * @return array|null
+     * @throws LDAPException
+     * @throws ValidationError
+     */
+    public static function createGroup(array $attrs): ?array
+    {
+        if(isset($attrs['cn'])) // Name set through DN instead
+            unset($attrs['cn']);
+
+        if(isset($attrs['members'])) // Members added through user
+            unset($attrs['members']);
+
+        $errors = array();
+
+        // Check DN is present
+        if(strlen($attrs['distinguishedname']) < 1)
+            $errors[] = 'Distinguished Name (DN) is required';
+
+        // Throw errors, if present
+        if(!empty($errors))
+            throw new ValidationError($errors);
+
+        // Remove empty attributes
+        foreach(array_keys($attrs) as $attr)
+        {
+            if((is_array($attrs[$attr]) AND empty($attrs[$attr])) OR (!is_array($attrs[$attr]) AND strlen($attrs[$attr]) === 0))
+                unset($attrs[$attr]);
+        }
+
+        $attrs['objectclass'] = array('top', 'group');
+
+        // Create object
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+
+        if($ldap->createObject($attrs['distinguishedname'], $attrs))
+        {
+            $cn = explode(',', $attrs['distinguishedname'])[0];
+            $cn = explode('=', $cn)[1];
+            return array('cn' => $cn);
+        }
+
+        return NULL;
     }
 }

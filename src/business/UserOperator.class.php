@@ -414,25 +414,6 @@ class UserOperator extends Operator
     }
 
     /**
-     * @return array
-     * @throws DatabaseException
-     */
-    public static function reSyncLdapUsers(): array
-    {
-        $data = array();
-
-        foreach(UserDatabaseHandler::select() as $user)
-        {
-            if($user->getAuthType() !== 'ldap')
-                continue;
-
-
-        }
-
-        return $data;
-    }
-
-    /**
      * @param User $user
      * @param string $password
      * @return bool
@@ -483,7 +464,6 @@ class UserOperator extends Operator
     private static function changeLDAPUserPassword(User $user, string $password): bool
     {
         $ldap = new LDAPConnection();
-        $ldap->setPassword($user->getUsername(), $password);
-        return TRUE;
+        return $ldap->setPassword($user->getUsername(), $password);
     }
 }

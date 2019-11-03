@@ -25,6 +25,16 @@ class LDAPConnection
     private $domainDN;
 
     /**
+     * @param string $password
+     * @return string
+     */
+    public static function getLDAPFormattedPassword(string $password): string
+    {
+
+        return mb_convert_encoding(("\"" . $password . "\""), 'UTF-16LE');
+    }
+
+    /**
      * LDAPConnection constructor.
      * @param bool $useTLS
      * @throws LDAPException
@@ -125,6 +135,7 @@ class LDAPConnection
      * @param $username
      * @param $password
      * @return bool Was the password update successful
+     * @throws LDAPException
      */
     public function setPassword($username, $password): bool
     {
@@ -143,13 +154,14 @@ class LDAPConnection
         if(ldap_mod_replace($this->connection, $resultUserDN, $newLDAPEntry))
             return TRUE;
 
-        return FALSE;
+        throw new LDAPException(ldap_error($this->connection), LDAPException::OPERATION_FAILED);
     }
 
     /**
      * @param string $username
      * @param $newEntry
      * @return bool
+     * @throws LDAPException
      */
     public function updateUser(string $username, $newEntry): bool
     {
@@ -180,13 +192,14 @@ class LDAPConnection
         if(ldap_mod_replace($this->connection, $resultUserDN, $newEntry))
             return TRUE;
 
-        return FALSE;
+        throw new LDAPException(ldap_error($this->connection), LDAPException::OPERATION_FAILED);
     }
 
     /**
      * @param string $dn
      * @param array $newEntry
      * @return bool
+     * @throws LDAPException
      */
     public function updateEntry(string $dn, array $newEntry): bool
     {
@@ -206,7 +219,7 @@ class LDAPConnection
         if(ldap_mod_replace($this->connection, $dn, $newEntry))
             return TRUE;
 
-        return FALSE;
+        throw new LDAPException(ldap_error($this->connection), LDAPException::OPERATION_FAILED);
     }
 
     /**
@@ -255,10 +268,14 @@ class LDAPConnection
      * @param $newCN
      * @param $newOU
      * @return bool
+     * @throws LDAPException
      */
     public function rename($dn, $newCN, $newOU): bool
     {
-        return ldap_rename($this->connection, $dn, $newCN, $newOU, true);
+        if(!ldap_rename($this->connection, $dn, $newCN, $newOU, true))
+            throw new LDAPException(ldap_error($this->connection), LDAPException::OPERATION_FAILED);
+
+        return TRUE;
     }
 
     /**
@@ -266,10 +283,14 @@ class LDAPConnection
      * @param $attrName
      * @param $newVal
      * @return bool
+     * @throws LDAPException
      */
     public function addAttribute($dn, $attrName, $newVal): bool
     {
-        return ldap_mod_add($this->connection, $dn, array($attrName => $newVal));
+        if(!ldap_mod_add($this->connection, $dn, array($attrName => $newVal)))
+            throw new LDAPException(ldap_error($this->connection), LDAPException::OPERATION_FAILED);
+
+        return TRUE;
     }
 
     /**
@@ -277,9 +298,40 @@ class LDAPConnection
      * @param $attrName
      * @param $oldVal
      * @return bool
+     * @throws LDAPException
      */
     public function delAttribute($dn, $attrName, $oldVal): bool
     {
-        return ldap_mod_del($this->connection, $dn, array($attrName => $oldVal));
+        if(!ldap_mod_del($this->connection, $dn, array($attrName => $oldVal)))
+            throw new LDAPException(ldap_error($this->connection), LDAPException::OPERATION_FAILED);
+
+        return TRUE;
+    }
+
+    /**
+     * @param $dn
+     * @return bool
+     * @throws LDAPException
+     */
+    public function deleteObject(string $dn): bool
+    {
+        if(!ldap_delete($this->connection, $dn))
+            throw new LDAPException(ldap_error($this->connection), LDAPException::OPERATION_FAILED);
+
+        return TRUE;
+    }
+
+    /**
+     * @param string $dn
+     * @param array $attrs
+     * @return bool
+     * @throws LDAPException
+     */
+    public function createObject(string $dn, array $attrs): bool
+    {
+        if(!ldap_add($this->connection, $dn, $attrs))
+            throw new LDAPException(ldap_error($this->connection), LDAPException::OPERATION_FAILED);
+
+        return TRUE;
     }
 }

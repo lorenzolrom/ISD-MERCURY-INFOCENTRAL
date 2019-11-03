@@ -14,6 +14,8 @@
 namespace exceptions;
 
 
+use Throwable;
+
 class LDAPException extends MercuryException
 {
     const FAILED_SET_LDAP_VERSION = 1200;
@@ -27,4 +29,9 @@ class LDAPException extends MercuryException
         self::FAILED_START_TLS => "Failed to start TLS LDAP connection",
         self::OPERATION_FAILED => "The LDAP operation failed"
     );
+
+    public function __construct(string $message = "", int $code = 0, Throwable $previous = null)
+    {
+        parent::__construct('LDAP: ' . $message, $code, $previous);
+    }
 }

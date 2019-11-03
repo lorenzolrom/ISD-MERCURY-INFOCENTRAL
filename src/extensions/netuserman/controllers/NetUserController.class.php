@@ -65,6 +65,11 @@ class NetUserController extends Controller
                 CurrentUserController::validatePermission('netuserman-edit-details');
                 return $this->updateUserImage((string)$param);
             }
+            else if($param === NULL)
+            {
+                CurrentUserController::validatePermission('netuserman-create');
+                return $this->createUser();
+            }
         }
         else if($this->request->method() === HTTPRequest::PUT)
         {
@@ -74,6 +79,12 @@ class NetUserController extends Controller
             else if($next === 'groups')
                 return $this->modifyGroups((string)$param);
             return $this->updateUser((string)$param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            CurrentUserController::validatePermission('netuserman-delete');
+            if($next === NULL AND $param !== NULL)
+                return $this->deleteUser((string)$param);
         }
 
         return NULL;
@@ -119,25 +130,22 @@ class NetUserController extends Controller
         if(empty($_FILES['thumbnailphoto']))
             throw new ValidationError(array('Photo required'));
 
-        if(NetUserOperator::updateUserImage($username, file_get_contents($_FILES['thumbnailphoto']['tmp_name'])))
-            return new HTTPResponse(HTTPResponse::NO_CONTENT);
-
-        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
+        NetUserOperator::updateUserImage($username, file_get_contents($_FILES['thumbnailphoto']['tmp_name']));
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
      * @param string $username
      * @return HTTPResponse
      * @throws LDAPException
+     * @throws ValidationError
      */
     private function updateUser(string $username): HTTPResponse
     {
         $details = $this->request->body();
 
-        if(NetUserOperator::updateUser($username, $details))
-            return new HTTPResponse(HTTPResponse::NO_CONTENT);
-
-        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
+        NetUserOperator::updateUser($username, $details);
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
@@ -159,22 +167,42 @@ class NetUserController extends Controller
      */
     private function resetPassword(string $username): HTTPResponse
     {
-        if(NetUserOperator::resetPassword($username, self::getFormattedBody(array('password', 'confirm'), TRUE)))
-            return new HTTPResponse(HTTPResponse::NO_CONTENT);
-
-        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
+        NetUserOperator::resetPassword($username, self::getFormattedBody(array('password', 'confirm'), TRUE));
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
      * @param string $username
      * @return HTTPResponse
      * @throws LDAPException
+     * @throws \exceptions\EntryNotFoundException
      */
     private function modifyGroups(string $username): HTTPResponse
     {
-        if(NetUserOperator::modifyGroups($username, self::getFormattedBody(array('addGroups', 'removeGroups'), TRUE)))
-            return new HTTPResponse(HTTPResponse::NO_CONTENT);
+        NetUserOperator::modifyGroups($username, self::getFormattedBody(array('addGroups', 'removeGroups'), TRUE));
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
 
-        throw new LDAPException(LDAPException::MESSAGES[LDAPException::OPERATION_FAILED], LDAPException::OPERATION_FAILED);
+    /**
+     * @param string $username
+     * @return HTTPResponse
+     * @throws LDAPException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function deleteUser(string $username): HTTPResponse
+    {
+        NetUserOperator::deleteUser($username);
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws LDAPException
+     * @throws ValidationError
+     */
+    private function createUser(): HTTPResponse
+    {
+        $result = NetUserOperator::createUser(self::getFormattedBody(ExtConfig::OPTIONS['usedAttributes'], TRUE));
+        return new HTTPResponse(HTTPResponse::CREATED, $result);
     }
 }

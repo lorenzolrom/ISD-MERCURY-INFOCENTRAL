@@ -169,7 +169,8 @@ class NetUserOperator extends Operator
      * @param string $username
      * @param array $vals
      * @return bool
-     * @throws \exceptions\LDAPException
+     * @throws LDAPException
+     * @throws ValidationError
      */
     public static function updateUser(string $username, array $vals): bool
     {
@@ -186,6 +187,24 @@ class NetUserOperator extends Operator
         if(isset($vals['useraccountcontrol']) AND is_array($vals['useraccountcontrol']))
         {
             $vals['useraccountcontrol'] = self::flagsToUAC($vals['useraccountcontrol']);
+        }
+
+        // Ensure that the domain suffix is appended to the userprincipalname
+        if(isset($vals['userprincipalname']))
+        {
+            // Remove domain '@' suffix from userprincipalname, if present
+            $vals['userprincipalname'] = explode(\Config::OPTIONS['ldapPrincipalSuffix'], $vals['userprincipalname'])[0];
+
+            try
+            {
+                // Check if username already exists
+                self::getUserDetails($vals['userprincipalname'], array('userprincipalname'));
+                throw new ValidationError(array('Login name already in use'));
+            }
+            catch(EntryNotFoundException $e){} // Do nothing
+
+            // Re-add domain '@'
+            $vals['userprincipalname'] = $vals['userprincipalname'] . \Config::OPTIONS['ldapPrincipalSuffix'];
         }
 
         $ldap = new LDAPConnection();
@@ -358,6 +377,108 @@ class NetUserOperator extends Operator
         }
 
         return TRUE;
+    }
+
+    /**
+     * @param string $username
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws LDAPException
+     */
+    public static function deleteUser(string $username): bool
+    {
+        $userDN = self::getUserDetails($username, array('distinguishedname'))['distinguishedname'];
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+
+        return $ldap->deleteObject($userDN);
+    }
+
+    /**
+     * @param array $attrs
+     * @return array|null Array with new user login name if created, NULL if failed
+     * @throws LDAPException
+     * @throws ValidationError
+     */
+    public static function createUser(array $attrs): ?array
+    {
+        // Extract passwords
+        $password = isset($attrs['password']) ? $attrs['password'] : '';
+        $confirm = isset($attrs['confirm']) ? $attrs['confirm'] : '';
+
+        // Remove invalid attributes
+        foreach(array_keys($attrs) as $attr)
+        {
+            if(!in_array($attr, ExtConfig::OPTIONS['usedAttributes']))
+                unset($attrs[$attr]);
+        }
+
+        if(isset($attrs['cn'])) // CN is not set this way, will use DN
+            unset($attrs['cn']);
+
+        $errors = array();
+
+        // Remove domain '@' suffix from userprincipalname, if present
+        $attrs['userprincipalname'] = explode(\Config::OPTIONS['ldapPrincipalSuffix'], $attrs['userprincipalname'])[0];
+        $attrs['samaccountname'] = $attrs['userprincipalname'];
+
+        // Check DN is present
+        if(strlen($attrs['distinguishedname']) < 1)
+            $errors[] = 'Distinguished Name (DN) is required';
+
+        // Check username is present
+        if(strlen($attrs['userprincipalname']) < 1)
+            $errors[] = 'User Principal Name (Login) is required';
+
+        // Check for existing user with username
+        try
+        {
+            self::getUserDetails($attrs['userprincipalname'], array('userprincipalname'));
+            $errors[] = 'Login name already in use';
+        }
+        catch(EntryNotFoundException $e){} // Do nothing, userprincipalname does not exist
+
+        // Re-add domain '@'
+        $attrs['userprincipalname'] = $attrs['userprincipalname'] . \Config::OPTIONS['ldapPrincipalSuffix'];
+
+        // Make sure passwords match
+        if($password !== $confirm)
+            $errors[] = 'Passwords do not match';
+
+        // Throw errors, if present
+        if(!empty($errors))
+            throw new ValidationError($errors);
+
+        // Add objectclass "person"
+        $attrs['objectclass'] = array('top', 'person', 'organizationalPerson', 'user');
+
+        $ldap = new LDAPConnection();
+        $ldap->bind();
+
+        // Extract and unset DN
+        $dn = $attrs['distinguishedname'];
+
+        // Translate useraccountcontrol
+        if(isset($attrs['useraccountcontrol']) AND is_array($attrs['useraccountcontrol']))
+        {
+            $attrs['useraccountcontrol'] = self::flagsToUAC($attrs['useraccountcontrol']);
+        }
+
+        $attrs['unicodePwd'] = LDAPConnection::getLDAPFormattedPassword($password);
+
+        // Remove empty attributes
+        foreach(array_keys($attrs) as $attr)
+        {
+            if((is_array($attrs[$attr]) AND empty($attrs[$attr])) OR (!is_array($attrs[$attr]) AND strlen($attrs[$attr]) === 0))
+                unset($attrs[$attr]);
+        }
+
+        // Create object
+        if($ldap->createObject($dn, $attrs))
+            return array('userprincipalname' => $attrs['userprincipalname']);
+
+
+        return NULL;
     }
 
     /**

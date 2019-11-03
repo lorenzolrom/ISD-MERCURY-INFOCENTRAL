@@ -212,4 +212,25 @@ class BuildingDatabaseHandler extends DatabaseHandler
 
         return $select->fetchColumn();
     }
+
+    /**
+     * @param string $code
+     * @return string|null
+     * @throws DatabaseException
+     */
+    public static function selectIdFromCode(string $code): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare("SELECT `id` FROM `FacilitiesCore_Building` WHERE `code` = ? LIMIT 1");
+        $select->bindParam(1, $code, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        if($select->getRowCount() !== 1)
+            return null;
+
+        return $select->fetchColumn();
+    }
 }

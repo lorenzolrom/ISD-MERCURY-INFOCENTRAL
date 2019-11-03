@@ -24,9 +24,14 @@ CREATE TABLE `FacilitiesCore_Location` (
 
 -- Floorplan
 CREATE TABLE `Facilities_Floorplan` (
-  `building` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `building` int(11) NOT NULL,
   `floor` varchar(16) NOT NULL,
-  PRIMARY KEY (`building`, `floor`)
+  `imageType` TEXT NOT NULL,
+  `imageName` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`building`, `floor`),
+  CONSTRAINT `Facilities_Floorplan_ibfk_1` FOREIGN KEY (`building`) REFERENCES `FacilitiesCore_Building`(`id`) ON UPDATE CASCADE
 );
 
 -- Permissions
@@ -34,3 +39,7 @@ INSERT INTO `Permission` (`code`) VALUES
   ('facilities'),
   ('facilitiescore_facilities-r'),
   ('facilitiescore_facilities-w');
+
+INSERT INTO `Permission` (`code`) VALUES
+  ('facilitiescore_floorplans-r'),
+  ('facilitiescore_floorplans-w');

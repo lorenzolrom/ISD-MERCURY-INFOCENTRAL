@@ -16,3 +16,10 @@ CREATE TABLE `ITSM_Host` (
   KEY `asset` (`asset`),
   CONSTRAINT `ITSM_Host_ibfk_1` FOREIGN KEY (`asset`) REFERENCES `ITSM_Asset` (`id`) ON UPDATE CASCADE
 );
+
+-- Permissions
+INSERT INTO `Permission` (`code`) VALUES
+  ('itsm_devices'),
+  ('itsm_devices-hosts-r'),
+  ('itsm_devices-hosts-w'),
+  ('itsm_dhcplogs-r');

@@ -21,3 +21,16 @@ CREATE TABLE `FacilitiesCore_Location` (
   UNIQUE KEY `building` (`building`,`code`),
   CONSTRAINT `FacilitiesCore_Location_ibfk_1` FOREIGN KEY (`building`) REFERENCES `FacilitiesCore_Building` (`id`) ON UPDATE CASCADE
 );
+
+-- Floorplan
+CREATE TABLE `Facilities_Floorplan` (
+  `building` int(11) NOT NULL AUTO_INCREMENT,
+  `floor` varchar(16) NOT NULL,
+  PRIMARY KEY (`building`, `floor`)
+);
+
+-- Permissions
+INSERT INTO `Permission` (`code`) VALUES
+  ('facilities'),
+  ('facilitiescore_facilities-r'),
+  ('facilitiescore_facilities-w');

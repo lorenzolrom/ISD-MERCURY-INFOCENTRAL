@@ -124,3 +124,10 @@ CREATE TABLE `Tickets_Widget` (
   FOREIGN KEY (`workspace`) REFERENCES `Tickets_Workspace`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (`search`) REFERENCES `Tickets_Search`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+-- Permissions
+INSERT INTO `Permission` (`code`) VALUES
+  ('tickets'),
+  ('tickets-customer'),
+  ('tickets-agent'),
+  ('tickets-admin');

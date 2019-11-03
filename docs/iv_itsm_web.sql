@@ -53,3 +53,13 @@ INSERT INTO `Attribute` (`extension`, `type`, `code`, `name`) VALUES
   ('itsm', 'wdns', 'redi', 'Redirected'),
   ('itsm', 'wdns', 'dorm', 'Dormant'),
   ('itsm', 'wdns', 'expi', 'Expired');
+
+-- Permissions
+INSERT INTO `Permission` (`code`) VALUES
+  ('itsm_web'),
+  ('itsm_web-aliases-rw'),
+  ('itsm_web-registrars-r'),
+  ('itsm_web-registrars-w'),
+  ('itsm_web-vhosts-r'),
+  ('itsm_web-vhosts-w'),
+  ('itsm_weblogs');

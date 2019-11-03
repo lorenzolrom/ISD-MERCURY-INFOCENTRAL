@@ -190,3 +190,21 @@ INSERT INTO `Attribute` (`extension`, `type`, `code`, `name`) VALUES
 ('itsm', 'rost', 'sent', 'Sent'),
 ('itsm', 'rost', 'cncl', 'Canceled'),
 ('itsm', 'rost', 'rcvd', 'Received');
+
+-- Permissions
+INSERT INTO `Permission` (`code`) VALUES
+  ('itsm'),
+  ('itsm_inventory'),
+  ('itsm_inventory-assets-r'),
+  ('itsm_inventory-assets-w'),
+  ('itsm_inventory-commodities-r'),
+  ('itsm_inventory-commodities-w'),
+  ('itsm_inventory-discards-r'),
+  ('itsm_inventory-discards-w'),
+  ('itsm_inventory-purchaseorders-r'),
+  ('itsm_inventory-purchaseorders-w'),
+  ('itsm_inventory-settings-rw'),
+  ('itsm_inventory-vendors-r'),
+  ('itsm_inventory-vendors-w'),
+  ('itsm_inventory-warehouses-r'),
+  ('itsm_inventory-warehouses-w');

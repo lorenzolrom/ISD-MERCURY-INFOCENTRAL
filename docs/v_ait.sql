@@ -82,3 +82,9 @@ INSERT INTO `Attribute` (`extension`, `type`, `code`, `name`) VALUES
 ('itsm', 'aits', 'rdao', 'Retain Data Only'),
 ('itsm', 'aits', 'reti', 'Retired'),
 ('itsm', 'aits', 'deco', 'Decomissioned');
+
+-- Permissions
+INSERT INTO `Permission` (`code`) VALUES
+  ('itsm_ait'),
+  ('itsm_ait-apps-r'),
+  ('itsm_ait-apps-w');

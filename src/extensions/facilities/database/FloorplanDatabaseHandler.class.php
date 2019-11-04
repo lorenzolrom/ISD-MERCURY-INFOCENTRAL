@@ -28,7 +28,7 @@ class FloorplanDatabaseHandler extends DatabaseHandler
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function select(int $building, string $floor): Floorplan
+    public static function selectByBuildingFloor(int $building, string $floor): Floorplan
     {
         $c = new DatabaseConnection();
 
@@ -43,6 +43,58 @@ class FloorplanDatabaseHandler extends DatabaseHandler
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
 
         return $s->fetchObject('extensions\facilities\models\Floorplan');
+    }
+
+    /**
+     * @param int $id
+     * @return Floorplan
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectById(int $id): Floorplan
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `id`, `building`, `floor`, `imageType`, `imageName` FROM `Facilities_Floorplan` WHERE `id` = :id LIMIT 1');
+        $s->bindParam('id', $id, DatabaseConnection::PARAM_INT);
+        $s->execute();
+
+        $c->close();
+
+        if($s->getRowCount() !== 1)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+
+        return $s->fetchObject('extensions\facilities\models\Floorplan');
+    }
+
+    /**
+     * @param string $buildingCodeFilter
+     * @param string $floorFilter
+     * @return Floorplan[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function select(string $buildingCodeFilter, string $floorFilter): array
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `id` FROM `Facilities_Floorplan` WHERE `building` IN (SELECT `id` FROM `FacilitiesCore_Building` WHERE `code` LIKE :buildingCode) AND `floor` LIKE :floor');
+        $s->bindParam('buildingCode', $buildingCodeFilter, DatabaseConnection::PARAM_STR);
+        $s->bindParam('floor', $floorFilter, DatabaseConnection::PARAM_STR);
+        $s->execute();
+
+        $c->close();
+
+        $floorplans = array();
+
+        foreach($s->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{
+                $floorplans[] = self::selectById($id);
+            }
+            catch(EntryNotFoundException $e){} // Do nothing
+        }
+
+        return $floorplans;
     }
 
     /**
@@ -67,7 +119,7 @@ class FloorplanDatabaseHandler extends DatabaseHandler
 
         $c->close();
 
-        return self::select($building, $floor);
+        return self::selectByBuildingFloor($building, $floor);
     }
 
     /**
@@ -94,7 +146,7 @@ class FloorplanDatabaseHandler extends DatabaseHandler
 
         $c->close();
 
-        return self::select($building, $floor);
+        return self::selectByBuildingFloor($building, $floor);
     }
 
     /**

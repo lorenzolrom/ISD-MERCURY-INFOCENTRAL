@@ -17,6 +17,7 @@ namespace extensions\facilities\controllers;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\ValidationError;
+use extensions\facilities\business\BuildingOperator;
 use extensions\facilities\business\FloorplanOperator;
 use models\HTTPRequest;
 use models\HTTPResponse;
@@ -46,6 +47,19 @@ class FloorplanController extends Controller
                 CurrentUserController::validatePermission('facilitiescore_floorplans-w');
                 return $this->createFloorplan();
             }
+            else if($param === 'search')
+                return $this->search();
+        }
+        else if($this->request->method() === HTTPRequest::GET)
+        {
+            if($param !== NULL)
+            {
+                if($this->request->next() === 'image')
+                    return $this->getFloorplanImage((int)$param);
+                return $this->getFloorplanInfo((int)$param);
+            }
+            else
+                return $this->search();
         }
 
         return NULL;
@@ -79,6 +93,65 @@ class FloorplanController extends Controller
         $attrs[self::FLOORPLAN_IMAGE_NAME] = $_FILES[self::FLOORPLAN_IMAGE_NAME];
 
         $new = FloorplanOperator::createFloorplan($attrs);
-        return new HTTPResponse(HTTPResponse::CREATED, array('building' => $new->getBuilding(), 'floor' => $new->getFloor()));
+        return new HTTPResponse(HTTPResponse::CREATED, array('id' => $new->getId()));
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function search(): HTTPResponse
+    {
+        $criteria = self::getFormattedBody(self::FLOORPLAN_FIELDS, FALSE);
+        $floors = array();
+
+        foreach(FloorplanOperator::getFloorplans($criteria['buildingCode'], $criteria['floor']) as $floorplan)
+        {
+            $building = BuildingOperator::getBuilding($floorplan->getBuilding());
+
+            $floors[] = array(
+                'id' => $floorplan->getId(),
+                'buildingCode' => $building->getCode(),
+                'buildingName' => $building->getName(),
+                'floor' => $floorplan->getFloor()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $floors);
+    }
+
+    /**
+     * @param int $id
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function getFloorplanInfo(int $id): HTTPResponse
+    {
+        $floorplan = FloorplanOperator::getFloorplan($id);
+        $building = BuildingOperator::getBuilding($floorplan->getBuilding());
+
+        return new HTTPResponse(HTTPResponse::OK, array(
+            'id' => $floorplan->getId(),
+            'floor' => $floorplan->getFloor(),
+            'building' => $floorplan->getBuilding(),
+            'buildingCode' => $building->getCode(),
+            'buildingName' => $building->getName()
+        ));
+    }
+
+    /**
+     * @param int $id
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function getFloorplanImage(int $id): void
+    {
+        $data = FloorplanOperator::getFloorplanImage($id);
+
+        header('Content-Type: ' . $data['imageType']);
+        echo file_get_contents($data['imagePath']);
+        exit;
     }
 }

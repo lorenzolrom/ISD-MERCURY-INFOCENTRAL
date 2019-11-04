@@ -65,7 +65,7 @@ class FloorplanOperator extends Operator
         // Does floor already exist
         try
         {
-            FloorplanDatabaseHandler::select($building, (string)$attrs['floor']);
+            FloorplanDatabaseHandler::selectByBuildingFloor($building, (string)$attrs['floor']);
             $errors[] = 'Floor already exists';
         }
         catch(EntryNotFoundException $e){} // Do nothing
@@ -79,7 +79,7 @@ class FloorplanOperator extends Operator
         }
         catch(ValidationException $e)
         {
-            $errors .= 'Image type must be: ' . implode(', ', Floorplan::IMAGE_TYPE_RULES['acceptable']);
+            $errors[] = 'Image type must be: ' . implode(', ', Floorplan::IMAGE_TYPE_RULES['acceptable']);
         }
 
         if(!empty($errors))
@@ -100,18 +100,43 @@ class FloorplanOperator extends Operator
         return $newFloor;
     }
 
-    public static function updateFloorplan()
+    /**
+     * @param $id
+     * @return array
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getFloorplanImage($id): array
     {
+        $floorplan = self::getFloorplan($id);
 
+        $filePath = dirname(__FILE__) .'/../' . self::IMAGE_PATH . $floorplan->getImageName();
+
+        return array(
+            'imageType' => $floorplan->getImageType(),
+            'imagePath' => $filePath
+        );
     }
 
-    public static function deleteFloorplan()
+    /**
+     * @param string $buildingCode
+     * @param string $floor
+     * @return Floorplan[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getFloorplans(string $buildingCode, string $floor): array
     {
-
+        return FloorplanDatabaseHandler::select($buildingCode, $floor);
     }
 
-    public static function getFloorplans(string $buildingCode)
+    /**
+     * @param int $id
+     * @return Floorplan
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getFloorplan(int $id): Floorplan
     {
-
+        return FloorplanDatabaseHandler::selectById($id);
     }
 }

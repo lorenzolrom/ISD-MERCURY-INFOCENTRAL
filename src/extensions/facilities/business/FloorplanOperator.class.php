@@ -86,7 +86,7 @@ class FloorplanOperator extends Operator
             throw new ValidationError($errors);
 
         // Process file upload
-        $fileName = $building . '_' . $attrs['floor'] . '.flr';
+        $fileName = $building . '_' . $attrs['floor'] . date_timestamp_get(date_create()) . '.flr';
         $filePath = dirname(__FILE__) . '/../' . self::IMAGE_PATH .  $fileName;
 
 
@@ -138,5 +138,112 @@ class FloorplanOperator extends Operator
     public static function getFloorplan(int $id): Floorplan
     {
         return FloorplanDatabaseHandler::selectById($id);
+    }
+
+    /**
+     * @param Floorplan $floorplan
+     * @param array $attrs
+     * @return Floorplan
+     * @throws EntryNotFoundException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function updateFloorplan(Floorplan $floorplan, array $attrs): Floorplan
+    {
+        $errors = array();
+
+        // Validate floor name
+        try
+        {
+            Floorplan::validateFloor((string)$attrs['floor']);
+        }
+        catch(ValidationException $e)
+        {
+            $errors[] = $e->getMessage();
+        }
+
+        // Does floor already exist
+        if($floorplan->getFloor() !== $attrs['floor'])
+        {
+            try
+            {
+                FloorplanDatabaseHandler::selectByBuildingFloor($floorplan->getBuilding(), (string)$attrs['floor']);
+                $errors[] = 'Floor already exists';
+            }
+            catch(EntryNotFoundException $e){} // Do nothing
+        }
+
+        if(!empty($errors))
+            throw new ValidationError($errors);
+
+        // Update database record
+        HistoryRecorder::writeHistory('Facilities_Floorplan', HistoryRecorder::MODIFY, $floorplan->getId(), $floorplan, $attrs);
+        return FloorplanDatabaseHandler::update($floorplan->getId(), $floorplan->getBuilding(), $floorplan->getFloor(), $attrs['floor'], $floorplan->getImageType(), $floorplan->getImageName());
+    }
+
+    /**
+     * @param Floorplan $floorplan
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function delete(Floorplan $floorplan): bool
+    {
+        HistoryRecorder::writeHistory('Facilities_Floorplan', HistoryRecorder::DELETE, $floorplan->getId(), $floorplan);
+
+        // Remove file
+        $filePath = dirname(__FILE__) . '/../' . self::IMAGE_PATH .  $floorplan->getImageName();
+        unlink($filePath);
+
+        // Remove from database
+        FloorplanDatabaseHandler::delete($floorplan->getBuilding(), $floorplan->getFloor());
+
+        return TRUE;
+    }
+
+    /**
+     * @param Floorplan $fp
+     * @param array $image
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws UploadException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function updateFloorplanImage(Floorplan $fp, array $image): bool
+    {
+        $errors = array();
+
+        if(!empty($errors))
+            throw new ValidationError($errors);
+
+        // Validate image
+        try
+        {
+            Floorplan::validateImageType($image['type']);
+        }
+        catch(ValidationException $e)
+        {
+            $errors[] = 'Image type must be: ' . implode(', ', Floorplan::IMAGE_TYPE_RULES['acceptable']);
+        }
+
+        if(!empty($errors))
+            throw new ValidationError($errors);
+
+        // Process file upload - put in existing location
+        $filePath = dirname(__FILE__) . '/../' . self::IMAGE_PATH .  $fp->getImageName();
+
+
+        if(!move_uploaded_file($image['tmp_name'], $filePath))
+            throw new UploadException(UploadException::MESSAGES[UploadException::MOVE_UPLOADED_FILE_FAILED], UploadException::MOVE_UPLOADED_FILE_FAILED);
+
+        // Add to database
+        $hist = HistoryRecorder::writeHistory('Facilities_Floorplan', HistoryRecorder::MODIFY, $fp->getId(), $fp);
+        HistoryRecorder::writeAssocHistory($hist, array('systemEntry' => array('Updated Floorplan Image')));
+
+        return TRUE;
     }
 }

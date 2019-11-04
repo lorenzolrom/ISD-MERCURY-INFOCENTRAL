@@ -123,6 +123,7 @@ class FloorplanDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $id
      * @param int $building
      * @param string $floor
      * @param string $newFloor
@@ -132,7 +133,7 @@ class FloorplanDatabaseHandler extends DatabaseHandler
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function update(int $building, string $floor, string $newFloor, string $imageType, string $imageName): Floorplan
+    public static function update(int $id, int $building, string $floor, string $newFloor, string $imageType, string $imageName): Floorplan
     {
         $c = new DatabaseConnection();
 
@@ -146,7 +147,7 @@ class FloorplanDatabaseHandler extends DatabaseHandler
 
         $c->close();
 
-        return self::selectByBuildingFloor($building, $floor);
+        return self::selectById($id);
     }
 
     /**

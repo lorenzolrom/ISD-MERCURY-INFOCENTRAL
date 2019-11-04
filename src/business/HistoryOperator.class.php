@@ -28,12 +28,10 @@ class HistoryOperator extends Operator
 {
     // Convert friendly name to table
     private const OBJECTS = array(
-        'lock_system' => 'LockShop_System',
-        'lock_core' => 'LockShop_Core',
-        'lock_key' => 'LockShop_Key',
         'hostcategory' => 'ITSM_HostCategory',
         'building' => 'FacilitiesCore_Building',
         'location' => 'FacilitiesCore_Location',
+        'floorplan' => 'Facilities_Floorplan',
         'asset' => 'ITSM_Asset',
         'commodity' => 'ITSM_Commodity',
         'host' => 'ITSM_Host',
@@ -56,14 +54,12 @@ class HistoryOperator extends Operator
 
     // Associate table with permissions
     private const TABLE_PERMISSIONS = array(
-        'LockShop_System' => 'lockshop-r',
-        'LockShop_Core' => 'lockshop-r',
-        'LockShop_Key' => 'lockshop-r',
         'Tickets_Workspace' => 'tickets-admin',
         'Tickets_Team' => 'tickets-admin',
         'Tickets_Ticket' => 'tickets-agent',
         'FacilitiesCore_Building' => 'facilitiescore_facilities-r',
         'FacilitiesCore_Location' => 'facilitiescore_facilities-r',
+        'Facilities_Floorplan' => 'facilitiescore_floorplans-r',
         'ITSM_Asset' => 'itsm_inventory-assets-r',
         'ITSM_Commodity' => 'itsm_inventory-commodities-r',
         'ITSM_Host' => 'itsm_devices-hosts-r',

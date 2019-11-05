@@ -99,7 +99,7 @@ class SpaceOperator extends Operator
         self::validate('extensions\facilities\models\Space', $attrs);
 
         HistoryRecorder::writeHistory('Facilities_Space', HistoryRecorder::MODIFY, $space->getLocation(), $space, $attrs);
-        return SpaceDatabaseHandler::update($space->getLocation(), $attrs['hexCode'], $attrs['area'], $attrs['unit']);
+        return SpaceDatabaseHandler::update($space->getLocation(), $attrs['hexColor'], $attrs['area'], $attrs['unit']);
     }
 
     /**

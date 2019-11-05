@@ -130,4 +130,22 @@ class SpaceDatabaseHandler extends DatabaseHandler
 
         return $d->getRowCount() === 1;
     }
+
+    /**
+     * @param int $floorId
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectAreasByFloor(int $floorId): array
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `area`, `unit` FROM `Facilities_Space` WHERE `floor` = ?');
+        $s->bindParam(1, $floorId, DatabaseConnection::PARAM_INT);
+        $s->execute();
+
+        $c->close();
+
+        return $s->fetchAll();
+    }
 }

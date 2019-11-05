@@ -14,6 +14,7 @@
 namespace extensions\facilities\models;
 
 
+use extensions\facilities\database\SpaceDatabaseHandler;
 use models\Model;
 use utilities\Validator;
 
@@ -76,6 +77,31 @@ class Floorplan extends Model
     public function getImageName(): string
     {
         return $this->imageName;
+    }
+
+    /**
+     * Returns the total area in all units
+     * @return array An array indexed by available units, and the total for each unit, based on Spaces
+     * @throws \exceptions\DatabaseException
+     */
+    public function getTotalArea(): array
+    {
+        $areas = SpaceDatabaseHandler::selectAreasByFloor($this->id);
+
+        $totals = array();
+
+        foreach($areas as $area)
+        {
+            $unit = $area['unit'];
+            $area = $area['area'];
+
+            if(!isset($totals[$unit]))
+                $totals[$unit] = 0.0;
+
+            $totals[$unit] = round($totals[$unit] + (float)$area, 2);
+        }
+
+        return $totals;
     }
 
     /**

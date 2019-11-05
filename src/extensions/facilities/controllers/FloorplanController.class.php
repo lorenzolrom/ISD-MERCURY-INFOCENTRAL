@@ -132,7 +132,8 @@ class FloorplanController extends Controller
                 'id' => $floorplan->getId(),
                 'buildingCode' => $building->getCode(),
                 'buildingName' => $building->getName(),
-                'floor' => $floorplan->getFloor()
+                'floor' => $floorplan->getFloor(),
+                'area' => $floorplan->getTotalArea()
             );
         }
 
@@ -155,7 +156,8 @@ class FloorplanController extends Controller
             'floor' => $floorplan->getFloor(),
             'building' => $floorplan->getBuilding(),
             'buildingCode' => $building->getCode(),
-            'buildingName' => $building->getName()
+            'buildingName' => $building->getName(),
+            'area' => $floorplan->getTotalArea()
         ));
     }
 

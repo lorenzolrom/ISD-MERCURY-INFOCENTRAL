@@ -59,6 +59,18 @@ class SpaceController extends Controller
             else if($param !== NULL)
                 return $this->getSpace((int)$param);
         }
+        else if($this->request->method() === HTTPRequest::PUT)
+        {
+            CurrentUserController::validatePermission('facilitiescore_floorplans-w');
+            if($param !== NULL)
+                return $this->editSpace((int)$param);
+        }
+        else if($this->request->method() === HTTPRequest::DELETE)
+        {
+            CurrentUserController::validatePermission('facilitiescore_floorplans-w');
+            if($param !== NULL)
+                return $this->deleteSpace((int)$param);
+        }
 
         return NULL;
     }
@@ -90,6 +102,8 @@ class SpaceController extends Controller
 
         $pointArray = array();
 
+        $location = LocationOperator::getLocation($space->getLocation());
+
         foreach($points as $point)
         {
             $pointArray[$point->getId()] = array('pD' => $point->getPD(), 'pR' => $point->getPR());
@@ -97,8 +111,10 @@ class SpaceController extends Controller
 
         return new HTTPResponse(HTTPResponse::OK, array(
             'location' => $space->getLocation(),
+            'code' => $location->getCode(),
+            'name' => $location->getName(),
             'floor' => $space->getFloor(),
-            'hexCode' => $space->getHexColor(),
+            'hexColor' => $space->getHexColor(),
             'area' => $space->getArea(),
             'unit' => $space->getUnit(),
             'points' => $pointArray
@@ -152,7 +168,7 @@ class SpaceController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function addPoints(int $id)
+    private function addPoints(int $id): HTTPResponse
     {
         $space = SpaceOperator::getSpace($id);
 
@@ -163,5 +179,36 @@ class SpaceController extends Controller
 
         SpaceOperator::addPoints($space, $details['points']);
         return new HTTPResponse(HTTPResponse::CREATED);
+    }
+
+    /**
+     * @param int $id
+     * @return HTTPResponse
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    private function editSpace(int $id): HTTPResponse
+    {
+        $space = SpaceOperator::getSpace($id);
+
+        $details = self::getFormattedBody(self::SPACE_FIELDS, TRUE);
+
+        SpaceOperator::updateSpace($space, $details);
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param int $id
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    private function deleteSpace(int $id): HTTPResponse
+    {
+        $space = SpaceOperator::getSpace($id);
+        SpaceOperator::deleteSpace($space);
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

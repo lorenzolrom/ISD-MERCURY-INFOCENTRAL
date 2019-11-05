@@ -20,6 +20,7 @@ class ExtConfig
     public const ROUTES = array(
         'buildings' => 'extensions\facilities\controllers\BuildingController',
         'locations' => 'extensions\facilities\controllers\LocationController',
-        'floorplans' => 'extensions\facilities\controllers\FloorplanController'
+        'floorplans' => 'extensions\facilities\controllers\FloorplanController',
+        'spaces' => 'extensions\facilities\controllers\SpaceController'
     );
 }

@@ -62,8 +62,10 @@ class SpaceController extends Controller
         else if($this->request->method() === HTTPRequest::PUT)
         {
             CurrentUserController::validatePermission('facilitiescore_floorplans-w');
-            if($param !== NULL)
+            if($param !== NULL AND $next === NULL)
                 return $this->editSpace((int)$param);
+            else if($param !== NULL AND $next === 'points')
+                return $this->redefinePoints((int)$param);
         }
         else if($this->request->method() === HTTPRequest::DELETE)
         {
@@ -179,6 +181,27 @@ class SpaceController extends Controller
 
         SpaceOperator::addPoints($space, $details['points']);
         return new HTTPResponse(HTTPResponse::CREATED);
+    }
+
+    /**
+     * @param int $id
+     * @return HTTPResponse
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    private function redefinePoints(int $id): HTTPResponse
+    {
+        $space = SpaceOperator::getSpace($id);
+
+        $points = self::getFormattedBody(['points'], TRUE)['points'];
+
+        if(!is_array($points))
+            throw new ValidationError(['Points not formatted correctly']);
+
+        SpaceOperator::redefinePoints($space, $points);
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**

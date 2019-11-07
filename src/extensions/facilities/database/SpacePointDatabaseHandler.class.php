@@ -64,13 +64,17 @@ class SpacePointDatabaseHandler
      * @param int $space
      * @param float $pD
      * @param float $pR
+     * @param DatabaseConnection|null $conn If this is supplied, it will be used as the data connection.  Intended for transactions.
      * @return SpacePoint
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(int $space, float $pD, float $pR)
+    public static function insert(int $space, float $pD, float $pR, ?DatabaseConnection $conn = NULL)
     {
-        $c = new DatabaseConnection();
+        if($conn === NULL)
+            $c = new DatabaseConnection();
+        else
+            $c = $conn;
 
         $i = $c->prepare('INSERT INTO `Facilities_SpacePoint`(`space`, `pD`, `pR`) VALUES (:space, :pD, :pR)');
         $i->bindParam('space', $space, DatabaseConnection::PARAM_INT);
@@ -80,7 +84,8 @@ class SpacePointDatabaseHandler
 
         $id = $c->getLastInsertId();
 
-        $c->close();
+        if($conn === NULL)
+            $c->close();
 
         return self::selectById($id);
     }
@@ -101,5 +106,29 @@ class SpacePointDatabaseHandler
         $c->close();
 
         return $d->getRowCount() === 1;
+    }
+
+    /**
+     * Deletes all points in the provided Space
+     * @param int $spaceId
+     * @param DatabaseConnection|null $conn If this is supplied, it will be used as the data connection.  Intended for transactions.
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function deleteBySpace(int $spaceId, ?DatabaseConnection $conn = NULL): bool
+    {
+        if($conn === NULL)
+            $c = new DatabaseConnection();
+        else
+            $c = $conn;
+
+        $d = $c->prepare('DELETE FROM `Facilities_SpacePoint` WHERE `space` = ?');
+        $d->bindParam(1, $spaceId, DatabaseConnection::PARAM_INT);
+        $d->execute();
+
+        if($conn === NULL)
+            $c->close();
+
+        return $d->getRowCount() !== 0;
     }
 }

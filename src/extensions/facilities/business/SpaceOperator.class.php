@@ -15,6 +15,8 @@ namespace extensions\facilities\business;
 
 
 use business\Operator;
+use database\DatabaseConnection;
+use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use extensions\facilities\database\SpaceDatabaseHandler;
@@ -161,6 +163,63 @@ class SpaceOperator extends Operator
             catch(EntryNotFoundException $e){}
         }
 
+        return $count === $success;
+    }
+
+    /**
+     * @param Space $space
+     * @param array $coords
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function redefinePoints(Space $space, array $coords): bool
+    {
+        $c = new DatabaseConnection();
+        $c->startTransaction();
+
+        $count = count($coords);
+        $success = 0;
+
+        try
+        {
+            // Remove existing points
+            foreach($space->getPoints() as $point)
+            {
+                HistoryRecorder::writeHistory('Facilities_SpacePoint', HistoryRecorder::DELETE, $point->getId(), $point);
+                SpacePointDatabaseHandler::delete($point->getId());
+            }
+
+            // Add all coords
+            foreach($coords as $coord)
+            {
+                if(count($coord) !== 2)
+                    continue;
+
+                $point = SpacePointDatabaseHandler::insert($space->getLocation(), (float)$coord[0], (float)$coord[1]);
+                HistoryRecorder::writeHistory('Facilities_SpacePoint', HistoryRecorder::CREATE, $point->getId(), $point);
+                $success += 1;
+            }
+        }
+        catch(DatabaseException $e)
+        {
+            $c->rollback();
+            $c->close();
+        }
+
+        // If the replacement succeeded, commit
+        if($count === $success)
+        {
+            $c->commit();
+        }
+        else
+        {
+            $c->rollback();
+        }
+
+        // Return result
+        $c->close();
         return $count === $success;
     }
 

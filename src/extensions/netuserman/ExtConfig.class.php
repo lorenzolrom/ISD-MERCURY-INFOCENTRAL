@@ -76,7 +76,8 @@ class ExtConfig
             'mail', // Email
             'memberof', // Add to Groups
             'title', // Title
-            'useraccountcontrol' // Disable and password expire status
+            'useraccountcontrol', // Disable and password expire status
+            'lastlogon' // Last login of user UNIX timestamp
         ),
 
         'userEditableAttributes' => array( // Attributes allowed to be edited in a user

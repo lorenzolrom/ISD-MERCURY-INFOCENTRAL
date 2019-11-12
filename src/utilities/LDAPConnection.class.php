@@ -334,4 +334,27 @@ class LDAPConnection
 
         return TRUE;
     }
+
+    /**
+     * @param $time
+     * @return string
+     */
+    public static function LDAPTimeToUnixTime($time): string
+    {
+        $secsAfterADEpoch = $time / 10000000;
+        $ADToUnixConverter = ((1970 - 1601) * 365 - 3 + round((1970 - 1601) / 4)) * 86400;
+
+        return intval($secsAfterADEpoch - $ADToUnixConverter);
+    }
+
+    /**
+     * @param $time
+     * @return string
+     */
+    public static function UnixTimeToLDAPTime($time): string
+    {
+        $ADToUnixConverter = ((1970 - 1601) * 365 - 3 + round((1970 - 1601) / 4)) * 86400;
+        $secsAfterADEpoch = intval($ADToUnixConverter + $time);
+        return $secsAfterADEpoch * 10000000;
+    }
 }

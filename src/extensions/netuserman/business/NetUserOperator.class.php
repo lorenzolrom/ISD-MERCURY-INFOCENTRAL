@@ -162,6 +162,9 @@ class NetUserOperator extends Operator
             $formatted['useraccountcontrol'] = self::getUACFlags((int)$formatted['useraccountcontrol']);
         }
 
+        if(isset($formatted['lastlogon']))
+            $formatted['lastlogon'] = LDAPConnection::LDAPTimeToUnixTime($formatted['lastlogon']);
+
         return $formatted;
     }
 

@@ -77,23 +77,20 @@ class FrontController
             // Get secret
             $key = self::currentSecret();
 
-            // Determine URI
-            if(isset($_SERVER['HTTPS']) AND $_SERVER['HTTPS'] == 'on')
-                $url = "https";
-            else
-                $url = "http";
+            // Remove the baseURI
+            $reqURI = explode(\Config::OPTIONS['baseURI'], $_SERVER['REQUEST_URI'])[1];
 
-            $url .= "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+            // Remove Query Params
+            $reqURI = explode('?', $reqURI)[0];
 
-            $urlParts = explode(\Config::OPTIONS['baseURL'] . \Config::OPTIONS['baseURI'], $url);
+            // Remove trailing slash
+            $reqURI = rtrim($reqURI, '/');
 
-            if(isset($urlParts[1]))
-                $uriParts = explode('/', $urlParts[1]);
-            else
-                $uriParts = array();
+            // Break up into parts
+            $reqURI = explode('/', $reqURI);
 
             // Create request
-            $request = new HTTPRequest($key, $method, $uriParts, self::getRequestBodyAsArray());
+            $request = new HTTPRequest($key, $method, $reqURI, self::getRequestBodyAsArray());
 
             $response = ControllerFactory::getController($request)->getResponse();
 

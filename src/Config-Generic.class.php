@@ -17,7 +17,6 @@
 abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
 {
     const OPTIONS = array(
-        'baseURL' => 'https://api.example.com',
         'baseURI' => '/',
 
         'databaseHost' => 'your.server',

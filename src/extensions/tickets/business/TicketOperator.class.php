@@ -977,7 +977,7 @@ class TicketOperator extends Operator
 
         $message = "<p style='color: #888888;'><em>E-Mail Notification from " . $workspace->getName() . "</em></p>
 
-        <p>Your support ticket <a href='" . ExtConfig::OPTIONS['serviceCenterRequestURL'] . "{$ticket->getNumber()}'>{$ticket->getNumber()}</a> (<span style='color: red; font-weight: bold;'>{$ticket->getTitle()}</span>) has been <strong>$action</strong> with the following details:</p>
+        <p>Your support ticket <a href='" . ExtConfig::OPTIONS['serviceCenterRequestURL'] . "{$ticket->getWorkspace()}-{$ticket->getNumber()}'>{$ticket->getNumber()}</a> (<span style='color: red; font-weight: bold;'>{$ticket->getTitle()}</span>) has been <strong>$action</strong> with the following details:</p>
         
         <div style='background-color: #e3e3e3;'>
             {$ticket->getLastUpdate()->getDescription()}

@@ -77,8 +77,9 @@ class FrontController
             // Get secret
             $key = self::currentSecret();
 
-            // Remove the baseURI
-            $reqURI = explode(\Config::OPTIONS['baseURI'], $_SERVER['REQUEST_URI'])[1];
+            // Remove baseURI
+            $pos = strpos($_SERVER['REQUEST_URI'], \Config::OPTIONS['baseURI']);
+            $reqURI = substr_replace($_SERVER['REQUEST_URI'], '', $pos, strlen(\Config::OPTIONS['baseURI']));
 
             // Remove Query Params
             $reqURI = explode('?', $reqURI)[0];

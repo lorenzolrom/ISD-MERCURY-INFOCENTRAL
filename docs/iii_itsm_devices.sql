@@ -1,7 +1,7 @@
 -- HOST
 CREATE TABLE `ITSM_Host` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `asset` int(11) NOT NULL,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `asset` int(11) unsigned NOT NULL,
   `ipAddress` varchar(39) NOT NULL,
   `macAddress` char(17) NOT NULL,
   `notes` text,

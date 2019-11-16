@@ -1,16 +1,16 @@
 -- Application
 CREATE TABLE `ITSM_Application` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `number` int(11) NOT NULL,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `number` int(11) unsigned NOT NULL,
   `name` varchar(64) NOT NULL,
   `description` text NOT NULL,
-  `owner` int(11) NOT NULL,
-  `type` int(11) NOT NULL,
-  `status` int(11) NOT NULL,
+  `owner` int(11) unsigned NOT NULL,
+  `type` int(11) unsigned NOT NULL,
+  `status` int(11) unsigned NOT NULL,
   `publicFacing` tinyint(1) NOT NULL DEFAULT '0',
-  `lifeExpectancy` int(11) NOT NULL,
-  `dataVolume` int(11) NOT NULL,
-  `authType` int(11) NOT NULL,
+  `lifeExpectancy` int(11) unsigned NOT NULL,
+  `dataVolume` int(11) unsigned NOT NULL,
+  `authType` int(11) unsigned NOT NULL,
   `port` varchar(5) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `number` (`number`),
@@ -30,8 +30,8 @@ CREATE TABLE `ITSM_Application` (
 
 -- App - VHOST
 CREATE TABLE `ITSM_Application_VHost` (
-  `application` int(11) NOT NULL,
-  `vhost` int(11) NOT NULL,
+  `application` int(11) unsigned NOT NULL,
+  `vhost` int(11) unsigned NOT NULL,
   PRIMARY KEY (`application`,`vhost`),
   KEY `vhost` (`vhost`),
   CONSTRAINT `ITSM_Application_VHost_ibfk_1` FOREIGN KEY (`application`) REFERENCES `ITSM_Application` (`id`) ON UPDATE CASCADE,
@@ -40,8 +40,8 @@ CREATE TABLE `ITSM_Application_VHost` (
 
 -- App - Host
 CREATE TABLE `ITSM_Application_Host` (
-  `application` int(11) NOT NULL,
-  `host` int(11) NOT NULL,
+  `application` int(11) unsigned NOT NULL,
+  `host` int(11) unsigned NOT NULL,
   `relationship` char(4) NOT NULL,
   PRIMARY KEY (`application`,`host`,`relationship`),
   KEY `host` (`host`),

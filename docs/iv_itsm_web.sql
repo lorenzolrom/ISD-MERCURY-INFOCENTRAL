@@ -1,6 +1,6 @@
 -- REGISTRAR
 CREATE TABLE `ITSM_Registrar` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `code` varchar(32) DEFAULT NULL,
   `name` text NOT NULL,
   `url` text NOT NULL,
@@ -11,13 +11,13 @@ CREATE TABLE `ITSM_Registrar` (
 
 -- VHOST
 CREATE TABLE `ITSM_VHost` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `domain` text NOT NULL,
   `subdomain` text NOT NULL,
   `name` varchar(64) NOT NULL,
-  `host` int(11) NOT NULL,
-  `registrar` int(11) NOT NULL,
-  `status` int(11) NOT NULL,
+  `host` int(11) unsigned NOT NULL,
+  `registrar` int(11) unsigned NOT NULL,
+  `status` int(11) unsigned NOT NULL,
   `renewCost` float(11,2) NOT NULL,
   `webRoot` text,
   `logPath` text,
@@ -35,7 +35,7 @@ CREATE TABLE `ITSM_VHost` (
 
 -- URL ALIAS
 CREATE TABLE `NIS_URLAlias` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `alias` varchar(64) NOT NULL,
   `destination` text NOT NULL,
   `disabled` tinyint(1) NOT NULL DEFAULT '0',

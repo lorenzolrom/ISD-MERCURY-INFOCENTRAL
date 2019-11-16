@@ -1,7 +1,7 @@
 -- Vendor
 CREATE TABLE `ITSM_Vendor`
 (
-  `id`            int(11)     NOT NULL AUTO_INCREMENT,
+  `id`            int(11) unsigned     NOT NULL AUTO_INCREMENT,
   `code`          varchar(32) NOT NULL,
   `name`          text        NOT NULL,
   `streetAddress` text        NOT NULL,
@@ -17,11 +17,11 @@ CREATE TABLE `ITSM_Vendor`
 -- Commodity
 CREATE TABLE `ITSM_Commodity`
 (
-  `id`            int(11)      NOT NULL AUTO_INCREMENT,
+  `id`            int(11) unsigned      NOT NULL AUTO_INCREMENT,
   `code`          varchar(32)  NOT NULL,
   `name`          varchar(64)  NOT NULL,
-  `commodityType` int(11)      NOT NULL,
-  `assetType`     int(11) DEFAULT NULL,
+  `commodityType` int(11) unsigned      NOT NULL,
+  `assetType`     int(11) unsigned DEFAULT NULL,
   `manufacturer`  text         NOT NULL,
   `model`         text         NOT NULL,
   `unitCost`      float(11, 2) NOT NULL,
@@ -36,14 +36,14 @@ CREATE TABLE `ITSM_Commodity`
 -- Warehouse
 
 CREATE TABLE `ITSM_Warehouse` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `code` varchar(32) NOT NULL,
   `name` varchar(64) NOT NULL,
   `createDate` date DEFAULT NULL,
-  `createUser` int(11) DEFAULT NULL,
+  `createUser` int(11) unsigned DEFAULT NULL,
   `closed` tinyint(1) NOT NULL DEFAULT '0',
   `lastModifyDate` date DEFAULT NULL,
-  `lastModifyUser` int(11) DEFAULT NULL,
+  `lastModifyUser` int(11) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`),
   KEY `lastModifyUser` (`lastModifyUser`),
@@ -56,12 +56,12 @@ CREATE TABLE `ITSM_Warehouse` (
 
 CREATE TABLE `ITSM_PurchaseOrder`
 (
-  `id`          int(11)    NOT NULL AUTO_INCREMENT,
-  `number`      int(11)    NOT NULL,
+  `id`          int(11) unsigned    NOT NULL AUTO_INCREMENT,
+  `number`      int(11) unsigned    NOT NULL,
   `orderDate`   date       NOT NULL,
-  `warehouse`   int(11)    NOT NULL,
-  `vendor`      int(11)    NOT NULL,
-  `status`      int(11)    NOT NULL,
+  `warehouse`   int(11) unsigned    NOT NULL,
+  `vendor`      int(11) unsigned    NOT NULL,
+  `status`      int(11) unsigned    NOT NULL,
   `notes`       text,
   `sent`        tinyint(1) NOT NULL DEFAULT '0',
   `sendDate`    date                DEFAULT NULL,
@@ -81,10 +81,10 @@ CREATE TABLE `ITSM_PurchaseOrder`
 
 CREATE TABLE `ITSM_PurchaseOrder_Commodity`
 (
-  `id`            int(11)      NOT NULL AUTO_INCREMENT,
-  `purchaseOrder` int(11)      NOT NULL,
-  `commodity`     int(11)      NOT NULL,
-  `quantity`      int(11)      NOT NULL,
+  `id`            int(11) unsigned      NOT NULL AUTO_INCREMENT,
+  `purchaseOrder` int(11) unsigned      NOT NULL,
+  `commodity`     int(11) unsigned      NOT NULL,
+  `quantity`      int(11) unsigned      NOT NULL,
   `unitCost`      float(11, 2) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `purchaseOrder` (`purchaseOrder`),
@@ -95,8 +95,8 @@ CREATE TABLE `ITSM_PurchaseOrder_Commodity`
 
 CREATE TABLE `ITSM_PurchaseOrder_CostItem`
 (
-  `id`            int(11)      NOT NULL AUTO_INCREMENT,
-  `purchaseOrder` int(11)      NOT NULL,
+  `id`            int(11) unsigned      NOT NULL AUTO_INCREMENT,
+  `purchaseOrder` int(11) unsigned      NOT NULL,
   `cost`          float(11, 2) NOT NULL,
   `notes`         text,
   PRIMARY KEY (`id`),
@@ -107,8 +107,8 @@ CREATE TABLE `ITSM_PurchaseOrder_CostItem`
 -- Discard Order
 CREATE TABLE `ITSM_DiscardOrder`
 (
-  `id`          int(11)    NOT NULL AUTO_INCREMENT,
-  `number`      int(11)    NOT NULL UNIQUE,
+  `id`          int(11) unsigned    NOT NULL AUTO_INCREMENT,
+  `number`      int(11) unsigned    NOT NULL UNIQUE,
   `date`        date       NOT NULL,
   `notes`       text,
   `approved`    tinyint(1) NOT NULL DEFAULT '0',
@@ -122,8 +122,8 @@ CREATE TABLE `ITSM_DiscardOrder`
 
 CREATE TABLE `ITSM_DiscardOrder_Asset`
 (
-  `order` int(11) NOT NULL,
-  `asset` int(11) NOT NULL,
+  `order` int(11) unsigned NOT NULL,
+  `asset` int(11) unsigned NOT NULL,
   PRIMARY KEY (`asset`),
   CONSTRAINT `ITSM_DiscardOrder_Asset_ibfk_1` FOREIGN KEY (`order`) REFERENCES `ITSM_DiscardOrder` (`id`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `ITSM_DiscardOrder_Asset_ibfk_2` FOREIGN KEY (`asset`) REFERENCES `ITSM_Asset` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
@@ -132,17 +132,17 @@ CREATE TABLE `ITSM_DiscardOrder_Asset`
 -- Asset
 CREATE TABLE `ITSM_Asset`
 (
-  `id`              int(11)    NOT NULL AUTO_INCREMENT,
-  `commodity`       int(11)    NOT NULL,
-  `warehouse`       int(11)             DEFAULT NULL,
-  `assetTag`        int(11)    NOT NULL,
-  `parent`          int(11)             DEFAULT NULL,
-  `location`        int(11)             DEFAULT NULL,
+  `id`              int(11) unsigned    NOT NULL AUTO_INCREMENT,
+  `commodity`       int(11) unsigned    NOT NULL,
+  `warehouse`       int(11) unsigned             DEFAULT NULL,
+  `assetTag`        int(11) unsigned    NOT NULL,
+  `parent`          int(11) unsigned             DEFAULT NULL,
+  `location`        int(11) unsigned             DEFAULT NULL,
   `serialNumber`    varchar(64)         DEFAULT NULL,
   `manufactureDate` varchar(64)         DEFAULT NULL,
-  `purchaseOrder`   int(11)             DEFAULT NULL,
+  `purchaseOrder`   int(11) unsigned             DEFAULT NULL,
   `notes`           text,
-  `discardOrder`    int(11)             DEFAULT NULL,
+  `discardOrder`    int(11) unsigned             DEFAULT NULL,
   `discarded`       tinyint(1) NOT NULL DEFAULT '0',
   `discardDate`     date                DEFAULT NULL,
   `verified`        tinyint(1) NOT NULL DEFAULT '0',
@@ -165,7 +165,7 @@ ALTER TABLE `ITSM_Asset` ADD FOREIGN KEY (`parent`) REFERENCES `ITSM_Asset` (`id
 -- Asset Worksheet
 CREATE TABLE `ITSM_Asset_Worksheet`
 (
-  `asset` int(11) NOT NULL,
+  `asset` int(11) unsigned NOT NULL,
   PRIMARY KEY (`asset`),
   CONSTRAINT `ITSM_Asset_Worksheet_ibfk_1` FOREIGN KEY (`asset`) REFERENCES `ITSM_Asset` (`id`) ON UPDATE CASCADE
 );

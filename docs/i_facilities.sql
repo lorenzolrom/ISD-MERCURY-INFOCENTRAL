@@ -1,6 +1,6 @@
 -- Building
 CREATE TABLE `FacilitiesCore_Building` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `code` varchar(32) NOT NULL,
   `name` varchar(64) NOT NULL,
   `streetAddress` text NOT NULL,
@@ -13,8 +13,8 @@ CREATE TABLE `FacilitiesCore_Building` (
 
 -- Location
 CREATE TABLE `FacilitiesCore_Location` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `building` int(11) NOT NULL,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `building` int(11) unsigned NOT NULL,
   `code` varchar(32) NOT NULL,
   `name` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -24,8 +24,8 @@ CREATE TABLE `FacilitiesCore_Location` (
 
 -- Floorplan
 CREATE TABLE `Facilities_Floorplan` (
-  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `building` int(11) NOT NULL,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `building` int(11) unsigned NOT NULL,
   `floor` varchar(16) NOT NULL,
   `imageType` TEXT NOT NULL,
   `imageName` TEXT NOT NULL,
@@ -35,8 +35,8 @@ CREATE TABLE `Facilities_Floorplan` (
 );
 
 CREATE TABLE `Facilities_Space` (
-  `location` int(11) NOT NULL,
-  `floor` int(11) UNSIGNED NOT NULL,
+  `location` int(11) unsigned NOT NULL,
+  `floor` int(11) unsigned NOT NULL,
   `hexColor` char(6) NOT NULL DEFAULT 'FFFFFF',
   `area` decimal(7,1) NOT NULL DEFAULT 0.0,
   `unit` varchar(2) NOT NULL DEFAULT '',
@@ -46,8 +46,8 @@ CREATE TABLE `Facilities_Space` (
 );
 
 CREATE TABLE `Facilities_SpacePoint` (
-  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `space` int(11) NOT NULL,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `space` int(11) unsigned NOT NULL,
   `pD` decimal(7,4) UNSIGNED NOT NULL, -- percent down
   `pR` decimal(7,4) UNSIGNED NOT NULL, -- percent right
   PRIMARY KEY (`id`),

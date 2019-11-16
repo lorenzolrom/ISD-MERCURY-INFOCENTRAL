@@ -1,6 +1,6 @@
 -- USER
 CREATE TABLE `User` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(64) NOT NULL,
   `firstName` varchar(30) NOT NULL,
   `lastName` varchar(30) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE `User` (
 -- AUTH
 CREATE TABLE `Token` (
   `token` char(128) NOT NULL,
-  `user` int(11) NOT NULL,
+  `user` int(11) unsigned NOT NULL,
   `issueTime` datetime NOT NULL,
   `expireTime` datetime NOT NULL,
   `expired` tinyint(1) NOT NULL DEFAULT '0',
@@ -26,7 +26,7 @@ CREATE TABLE `Token` (
 );
 
 CREATE TABLE `Secret` (
-  `id` int(11) NOT NULL auto_increment,
+  `id` int(11) unsigned NOT NULL auto_increment,
   `secret` char(128) NOT NULL,
   `name` varchar(64) NOT NULL,
   PRIMARY KEY (`id`),
@@ -36,15 +36,15 @@ CREATE TABLE `Secret` (
 
 -- ROLE
 CREATE TABLE `Role` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 );
 
 CREATE TABLE `User_Role` (
-  `user` int(11) NOT NULL,
-  `role` int(11) NOT NULL,
+  `user` int(11) unsigned NOT NULL,
+  `role` int(11) unsigned NOT NULL,
   PRIMARY KEY (`user`,`role`),
   KEY `role` (`role`),
   CONSTRAINT `User_Role_ibfk_1` FOREIGN KEY (`user`) REFERENCES `User` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -59,7 +59,7 @@ CREATE TABLE `Permission` (
 );
 
 CREATE TABLE `Role_Permission` (
-  `role` int(11) NOT NULL,
+  `role` int(11) unsigned NOT NULL,
   `permission` varchar(64) NOT NULL,
   PRIMARY KEY (`role`,`permission`),
   KEY `permission` (`permission`),
@@ -78,8 +78,8 @@ CREATE TABLE `Secret_Permission` (
 
 -- NOTIFICATION
 CREATE TABLE `Notification` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user` int(11) NOT NULL,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user` int(11) unsigned NOT NULL,
   `title` text NOT NULL,
   `data` text NOT NULL,
   `read` tinyint(1) NOT NULL DEFAULT '0',
@@ -93,7 +93,7 @@ CREATE TABLE `Notification` (
 
 -- BULLETIN
 CREATE TABLE `Bulletin` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `startDate` date NOT NULL,
   `endDate` date NOT NULL,
   `title` text NOT NULL,
@@ -104,8 +104,8 @@ CREATE TABLE `Bulletin` (
 );
 
 CREATE TABLE `Role_Bulletin` (
-  `role` int(11) NOT NULL,
-  `bulletin` int(11) NOT NULL,
+  `role` int(11) unsigned NOT NULL,
+  `bulletin` int(11) unsigned NOT NULL,
   PRIMARY KEY (`role`,`bulletin`),
   KEY `bulletin` (`bulletin`),
   CONSTRAINT `Role_Bulletin_ibfk_1` FOREIGN KEY (`role`) REFERENCES `Role` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -114,7 +114,7 @@ CREATE TABLE `Role_Bulletin` (
 
 -- Attribute
 CREATE TABLE `Attribute` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `extension` char(4) NOT NULL DEFAULT 'core',
   `type` char(4) NOT NULL,
   `code` char(4) NOT NULL,
@@ -125,7 +125,7 @@ CREATE TABLE `Attribute` (
 
 -- History
 CREATE TABLE `History` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `action` enum('CREATE','MODIFY','DELETE') NOT NULL,
   `table` text NOT NULL,
   `index` text NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE `History` (
 );
 
 CREATE TABLE `HistoryItem` (
-  `history` int(11) NOT NULL,
+  `history` int(11) unsigned NOT NULL,
   `column` text NOT NULL,
   `oldValue` text,
   `newValue` text,

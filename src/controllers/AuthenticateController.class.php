@@ -36,6 +36,7 @@ class AuthenticateController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      * @throws \exceptions\LDAPException
+     * @throws \exceptions\EntryNotFoundException
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -64,6 +65,7 @@ class AuthenticateController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      * @throws \exceptions\LDAPException
+     * @throws \exceptions\EntryNotFoundException
      */
     private function loginUser(): HTTPResponse
     {

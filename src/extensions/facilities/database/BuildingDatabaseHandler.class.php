@@ -215,7 +215,7 @@ class BuildingDatabaseHandler extends DatabaseHandler
 
     /**
      * @param string $code
-     * @return string|null
+     * @return int|null
      * @throws DatabaseException
      */
     public static function selectIdFromCode(string $code): ?int

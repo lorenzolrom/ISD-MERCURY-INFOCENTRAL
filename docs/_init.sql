@@ -129,7 +129,7 @@ CREATE TABLE `History` (
   `action` enum('CREATE','MODIFY','DELETE') NOT NULL,
   `table` text NOT NULL,
   `index` text NOT NULL,
-  `username` varchar(64) NOT NULL,
+  `username` varchar(64) DEFAULT NULL,
   `time` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `username` (`username`),

@@ -98,6 +98,7 @@ class NetGroupController extends Controller
      * @param string $cn
      * @return HTTPResponse
      * @throws \exceptions\LDAPException
+     * @throws \exceptions\EntryNotFoundException
      */
     private function updateGroup(string $cn): HTTPResponse
     {

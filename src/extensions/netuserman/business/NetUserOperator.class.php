@@ -19,6 +19,7 @@ use exceptions\LDAPException;
 use exceptions\ValidationError;
 use extensions\netuserman\ExtConfig;
 use utilities\LDAPConnection;
+use utilities\LDAPUtility;
 
 /**
  * Interactions with LDAP
@@ -99,10 +100,10 @@ class NetUserOperator extends Operator
      */
     public static function getUserDetails(string $username, array $attributes = ExtConfig::OPTIONS['userReturnedAttributes']): array
     {
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
-        $results = $ldap->searchByUsername($username, $attributes);
+        $results = LDAPUtility::getUserByUsername($c, $username, $attributes);
+        $c->close();
 
         if($results['count'] !== 1)
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
@@ -163,7 +164,7 @@ class NetUserOperator extends Operator
         }
 
         if(isset($formatted['lastlogon']))
-            $formatted['lastlogon'] = LDAPConnection::LDAPTimeToUnixTime($formatted['lastlogon']);
+            $formatted['lastlogon'] = LDAPUtility::LDAPTimeToUnixTime($formatted['lastlogon']);
 
         return $formatted;
     }
@@ -211,10 +212,13 @@ class NetUserOperator extends Operator
             $vals['userprincipalname'] = $vals['userprincipalname'] . \Config::OPTIONS['ldapPrincipalSuffix'];
         }
 
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
+        $user = LDAPUtility::getUserByUsername($c, $username, ['dn']);
 
-        return $ldap->updateUser($username, $vals);
+        $res = LDAPUtility::updateEntry($c, $user[0]['dn'], $vals);
+
+        $c->close();
+        return $res;
     }
 
     /**
@@ -225,10 +229,10 @@ class NetUserOperator extends Operator
      */
     public static function searchUsers(array $filterAttrs, array $getAttrs = ExtConfig::OPTIONS['userReturnedSearchAttributes']): array
     {
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
-        $results = $ldap->searchUsers($filterAttrs, $getAttrs);
+        $results = LDAPUtility::getObjects($c, $filterAttrs, $getAttrs, array('objectClass' => 'user', 'objectCategory' => 'person'));
+        $c->close();
 
         $users = array();
 
@@ -300,10 +304,14 @@ class NetUserOperator extends Operator
             throw new ValidationError($errors);
 
         // Change photo
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
-        return $ldap->updateUser($username, array('thumbnailphoto' => $imageContents));
+        $user = LDAPUtility::getUserByUsername($c, $username, array('dn'));
+        $res = LDAPUtility::updateEntry($c, $user[0]['dn'], array('thumbnailphoto' => $imageContents));
+
+        $c->close();
+
+        return $res;
     }
 
     /**
@@ -321,10 +329,12 @@ class NetUserOperator extends Operator
         if($password != $confirm)
             throw new ValidationError(array('Passwords do not match'));
 
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
-        return $ldap->setPassword($username, $password);
+        $res = LDAPUtility::setUserPassword($c, $username, $password);
+
+        $c->close();
+        return $res;
     }
 
     /**
@@ -368,14 +378,13 @@ class NetUserOperator extends Operator
             }
         }
 
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
         foreach($addDNs as $dn)
         {
             try
             {
-                $ldap->addAttribute($dn, 'member', $userDN);
+                LDAPUtility::addAttribute($c, $dn, 'member', $userDN);
             }
             catch(LDAPException $e){} // Do nothing
         }
@@ -384,11 +393,12 @@ class NetUserOperator extends Operator
         {
             try
             {
-                $ldap->delAttribute($dn, 'member', $userDN);
+                LDAPUtility::delAttribute($c, $dn, 'member', $userDN);
             }
             catch(LDAPException $e){}
         }
 
+        $c->close();
         return TRUE;
     }
 
@@ -401,10 +411,12 @@ class NetUserOperator extends Operator
     public static function deleteUser(string $username): bool
     {
         $userDN = self::getUserDetails($username, array('distinguishedname'))['distinguishedname'];
-        $ldap = new LDAPConnection();
-        $ldap->bind();
 
-        return $ldap->deleteObject($userDN);
+        $c = new LDAPConnection(TRUE, TRUE);
+
+        $res = LDAPUtility::deleteObject($c, $userDN);
+        $c->close();
+        return $res;
     }
 
     /**
@@ -453,7 +465,7 @@ class NetUserOperator extends Operator
             $errors[] = 'Passwords do not match';
 
         // Format password
-        $attrs['unicodePwd'] = LDAPConnection::getLDAPFormattedPassword($password);
+        $attrs['unicodePwd'] = LDAPUtility::getLDAPFormattedPassword($password);
 
         // Throw errors, if present
         if(!empty($errors))
@@ -462,8 +474,7 @@ class NetUserOperator extends Operator
         // Add objectclass "person"
         $attrs['objectclass'] = array('top', 'person', 'organizationalPerson', 'user');
 
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
         // Extract and unset DN
         $dn = $attrs['distinguishedname'];
@@ -482,10 +493,13 @@ class NetUserOperator extends Operator
         }
 
         // Create object
-        if($ldap->createObject($dn, $attrs))
+        if(LDAPUtility::createObject($c, $dn, $attrs))
+        {
+            $c->close();
             return array('userprincipalname' => $attrs['userprincipalname']);
+        }
 
-
+        $c->close();
         return NULL;
     }
 

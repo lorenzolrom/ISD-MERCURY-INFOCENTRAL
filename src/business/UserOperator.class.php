@@ -28,10 +28,11 @@ use models\Token;
 use models\User;
 use utilities\HistoryRecorder;
 use utilities\LDAPConnection;
+use utilities\LDAPUtility;
 
 class UserOperator extends Operator
 {
-    public const LDAP_ATTRIBUTES = array('givenname', 'sn', 'mail');
+    public const LDAP_ATTRIBUTES = array('givenname', 'sn', 'mail', \Config::OPTIONS['ldapGroupAttribute']);
 
     /**
      * @param int $id
@@ -80,14 +81,15 @@ class UserOperator extends Operator
 
     /**
      * @param array $vals
+     * @param bool $systemEntry Is this user being created by a system operation?
      * @return array
-     * @throws LDAPException
      * @throws DatabaseException
      * @throws EntryNotFoundException
+     * @throws LDAPException
      * @throws SecurityException
-     * @throws \exceptions\ValidationError
+     * @throws ValidationError
      */
-    public static function createUser(array $vals): array
+    public static function createUser(array $vals, bool $systemEntry = FALSE): array
     {
         $errors = array();
 
@@ -106,11 +108,10 @@ class UserOperator extends Operator
             if(!\Config::OPTIONS['ldapEnabled']) // LDAP is not enabled
                 throw new ValidationError(array('LDAP is not enabled'));
 
-            $ldap = new LDAPConnection();
-            $ldap->bind();
+            $c = new LDAPConnection(TRUE, TRUE);
 
             // Verify LDAP username
-            $results = $ldap->searchByUsername($vals['username'], array('givenname', 'sn', 'mail'));
+            $results = LDAPUtility::getUserByUsername($c, $vals['username'], self::LDAP_ATTRIBUTES);
 
             if($results['count'] !== 1)
             {
@@ -140,7 +141,9 @@ class UserOperator extends Operator
         }
 
         $user = UserDatabaseHandler::insert($vals['username'], $vals['firstName'], $vals['lastName'], $vals['email'], $vals['password'], $vals['disabled'], $vals['authType']);
-        $history = HistoryRecorder::writeHistory('User', HistoryRecorder::CREATE, $user->getId(), $user);
+        $history = HistoryRecorder::writeHistory('User', HistoryRecorder::CREATE, $user->getId(), $user, array(), array(), $systemEntry);
+        if($systemEntry)
+            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('System Generated User')));
 
         if(is_array($vals['roles']))
         {
@@ -164,6 +167,13 @@ class UserOperator extends Operator
      */
     public static function updateUser(User $user, array $vals, bool $resync = FALSE): array
     {
+        if($resync) //  If re-sync, set all values to current except for firstName, lastName, email
+        {
+            $vals['authType'] = 'ldap';
+            $vals['username'] = $user->getUsername();
+            $vals['roles'] = NULL; // Do not touch roles
+        }
+
         $errors = array();
 
         // Validate username format and that it is unique
@@ -185,11 +195,10 @@ class UserOperator extends Operator
             if(!\Config::OPTIONS['ldapEnabled']) // LDAP is not enabled
                 throw new ValidationError(array('LDAP is not enabled'));
 
-            $ldap = new LDAPConnection();
-            $ldap->bind();
+            $c = new LDAPConnection(TRUE, TRUE);
 
             // Verify LDAP username
-            $results = $ldap->searchByUsername($vals['username'], array('givenname', 'sn', 'mail'));
+            $results = LDAPUtility::getUserByUsername($c, $vals['username'], self::LDAP_ATTRIBUTES);
 
             if($results['count'] !== 1)
             {
@@ -227,12 +236,12 @@ class UserOperator extends Operator
                 throw new ValidationError($errors);
         }
 
-        $history = HistoryRecorder::writeHistory('User', HistoryRecorder::MODIFY, $user->getId(), $user, $vals);
-        $user = UserDatabaseHandler::update($user->getId(), $vals['username'], $vals['firstName'], $vals['lastName'], $vals['email'], $vals['disabled'], $vals['authType']);
+        $history = HistoryRecorder::writeHistory('User', HistoryRecorder::MODIFY, $user->getId(), $user, $vals, array(), $resync);
 
-        // Add resync history entry if this is part of an LDAP resync
         if($resync)
-            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('LDAP Re-sync')));
+            HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('LDAP Re-Sync')));
+
+        $user = UserDatabaseHandler::update($user->getId(), $vals['username'], $vals['firstName'], $vals['lastName'], $vals['email'], $vals['disabled'], $vals['authType']);
 
 
         // Wipe password if user is LDAP
@@ -277,6 +286,7 @@ class UserOperator extends Operator
      * @param string $remoteAddr
      * @return Token
      * @throws DatabaseException
+     * @throws EntryNotFoundException
      * @throws LDAPException
      * @throws SecurityException
      */
@@ -298,6 +308,32 @@ class UserOperator extends Operator
         }
         catch(EntryNotFoundException $e)
         {
+            // Attempt to create user if it doesn't exist
+            // If LDAP is enabled, query for username
+            if(\Config::OPTIONS['ldapEnabled'])
+            {
+                // If matching specified filter, create user with details
+                $c = new LDAPConnection(TRUE, TRUE);
+                $results = LDAPUtility::getUserMatchingFilter($c, $username, \Config::OPTIONS['ldapFilter'], self::LDAP_ATTRIBUTES);
+
+                // User found, create
+                if($results['count'] == 1)
+                {
+                    try
+                    {
+                        self::createUser(array(
+                            'username' => strtolower($username),
+                            'authType' => 'ldap',
+                            'roles' => array()
+                        ), TRUE);
+
+                        // Re-attempt the sign-in
+                        return self::loginUser($username, $password, $remoteAddr);
+                    }
+                    catch(ValidationError $e){} // Do nothing, error out
+                }
+            }
+
             throw new SecurityException(SecurityException::MESSAGES[SecurityException::USER_NOT_FOUND], SecurityException::USER_NOT_FOUND);
         }
     }
@@ -325,6 +361,11 @@ class UserOperator extends Operator
             {
                 case 'ldap':
                     $ok = self::authenticateLDAPUser($user, $password);
+
+                    if($ok) // Re-sync LDAP user details
+                        self::resyncLDAPUserDetails($user);
+
+
                     break;
                 default:
                     $ok = self::authenticateLocalUser($user, $password);
@@ -431,15 +472,20 @@ class UserOperator extends Operator
      */
     private static function authenticateLDAPUser(User $user, string $password): bool
     {
-        $ldap = new LDAPConnection();
+        $c = new LDAPConnection();
 
         if(strlen($password) == 0)
             return FALSE;
 
-        if($ldap->bind($user->getUsername(), $password))
-            return TRUE;
+        $bind = $c->bind($user->getUsername(), $password);
 
-        return FALSE;
+        $c->bind(); // Re-bind as Domain Admin
+
+        $res = LDAPUtility::getUserMatchingFilter($c, $user->getUsername(), \Config::OPTIONS['ldapFilter'], array('uid'));
+
+        $c->close();
+
+        return ($bind AND ($res['count'] == 1));
     }
 
     /**
@@ -463,7 +509,55 @@ class UserOperator extends Operator
      */
     private static function changeLDAPUserPassword(User $user, string $password): bool
     {
-        $ldap = new LDAPConnection();
-        return $ldap->setPassword($user->getUsername(), $password);
+        $c = new LDAPConnection(TRUE, TRUE);
+        $res = LDAPUtility::setUserPassword($c, $user->getUsername(), $password);
+        $c->close();
+        return $res;
+    }
+
+    /**
+     * @param User $user
+     * @return bool
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     * @throws LDAPException
+     * @throws SecurityException
+     */
+    private static function resyncLDAPUserDetails(User $user): bool
+    {
+        $c = new LDAPConnection(TRUE, TRUE);
+
+        $result = LDAPUtility::getUserByUsername($c, $user->getUsername(), self::LDAP_ATTRIBUTES);
+
+        if($result['count'] != 1) // User does not exist, this will likely have already been caught
+            return FALSE;
+
+        $result = $result[0];
+
+        $resync = FALSE;
+
+        // givenname
+        if($user->getFirstName() != (isset($result['givenname'][0]) ? $result['givenname'][0] : ''))
+            $resync = TRUE;
+
+        // sn
+        if($user->getLastName() != (isset($result['sn'][0]) ? $result['sn'][0] : ''))
+            $resync = TRUE;
+
+        // mail
+        if($user->getEmail() != (isset($result['mail'][0]) ? $result['mail'][0] : ''))
+            $resync = TRUE;
+
+        if($resync)
+        {
+            try
+            {
+                self::updateUser($user, array(), TRUE);
+            }
+            catch(ValidationError $e){return FALSE;}
+        }
+
+        $c->close();
+        return TRUE;
     }
 }

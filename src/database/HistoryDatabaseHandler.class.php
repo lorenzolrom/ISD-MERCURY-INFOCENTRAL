@@ -53,7 +53,7 @@ class HistoryDatabaseHandler extends DatabaseHandler
     {
         $handler = new DatabaseConnection();
 
-        $select = $handler->prepare('SELECT `id` FROM `History` WHERE `table` LIKE :table AND `index` LIKE :index AND `action` LIKE :action AND `username` LIKE :username');
+        $select = $handler->prepare('SELECT `id` FROM `History` WHERE `table` LIKE :table AND `index` LIKE :index AND `action` LIKE :action AND IFNULL(`username`, \'\') LIKE :username');
         $select->bindParam('table', $table, DatabaseConnection::PARAM_STR);
         $select->bindParam('index', $index, DatabaseConnection::PARAM_STR);
         $select->bindParam('action', $action, DatabaseConnection::PARAM_STR);
@@ -80,13 +80,13 @@ class HistoryDatabaseHandler extends DatabaseHandler
      * @param string $table
      * @param string $action
      * @param string $index
-     * @param string $username
+     * @param string|null $username
      * @param string $time
      * @return History
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(string $table, string $action, string $index, string $username, string $time): History
+    public static function insert(string $table, string $action, string $index, ?string $username, string $time): History
     {
         $handler = new DatabaseConnection();
 

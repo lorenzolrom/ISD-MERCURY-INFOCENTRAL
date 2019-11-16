@@ -20,6 +20,7 @@ use exceptions\LDAPException;
 use exceptions\ValidationError;
 use extensions\netuserman\ExtConfig;
 use utilities\LDAPConnection;
+use utilities\LDAPUtility;
 
 class NetGroupOperator extends Operator
 {
@@ -31,10 +32,9 @@ class NetGroupOperator extends Operator
      */
     public static function searchGroups(array $filterAttrs, array $getAttrs = ExtConfig::OPTIONS['groupReturnedSearchAttributes']): array
     {
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
-        $results = $ldap->searchGroups($filterAttrs, $getAttrs);
+        $results = LDAPUtility::getObjects($c, $filterAttrs, $getAttrs, array('objectClass' => 'group'));
 
         $groups = array();
 
@@ -77,6 +77,7 @@ class NetGroupOperator extends Operator
             $groups[] = $group;
         }
 
+        $c->close();
         return $groups;
     }
 
@@ -92,10 +93,9 @@ class NetGroupOperator extends Operator
         // Decode URI characters
         $cn = urldecode($cn);
 
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
-        $results = $ldap->getGroup($cn, $getAttrs);
+        $results = LDAPUtility::getObject($c, $cn, $getAttrs);
 
         if($results['count'] !== 1)
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
@@ -137,6 +137,7 @@ class NetGroupOperator extends Operator
             }
         }
 
+        $c->close();
         return $formatted;
     }
 
@@ -156,12 +157,14 @@ class NetGroupOperator extends Operator
                 $vals[$attr] = array();
         }
 
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
         $dn = self::getGroupDetails($cn, array('distinguishedname'))['distinguishedname'];
 
-        return $ldap->updateEntry($dn, $vals);
+        $res = LDAPUtility::updateEntry($c, $dn, $vals);
+
+        $c->close();
+        return $res;
     }
 
     /**
@@ -173,10 +176,13 @@ class NetGroupOperator extends Operator
     public static function deleteGroup(string $cn): bool
     {
         $groupDN = self::getGroupDetails($cn, array('distinguishedname'))['distinguishedname'];
-        $ldap = new LDAPConnection();
-        $ldap->bind();
 
-        return $ldap->deleteObject($groupDN);
+        $c = new LDAPConnection(TRUE, TRUE);
+
+        $res = LDAPUtility::deleteObject($c, $groupDN);
+
+        $c->close();
+        return $res;
     }
 
     /**
@@ -207,16 +213,18 @@ class NetGroupOperator extends Operator
         $attrs['objectclass'] = array('top', 'group');
 
         // Create object
-        $ldap = new LDAPConnection();
-        $ldap->bind();
+        $c = new LDAPConnection(TRUE, TRUE);
 
-        if($ldap->createObject($attrs['distinguishedname'], $attrs))
+        if(LDAPUtility::createObject($c, $attrs['distinguishedname'], $attrs))
         {
             $cn = explode(',', $attrs['distinguishedname'])[0];
             $cn = explode('=', $cn)[1];
+
+            $c->close();
             return array('cn' => $cn);
         }
 
+        $c->close();
         return NULL;
     }
 }

@@ -31,12 +31,13 @@ class HistoryRecorder
      * @param Model $currentState
      * @param array $newValues
      * @param array|null $nullVars
+     * @param bool $noUser Should this history entry be done by NO user?
      * @return int
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public static function writeHistory(string $tableName, string $action, string $index, Model $currentState, array $newValues = array(), array $nullVars = array()): int
+    public static function writeHistory(string $tableName, string $action, string $index, Model $currentState, array $newValues = array(), array $nullVars = array(), bool $noUser = FALSE): int
     {
         $rawOldValues = (array)$currentState;
         $oldValues = array();
@@ -51,7 +52,16 @@ class HistoryRecorder
         }
 
         // Create record for entry
-        $record = HistoryDatabaseHandler::insert($tableName, $action, $index, CurrentUserController::currentUser()->getUsername(), date('Y-m-d H:i:s'));
+        if($noUser)
+        {
+            $username = NULL;
+        }
+        else
+        {
+            $username = CurrentUserController::currentUser()->getUsername();
+        }
+
+        $record = HistoryDatabaseHandler::insert($tableName, $action, $index, $username, date('Y-m-d H:i:s'));
 
         foreach(array_keys($oldValues) as $varName)
         {

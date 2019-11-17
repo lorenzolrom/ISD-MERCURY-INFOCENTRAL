@@ -32,7 +32,7 @@ use utilities\LDAPUtility;
 
 class UserOperator extends Operator
 {
-    public const LDAP_ATTRIBUTES = array('givenname', 'sn', 'mail', \Config::OPTIONS['ldapGroupAttribute']);
+    public const LDAP_ATTRIBUTES = array('givenname', 'sn', 'mail');
 
     /**
      * @param int $id

@@ -37,8 +37,6 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
         'ldapEnabled' => FALSE,
         'ldapFilter' => '', // Filter for user lookup
         'ldapVersion' => 3, // LDAP version, use '3' for Active Directory
-        'ldapUseGroups' => TRUE, // Should users be put into groups if LDAP object is memberOf group with same name as existing Role
-        'ldapGroupAttribute' => 'memberOf', // Name of attribute holding groups
         'ldapDomainController' => 'domain.local',
         'ldapDomain' => 'DOMAIN', // Domain prefix for user accounts
         'ldapDomainDn' => 'dc=domain, dc=local',

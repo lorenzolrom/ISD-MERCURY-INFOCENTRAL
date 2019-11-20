@@ -306,8 +306,11 @@ class NetUserOperator extends Operator
      * @param string $username
      * @param string $imageContents
      * @return bool
+     * @throws EntryNotFoundException
+     * @throws LDAPException
      * @throws ValidationError
-     * @throws \exceptions\LDAPException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function updateUserImage(string $username, string $imageContents): bool
     {
@@ -327,8 +330,12 @@ class NetUserOperator extends Operator
         // Change photo
         $c = new LDAPConnection(TRUE, TRUE);
 
-        $user = LDAPUtility::getUserByUsername($c, $username, array('dn'));
-        $res = LDAPUtility::updateEntry($c, $user[0]['dn'], array('thumbnailphoto' => $imageContents));
+        $user = LDAPUtility::getUserByUsername($c, $username, array('dn', 'objectguid'));
+
+        $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::MODIFY, $user[0]['objectguid'][0], new NetModel());
+        HistoryRecorder::writeAssocHistory($hist, array('thumbnailphoto' => ['Thumbnail Photo Replaced']));
+
+        $res = LDAPUtility::updateEntry($c, $user[0]['dn'], array('thumbnailPhoto' => $imageContents));
 
         $c->close();
 
@@ -339,8 +346,11 @@ class NetUserOperator extends Operator
      * @param string $username
      * @param array $args // 'password' and 'confirm'
      * @return bool
+     * @throws EntryNotFoundException
      * @throws LDAPException
      * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function resetPassword(string $username, array $args): bool
     {
@@ -351,6 +361,11 @@ class NetUserOperator extends Operator
             throw new ValidationError(array('Passwords do not match'));
 
         $c = new LDAPConnection(TRUE, TRUE);
+
+        $userGUID = LDAPUtility::getUserByUsername($c, $username, array('objectguid'))[0]['objectguid'][0];
+
+        $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::MODIFY, $userGUID, new NetModel());
+        HistoryRecorder::writeAssocHistory($hist, array('unicodePwd' => ['User Password Reset']));
 
         $res = LDAPUtility::setUserPassword($c, $username, $password);
 
@@ -554,6 +569,8 @@ class NetUserOperator extends Operator
                     $histAttrs[$attr] = $attrs[$attr];
             }
 
+
+            unset($histAttrs['unicodePwd']); // Remove unicodePwd
             HistoryRecorder::writeAssocHistory($hist, $histAttrs);
 
             return array('userprincipalname' => $attrs['userprincipalname']);

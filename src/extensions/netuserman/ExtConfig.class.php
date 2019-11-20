@@ -76,6 +76,7 @@ class ExtConfig
             'telephonenumber', // Telephone Number
             'mail', // Email
             'memberof', // Add to Groups
+            'primarygroupid', // ID of the primary group
             'title', // Title
             'useraccountcontrol', // Disable and password expire status
             'lastlogon' // Last login of user UNIX timestamp

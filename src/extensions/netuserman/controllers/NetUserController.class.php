@@ -136,6 +136,9 @@ class NetUserController extends Controller
      * @return HTTPResponse
      * @throws LDAPException
      * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     private function updateUser(string $username): HTTPResponse
     {
@@ -172,7 +175,9 @@ class NetUserController extends Controller
      * @param string $username
      * @return HTTPResponse
      * @throws LDAPException
+     * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     private function modifyGroups(string $username): HTTPResponse
     {
@@ -184,7 +189,9 @@ class NetUserController extends Controller
      * @param string $username
      * @return HTTPResponse
      * @throws LDAPException
+     * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     private function deleteUser(string $username): HTTPResponse
     {
@@ -196,6 +203,9 @@ class NetUserController extends Controller
      * @return HTTPResponse
      * @throws LDAPException
      * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     private function createUser(): HTTPResponse
     {

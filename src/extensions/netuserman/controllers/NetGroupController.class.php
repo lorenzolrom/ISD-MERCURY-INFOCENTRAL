@@ -97,8 +97,10 @@ class NetGroupController extends Controller
     /**
      * @param string $cn
      * @return HTTPResponse
-     * @throws \exceptions\LDAPException
+     * @throws LDAPException
+     * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     private function updateGroup(string $cn): HTTPResponse
     {
@@ -110,7 +112,9 @@ class NetGroupController extends Controller
      * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
+     * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
     private function deleteGroup(string $cn): HTTPResponse
     {
@@ -121,6 +125,9 @@ class NetGroupController extends Controller
     /**
      * @return HTTPResponse
      * @throws LDAPException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      * @throws \exceptions\ValidationError
      */
     private function createGroup(): HTTPResponse

@@ -437,12 +437,18 @@ class NetUserOperator extends Operator
      * @return bool
      * @throws EntryNotFoundException
      * @throws LDAPException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function deleteUser(string $username): bool
     {
-        $userDN = self::getUserDetails($username, array('distinguishedname'))['distinguishedname'];
+        $details = self::getUserDetails($username, array('objectguid', 'distinguishedname'));
+        $userDN = $details['distinguishedname'];
+        $userGUID = $details['objectguid'];
 
         $c = new LDAPConnection(TRUE, TRUE);
+
+        HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::DELETE, $userGUID, new NetModel());
 
         $res = LDAPUtility::deleteObject($c, $userDN);
         $c->close();
@@ -452,12 +458,17 @@ class NetUserOperator extends Operator
     /**
      * @param array $attrs
      * @return array|null Array with new user login name if created, NULL if failed
+     * @throws EntryNotFoundException
      * @throws LDAPException
      * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function createUser(array $attrs): ?array
     {
         $errors = array();
+
+        $newUsername = NULL;
 
         // Remove domain '@' suffix from userprincipalname, if present
         $attrs['userprincipalname'] = explode(\Config::OPTIONS['ldapPrincipalSuffix'], $attrs['userprincipalname'])[0];
@@ -480,6 +491,7 @@ class NetUserOperator extends Operator
         catch(EntryNotFoundException $e){} // Do nothing, userprincipalname does not exist
 
         // Re-add domain '@'
+        $newUsername = $attrs['userprincipalname']; // Store the username only for use in getting GUID
         $attrs['userprincipalname'] = $attrs['userprincipalname'] . \Config::OPTIONS['ldapPrincipalSuffix'];
 
         // Extract passwords
@@ -526,6 +538,24 @@ class NetUserOperator extends Operator
         if(LDAPUtility::createObject($c, $dn, $attrs))
         {
             $c->close();
+
+            $userGUID = self::getUserDetails($newUsername, array('objectguid'))['objectguid'];
+
+            $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::CREATE, $userGUID, new NetModel());
+
+            // Format VALS for History Entry
+            $histAttrs = array();
+
+            foreach(array_keys($attrs) as $attr)
+            {
+                if(!is_array($attrs[$attr]))
+                    $histAttrs[$attr] = array($attrs[$attr]);
+                else
+                    $histAttrs[$attr] = $attrs[$attr];
+            }
+
+            HistoryRecorder::writeAssocHistory($hist, $histAttrs);
+
             return array('userprincipalname' => $attrs['userprincipalname']);
         }
 

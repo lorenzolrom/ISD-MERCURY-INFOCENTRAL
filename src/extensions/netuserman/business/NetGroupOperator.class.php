@@ -190,12 +190,18 @@ class NetGroupOperator extends Operator
      * @return bool
      * @throws EntryNotFoundException
      * @throws LDAPException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function deleteGroup(string $cn): bool
     {
-        $groupDN = self::getGroupDetails($cn, array('distinguishedname'))['distinguishedname'];
+        $details = self::getGroupDetails($cn, array('objectguid', 'distinguishedname'));
+        $groupDN = $details['distinguishedname'];
+        $groupGUID = $details['objectguid'];
 
         $c = new LDAPConnection(TRUE, TRUE);
+
+        HistoryRecorder::writeHistory('!NETGROUP', HistoryRecorder::DELETE, $groupGUID, new NetModel());
 
         $res = LDAPUtility::deleteObject($c, $groupDN);
 
@@ -206,8 +212,11 @@ class NetGroupOperator extends Operator
     /**
      * @param array $attrs
      * @return array|null
+     * @throws EntryNotFoundException
      * @throws LDAPException
      * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function createGroup(array $attrs): ?array
     {
@@ -237,6 +246,23 @@ class NetGroupOperator extends Operator
         {
             $cn = explode(',', $attrs['distinguishedname'])[0];
             $cn = explode('=', $cn)[1];
+
+            $groupGUID = self::getGroupDetails($cn, array('objectguid'))['objectguid'];
+
+            $hist = HistoryRecorder::writeHistory('!NETGROUP', HistoryRecorder::CREATE, $groupGUID, new NetModel());
+
+            // Format VALS for History Entry
+            $histAttrs = array();
+
+            foreach(array_keys($attrs) as $attr)
+            {
+                if(!is_array($attrs[$attr]))
+                    $histAttrs[$attr] = array($attrs[$attr]);
+                else
+                    $histAttrs[$attr] = $attrs[$attr];
+            }
+
+            HistoryRecorder::writeAssocHistory($hist, $histAttrs);
 
             $c->close();
             return array('cn' => $cn);

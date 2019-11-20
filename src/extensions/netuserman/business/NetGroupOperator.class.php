@@ -19,6 +19,8 @@ use exceptions\EntryNotFoundException;
 use exceptions\LDAPException;
 use exceptions\ValidationError;
 use extensions\netuserman\ExtConfig;
+use extensions\netuserman\models\NetModel;
+use utilities\HistoryRecorder;
 use utilities\LDAPConnection;
 use utilities\LDAPUtility;
 
@@ -147,6 +149,8 @@ class NetGroupOperator extends Operator
      * @return bool
      * @throws EntryNotFoundException
      * @throws LDAPException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function updateGroup(string $cn, array $vals): bool
     {
@@ -159,7 +163,21 @@ class NetGroupOperator extends Operator
 
         $c = new LDAPConnection(TRUE, TRUE);
 
-        $dn = self::getGroupDetails($cn, array('distinguishedname'))['distinguishedname'];
+        $details = self::getGroupDetails($cn, array('distinguishedname', 'objectguid'));
+        $dn = $details['distinguishedname'];
+        $guid = $details['objectguid'];
+
+        $hist = HistoryRecorder::writeHistory('!NETGROUP', HistoryRecorder::MODIFY, $guid, new NetModel());
+
+        // Format VALS for History Entry
+        $histAttrs = array();
+
+        foreach(array_keys($vals) as $attr)
+        {
+            $histAttrs[$attr] = array($vals[$attr]);
+        }
+
+        HistoryRecorder::writeAssocHistory($hist, $histAttrs);
 
         $res = LDAPUtility::updateEntry($c, $dn, $vals);
 

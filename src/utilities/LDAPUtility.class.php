@@ -83,7 +83,19 @@ class LDAPUtility
     {
         $filter = "(|(userprincipalname=" . $username . \Config::OPTIONS['ldapPrincipalSuffix'] . "))";
         $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
-        return ldap_get_entries($c->getConnection(), $search);
+
+        $results = ldap_get_entries($c->getConnection(), $search);
+
+        // Convert ObjectGUID to hex if present
+        for($i = 0; $i < (int)$results['count']; $i++)
+        {
+            if(isset($results[$i]['objectguid']))
+            {
+                $results[$i]['objectguid'][0] = bin2hex($results[$i]['objectguid'][0]);
+            }
+        }
+
+        return $results;
     }
 
     /**
@@ -118,7 +130,19 @@ class LDAPUtility
     {
         $filter = "(|(cn=" . $cn . "))";
         $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
-        return ldap_get_entries($c->getConnection(), $search);
+
+        $results = ldap_get_entries($c->getConnection(), $search);
+
+        // Convert ObjectGUID to hex if present
+        for($i = 0; $i < (int)$results['count']; $i++)
+        {
+            if(isset($results[$i]['objectguid']))
+            {
+                $results[$i]['objectguid'][0] = bin2hex($results[$i]['objectguid'][0]);
+            }
+        }
+
+        return $results;
     }
 
     /**
@@ -162,7 +186,19 @@ class LDAPUtility
 
         $results = ldap_get_entries($c->getConnection(), $search);
 
-        return is_array($results) ? $results : array();
+        if(!is_array($results))
+            return array();
+
+        // Convert ObjectGUID to hex if present
+        for($i = 0; $i < (int)$results['count']; $i++)
+        {
+            if(isset($results[$i]['objectguid']))
+            {
+                $results[$i]['objectguid'][0] = bin2hex($results[$i]['objectguid'][0]);
+            }
+        }
+
+        return $results;
     }
 
     //////////

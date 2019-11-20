@@ -18,6 +18,8 @@ use exceptions\EntryNotFoundException;
 use exceptions\LDAPException;
 use exceptions\ValidationError;
 use extensions\netuserman\ExtConfig;
+use extensions\netuserman\models\NetModel;
+use utilities\HistoryRecorder;
 use utilities\LDAPConnection;
 use utilities\LDAPUtility;
 
@@ -103,6 +105,7 @@ class NetUserOperator extends Operator
         $c = new LDAPConnection(TRUE, TRUE);
 
         $results = LDAPUtility::getUserByUsername($c, $username, $attributes);
+
         $c->close();
 
         if($results['count'] !== 1)
@@ -173,8 +176,11 @@ class NetUserOperator extends Operator
      * @param string $username
      * @param array $vals
      * @return bool
+     * @throws EntryNotFoundException
      * @throws LDAPException
      * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function updateUser(string $username, array $vals): bool
     {
@@ -213,7 +219,22 @@ class NetUserOperator extends Operator
         }
 
         $c = new LDAPConnection(TRUE, TRUE);
-        $user = LDAPUtility::getUserByUsername($c, $username, ['dn']);
+        $user = LDAPUtility::getUserByUsername($c, $username, ['objectguid', 'dn']);
+
+        $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::MODIFY, $user[0]['objectguid'][0], new NetModel());
+
+        // Format VALS for History Entry
+        $histAttrs = array();
+
+        foreach(array_keys($vals) as $attr)
+        {
+            if(!is_array($vals[$attr]))
+                $histAttrs[$attr] = array($vals[$attr]);
+            else
+                $histAttrs[$attr] = $vals[$attr];
+        }
+
+        HistoryRecorder::writeAssocHistory($hist, $histAttrs);
 
         $res = LDAPUtility::updateEntry($c, $user[0]['dn'], $vals);
 

@@ -62,6 +62,7 @@ class ExtConfig
         ),
 
         'userReturnedAttributes' => array( // Attributes returned when getting a single user
+            'objectguid',
             'givenname', // First Name
             'initials', // Middle Name / Initials
             'sn', // Last Name

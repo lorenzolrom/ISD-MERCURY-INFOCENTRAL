@@ -364,10 +364,14 @@ class NetUserOperator extends Operator
      * @return bool
      * @throws EntryNotFoundException
      * @throws LDAPException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
      */
     public static function modifyGroups(string $username, array $vals): bool
     {
-        $userDN = self::getUserDetails($username, array('distinguishedname'))['distinguishedname'];
+        $details = self::getUserDetails($username, array('objectguid', 'distinguishedname'));
+        $userDN = $details['distinguishedname'];
+        $userGUID = $details['objectguid'];
 
         $addGroups = is_array($vals['addGroups']) ? $vals['addGroups'] : array();
         $removeGroups = is_array($vals['removeGroups']) ? $vals['removeGroups'] : array();
@@ -400,6 +404,11 @@ class NetUserOperator extends Operator
         }
 
         $c = new LDAPConnection(TRUE, TRUE);
+
+        $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::MODIFY, $userGUID, new NetModel());
+
+        HistoryRecorder::writeAssocHistory($hist, array('addGroups' => $addDNs));
+        HistoryRecorder::writeAssocHistory($hist, array('removeGroups' => $removeDNs));
 
         foreach($addDNs as $dn)
         {

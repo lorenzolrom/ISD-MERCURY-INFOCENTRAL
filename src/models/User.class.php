@@ -178,7 +178,7 @@ class User extends Model
      */
     public static function hashPassword(string $password): string
     {
-        return password_hash(\Config::OPTIONS['salt'] . $password, PASSWORD_ARGON2ID);
+        return password_hash(\Config::OPTIONS['salt'] . $password, PASSWORD_ARGON2I);
     }
 
     /**

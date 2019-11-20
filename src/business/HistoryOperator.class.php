@@ -14,6 +14,7 @@
 namespace business;
 
 
+use exceptions\LDAPException;
 use extensions\itsm\business\ApplicationOperator;
 use extensions\itsm\business\AssetOperator;
 use extensions\itsm\business\DiscardOrderOperator;
@@ -22,6 +23,8 @@ use controllers\CurrentUserController;
 use database\HistoryDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use exceptions\SecurityException;
+use extensions\netuserman\business\NetGroupOperator;
+use extensions\netuserman\business\NetUserOperator;
 use models\History;
 
 class HistoryOperator extends Operator
@@ -49,7 +52,9 @@ class HistoryOperator extends Operator
         'discardorder' => 'ITSM_DiscardOrder',
         'workspace' => 'Tickets_Workspace',
         'team' => 'Tickets_Team',
-        'ticket' => 'Tickets_Ticket'
+        'ticket' => 'Tickets_Ticket',
+        'netuser' => '!NETUSER',
+        'netgroup' => '!NETGROUP'
     );
 
     // Associate table with permissions
@@ -72,6 +77,8 @@ class HistoryOperator extends Operator
         'ITSM_HostCategory' => 'itsmmonitor-hosts-w',
         'ITSM_PurchaseOrder' => 'itsm_inventory-purchaseorders-r',
         'ITSM_DiscardOrder' => 'itsm_inventory-discards-r',
+        '!NETUSER' => 'netuserman-read',
+        '!NETGROUP' => 'netuserman-readgroups',
         'Bulletin' => 'settings',
         'Role' => 'settings',
         'Secret' => 'api-settings',
@@ -101,16 +108,37 @@ class HistoryOperator extends Operator
 
         CurrentUserController::validatePermission(self::TABLE_PERMISSIONS[$tableName]);
 
-        // Assets use their asset tags as 'primary' keys
-        if($tableName == 'ITSM_Asset')
+        if($tableName == 'ITSM_Asset') // Assets use their asset tags as 'primary' keys
             $index = (string)AssetOperator::idFromAssetTag($index);
-        if($tableName == 'ITSM_Application')
+        else if($tableName == 'ITSM_Application') // Convert Number to ID
             $index = (string)ApplicationOperator::idFromNumber($index);
-        if($tableName == 'ITSM_PurchaseOrder')
-        $index = (string)PurchaseOrderOperator::idFromNumber($index);
-        if($tableName == 'ITSM_DiscardOrder')
+        else if($tableName == 'ITSM_PurchaseOrder') // Convert Number to ID
+            $index = (string)PurchaseOrderOperator::idFromNumber($index);
+        else if($tableName == 'ITSM_DiscardOrder') // Convert Number to ID
             $index = (string)DiscardOrderOperator::idFromNumber($index);
-
+        else if($tableName == '!NETUSER') // Convert username to GUID
+        {
+            try
+            {
+                // Convert only the sam account name to guid
+                $index = (string)NetUserOperator::getUserDetails(explode(\Config::OPTIONS['ldapPrincipalSuffix'], $index)[0], ['objectguid'])['objectguid'];
+            }
+            catch(LDAPException $e)
+            {
+                throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND, $e);
+            }
+        }
+        else if($tableName == '!NETGROUP') // Convert group CN to GUID
+        {
+            try
+            {
+                $index = (string)NetGroupOperator::getGroupDetails($index, ['objectguid'])['objectguid'];
+            }
+            catch(LDAPException $e)
+            {
+                throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND, $e);
+            }
+        }
         return HistoryDatabaseHandler::select($tableName, $index, $action, $username);
     }
 }

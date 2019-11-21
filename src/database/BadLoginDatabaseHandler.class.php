@@ -29,7 +29,7 @@ class BadLoginDatabaseHandler extends DatabaseHandler
         $c = new DatabaseConnection();
 
         $s = $c->prepare('SELECT `time`, `username`, `suppliedIP`, `sourceIP` FROM `BadLogin` WHERE `username` LIKE :username
-                  AND `sourceIP` LIKE :ipFilter AND `suppliedIP` LIKE :ipFilter AND `time` BETWEEN :timeStart AND :timeEnd ORDER BY `time` DESC');
+                  AND (`sourceIP` LIKE :ipFilter OR `suppliedIP` LIKE :ipFilter) AND `time` BETWEEN :timeStart AND :timeEnd ORDER BY `time` DESC');
         $s->bindParam('username', $usernameFilter, DatabaseConnection::PARAM_STR);
         $s->bindParam('ipFilter', $ipFilter, DatabaseConnection::PARAM_STR);
         $s->bindParam('timeStart', $timeStart, DatabaseConnection::PARAM_STR);

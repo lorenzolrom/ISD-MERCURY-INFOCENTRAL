@@ -145,6 +145,14 @@ CREATE TABLE `HistoryItem` (
   CONSTRAINT `HistoryItem_ibfk_1` FOREIGN KEY (`history`) REFERENCES `History` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- BAD LOGIN ATTEMPTS
+CREATE TABLE `BadLogin` (
+  `time` DATETIME NOT NULL, -- Time the request occurred
+  `username` TEXT NOT NULL, -- Username attempted
+  `suppliedIP` TEXT NOT NULL, -- IP manually supplied by the client
+  `sourceIP` TEXT NOT NULL -- The actual origin IP of the request
+);
+
 --
 -- DEFAULT DATA
 --

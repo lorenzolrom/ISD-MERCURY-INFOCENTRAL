@@ -13,6 +13,7 @@
 
 namespace controllers;
 
+use business\BadLoginOperator;
 use business\TokenOperator;
 use business\UserOperator;
 use exceptions\DatabaseException;
@@ -78,7 +79,17 @@ class AuthenticateController extends Controller
         if($credentials['remoteAddr'] == NULL)
             $credentials['remoteAddr'] = $_SERVER['REMOTE_ADDR'];
 
-        return new HTTPResponse(HTTPResponse::CREATED, array('token' => UserOperator::loginUser($credentials['username'], $credentials['password'], $credentials['remoteAddr'])->getToken()));
+        try
+        {
+            return new HTTPResponse(HTTPResponse::CREATED, array('token' => UserOperator::loginUser($credentials['username'], $credentials['password'], $credentials['remoteAddr'])->getToken()));
+        }
+        catch(SecurityException $e) // Log bad attempt
+        {
+            // Log attempt if username not found, user password is incorrect, user is disabled
+            if(in_array($e->getCode(), array(SecurityException::USER_NOT_FOUND, SecurityException::USER_PASSWORD_INCORRECT, SecurityException::USER_IS_DISABLED)))
+                BadLoginOperator::log((string)$credentials['username'], (string)$credentials['remoteAddr']);
+            throw $e;
+        }
     }
 
     /**

@@ -37,6 +37,7 @@ class ControllerFactory
         'bulletins' => 'controllers\BulletinController',
         'secrets' => 'controllers\SecretController',
         'tokens' => 'controllers\TokenController',
+        'badlogins' => 'controllers\BadLoginController',
         'notifications' => 'controllers\NotificationController'
     );
 

@@ -91,7 +91,7 @@ class NetGroupController extends Controller
      */
     private function getGroup(string $cn): HTTPResponse
     {
-        return new HTTPResponse(HTTPResponse::OK, NetGroupOperator::getGroupDetails($cn));
+        return new HTTPResponse(HTTPResponse::OK, NetGroupOperator::getGroupDetails(urldecode($cn)));
     }
 
     /**
@@ -104,7 +104,7 @@ class NetGroupController extends Controller
      */
     private function updateGroup(string $cn): HTTPResponse
     {
-        NetGroupOperator::updateGroup($cn, self::getFormattedBody(ExtConfig::OPTIONS['groupEditableAttributes']));
+        NetGroupOperator::updateGroup(urldecode($cn), self::getFormattedBody(ExtConfig::OPTIONS['groupEditableAttributes']));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
@@ -118,7 +118,7 @@ class NetGroupController extends Controller
      */
     private function deleteGroup(string $cn): HTTPResponse
     {
-        NetGroupOperator::deleteGroup($cn);
+        NetGroupOperator::deleteGroup(urldecode($cn));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 

@@ -49,13 +49,12 @@ class ExtConfig
         'userSearchByAttributes' => array( // Attributes allowed to be searched by in a user
             'samaccountname',
             'givenname',
-            'sn'
+            'sn',
         ),
 
         'userReturnedSearchAttributes' => array( // Attributes returned when searching for users
+            'cn',
             'userprincipalname',
-            'sn',
-            'givenname',
             'useraccountcontrol',
             'title',
             'description'

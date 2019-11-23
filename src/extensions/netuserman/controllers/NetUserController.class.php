@@ -48,7 +48,7 @@ class NetUserController extends Controller
                 if($next === 'photo')
                     return $this->getUserImage((string)$param);
                 else if($next === NULL)
-                    return $this->getSingleUser((string)$param);
+                    return $this->getUser((string)$param);
             }
         }
         else if($this->request->method() === HTTPRequest::POST)
@@ -88,25 +88,25 @@ class NetUserController extends Controller
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @return HTTPResponse
+     * @throws LDAPException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\LDAPException
      */
-    private function getSingleUser(string $username): HTTPResponse
+    private function getUser(string $cn): HTTPResponse
     {
-        return new HTTPResponse(HTTPResponse::OK, NetUserOperator::getUserDetails($username));
+        return new HTTPResponse(HTTPResponse::OK, NetUserOperator::getUserDetails(urldecode($cn)));
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @return HTTPResponse
+     * @throws LDAPException
      * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\LDAPException
      */
-    private function getUserImage(string $username): HTTPResponse
+    private function getUserImage(string $cn): HTTPResponse
     {
-        $photo = NetUserOperator::getUserDetails($username, array('thumbnailPhoto'));
+        $photo = NetUserOperator::getUserDetails(urldecode($cn), array('thumbnailPhoto'));
 
         if(!isset($photo['thumbnailphoto']) OR strlen($photo['thumbnailphoto']) === 0)
             $photo['thumbnailphoto'] = file_get_contents(dirname(__FILE__) . '/../media/no-photo-available.jpg');
@@ -117,22 +117,7 @@ class NetUserController extends Controller
     }
 
     /**
-     * @param string $username
-     * @return HTTPResponse
-     * @throws ValidationError
-     * @throws \exceptions\LDAPException
-     */
-    private function updateUserImage(string $username):HTTPResponse
-    {
-        if(empty($_FILES['thumbnailphoto']))
-            throw new ValidationError(array('Photo required'));
-
-        NetUserOperator::updateUserImage($username, file_get_contents($_FILES['thumbnailphoto']['tmp_name']));
-        return new HTTPResponse(HTTPResponse::NO_CONTENT);
-    }
-
-    /**
-     * @param string $username
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws ValidationError
@@ -140,11 +125,29 @@ class NetUserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function updateUser(string $username): HTTPResponse
+    private function updateUserImage(string $cn):HTTPResponse
+    {
+        if(empty($_FILES['thumbnailphoto']))
+            throw new ValidationError(array('Photo required'));
+
+        NetUserOperator::updateUserImage(urldecode($cn), file_get_contents($_FILES['thumbnailphoto']['tmp_name']));
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
+    }
+
+    /**
+     * @param string $cn
+     * @return HTTPResponse
+     * @throws LDAPException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
+     */
+    private function updateUser(string $cn): HTTPResponse
     {
         $details = $this->request->body();
 
-        NetUserOperator::updateUser($username, $details);
+        NetUserOperator::updateUser(urldecode($cn), $details);
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
@@ -160,42 +163,45 @@ class NetUserController extends Controller
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     * @throws \exceptions\SecurityException
      */
-    private function resetPassword(string $username): HTTPResponse
+    private function resetPassword(string $cn): HTTPResponse
     {
-        NetUserOperator::resetPassword($username, self::getFormattedBody(array('password', 'confirm'), TRUE));
+        NetUserOperator::resetPassword(urldecode($cn), self::getFormattedBody(array('password', 'confirm'), TRUE));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function modifyGroups(string $username): HTTPResponse
+    private function modifyGroups(string $cn): HTTPResponse
     {
-        NetUserOperator::modifyGroups($username, self::getFormattedBody(array('addGroups', 'removeGroups'), TRUE));
+        NetUserOperator::modifyGroups(urldecode($cn), self::getFormattedBody(array('addGroups', 'removeGroups'), TRUE));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function deleteUser(string $username): HTTPResponse
+    private function deleteUser(string $cn): HTTPResponse
     {
-        NetUserOperator::deleteUser($username);
+        NetUserOperator::deleteUser(urldecode($cn));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 

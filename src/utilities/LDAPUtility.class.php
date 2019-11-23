@@ -228,16 +228,16 @@ class LDAPUtility
      * Sets the password of the provided username
      *
      * @param LDAPConnection $c
-     * @param $username
+     * @param $cn
      * @param $password
      * @return bool
      * @throws LDAPException
      */
-    public static function setUserPassword(LDAPConnection $c, $username, $password): bool
+    public static function setUserPassword(LDAPConnection $c, $cn, $password): bool
     {
         $c->bind(\Config::OPTIONS['ldapUsername'], \Config::OPTIONS['ldapPassword']);
 
-        $user = self::getUserByUsername($c, $username, array('uid'));
+        $user = self::getObject($c, $cn, array('dn'));
 
         if($user['count'] != 1)
             return FALSE;

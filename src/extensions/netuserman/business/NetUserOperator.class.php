@@ -94,17 +94,17 @@ class NetUserOperator extends Operator
     );
 
     /**
-     * @param string $username
+     * @param string $cn
      * @param array $attributes
      * @return array
      * @throws EntryNotFoundException
-     * @throws \exceptions\LDAPException
+     * @throws LDAPException
      */
-    public static function getUserDetails(string $username, array $attributes = ExtConfig::OPTIONS['userReturnedAttributes']): array
+    public static function getUserDetails(string $cn, array $attributes = ExtConfig::OPTIONS['userReturnedAttributes']): array
     {
         $c = new LDAPConnection(TRUE, TRUE);
 
-        $results = LDAPUtility::getUserByUsername($c, $username, $attributes);
+        $results = LDAPUtility::getObject($c, $cn, $attributes);
 
         $c->close();
 
@@ -173,7 +173,7 @@ class NetUserOperator extends Operator
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @param array $vals
      * @return bool
      * @throws EntryNotFoundException
@@ -182,7 +182,7 @@ class NetUserOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    public static function updateUser(string $username, array $vals): bool
+    public static function updateUser(string $cn, array $vals): bool
     {
         foreach(array_keys($vals) as $attr)
         {
@@ -203,7 +203,7 @@ class NetUserOperator extends Operator
             $vals['userprincipalname'] = explode(\Config::OPTIONS['ldapPrincipalSuffix'], $vals['userprincipalname'])[0];
 
             // If username has been changed, verify it is not in use elsewhere
-            if($username != $vals['userprincipalname'])
+            if($cn != $vals['userprincipalname'])
             {
                 try
                 {
@@ -219,7 +219,7 @@ class NetUserOperator extends Operator
         }
 
         $c = new LDAPConnection(TRUE, TRUE);
-        $user = LDAPUtility::getUserByUsername($c, $username, ['objectguid', 'dn']);
+        $user = LDAPUtility::getObject($c, $cn, ['objectguid', 'dn']);
 
         $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::MODIFY, $user[0]['objectguid'][0], new NetModel());
 
@@ -303,7 +303,7 @@ class NetUserOperator extends Operator
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @param string $imageContents
      * @return bool
      * @throws EntryNotFoundException
@@ -312,7 +312,7 @@ class NetUserOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    public static function updateUserImage(string $username, string $imageContents): bool
+    public static function updateUserImage(string $cn, string $imageContents): bool
     {
         $errors = array();
 
@@ -330,7 +330,7 @@ class NetUserOperator extends Operator
         // Change photo
         $c = new LDAPConnection(TRUE, TRUE);
 
-        $user = LDAPUtility::getUserByUsername($c, $username, array('dn', 'objectguid'));
+        $user = LDAPUtility::getObject($c, $cn, array('dn', 'objectguid'));
 
         $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::MODIFY, $user[0]['objectguid'][0], new NetModel());
         HistoryRecorder::writeAssocHistory($hist, array('thumbnailphoto' => ['Thumbnail Photo Replaced']));
@@ -343,7 +343,7 @@ class NetUserOperator extends Operator
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @param array $args // 'password' and 'confirm'
      * @return bool
      * @throws EntryNotFoundException
@@ -352,7 +352,7 @@ class NetUserOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    public static function resetPassword(string $username, array $args): bool
+    public static function resetPassword(string $cn, array $args): bool
     {
         $password = (string)$args['password'];
         $confirm = (string)$args['confirm'];
@@ -362,19 +362,19 @@ class NetUserOperator extends Operator
 
         $c = new LDAPConnection(TRUE, TRUE);
 
-        $userGUID = LDAPUtility::getUserByUsername($c, $username, array('objectguid'))[0]['objectguid'][0];
+        $userGUID = LDAPUtility::getObject($c, $cn, array('objectguid'))[0]['objectguid'][0];
 
         $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::MODIFY, $userGUID, new NetModel());
         HistoryRecorder::writeAssocHistory($hist, array('unicodePwd' => ['User Password Reset']));
 
-        $res = LDAPUtility::setUserPassword($c, $username, $password);
+        $res = LDAPUtility::setUserPassword($c, $cn, $password);
 
         $c->close();
         return $res;
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @param array $vals
      * @return bool
      * @throws EntryNotFoundException
@@ -382,9 +382,9 @@ class NetUserOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    public static function modifyGroups(string $username, array $vals): bool
+    public static function modifyGroups(string $cn, array $vals): bool
     {
-        $details = self::getUserDetails($username, array('objectguid', 'distinguishedname'));
+        $details = self::getUserDetails($cn, array('objectguid', 'distinguishedname'));
         $userDN = $details['distinguishedname'];
         $userGUID = $details['objectguid'];
 
@@ -448,16 +448,16 @@ class NetUserOperator extends Operator
     }
 
     /**
-     * @param string $username
+     * @param string $cn
      * @return bool
      * @throws EntryNotFoundException
      * @throws LDAPException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    public static function deleteUser(string $username): bool
+    public static function deleteUser(string $cn): bool
     {
-        $details = self::getUserDetails($username, array('objectguid', 'distinguishedname'));
+        $details = self::getUserDetails($cn, array('objectguid', 'distinguishedname'));
         $userDN = $details['distinguishedname'];
         $userGUID = $details['objectguid'];
 

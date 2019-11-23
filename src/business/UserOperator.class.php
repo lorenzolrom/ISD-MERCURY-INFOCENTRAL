@@ -510,7 +510,10 @@ class UserOperator extends Operator
     private static function changeLDAPUserPassword(User $user, string $password): bool
     {
         $c = new LDAPConnection(TRUE, TRUE);
-        $res = LDAPUtility::setUserPassword($c, $user->getUsername(), $password);
+
+        $cn = LDAPUtility::getUserByUsername($c, $user->getUsername(), array('cn'))[0]['cn'][0];
+
+        $res = LDAPUtility::setUserPassword($c, $cn, $password);
         $c->close();
         return $res;
     }

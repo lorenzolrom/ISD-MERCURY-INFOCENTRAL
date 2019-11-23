@@ -121,7 +121,7 @@ class HistoryOperator extends Operator
             try
             {
                 // Convert only the sam account name to guid
-                $index = (string)NetUserOperator::getUserDetails(explode(\Config::OPTIONS['ldapPrincipalSuffix'], $index)[0], ['objectguid'])['objectguid'];
+                $index = (string)NetUserOperator::getUserDetails($index, ['objectguid'])['objectguid'];
             }
             catch(LDAPException $e)
             {

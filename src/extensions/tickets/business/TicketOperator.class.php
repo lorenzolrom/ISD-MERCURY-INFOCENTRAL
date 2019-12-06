@@ -19,7 +19,9 @@ use business\NotificationOperator;
 use business\Operator;
 use business\UserOperator;
 use controllers\CurrentUserController;
+use exceptions\EntryIsBusyException;
 use extensions\tickets\database\AttributeDatabaseHandler;
+use extensions\tickets\database\LockDatabaseHandler;
 use extensions\tickets\database\TeamDatabaseHandler;
 use extensions\tickets\database\TicketDatabaseHandler;
 use extensions\tickets\database\UpdateDatabaseHandler;
@@ -179,9 +181,14 @@ class TicketOperator extends Operator
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
+     * @throws EntryIsBusyException
      */
     public static function updateTicket(Ticket $ticket, array $vals): Ticket
     {
+        // Check for ticket lock
+        if(LockOperator::getActiveLock($ticket) !== NULL)
+            throw new EntryIsBusyException(EntryIsBusyException::MESSAGES[EntryIsBusyException::ENTRY_IS_BUSY],EntryIsBusyException::ENTRY_IS_BUSY);
+
         $workspace = WorkspaceOperator::getWorkspace($ticket->getWorkspace());
 
         self::validateTicket($workspace, $vals);
@@ -215,6 +222,9 @@ class TicketOperator extends Operator
             self::notifyContact($ticket);
             HistoryRecorder::writeAssocHistory($history, array('systemEntry' => array('Contact Notification Sent')));
         }
+
+        // Remove any locks
+        LockDatabaseHandler::delete($ticket->getId());
 
         return $ticket;
     }

@@ -125,6 +125,14 @@ CREATE TABLE `Tickets_Widget` (
   FOREIGN KEY (`search`) REFERENCES `Tickets_Search`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE TABLE `Tickets_Lock` (
+  `ticket` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user` int(11) unsigned NOT NULL,
+  `lastCheckin` DATETIME NOT NULL,
+  CONSTRAINT `Tickets_Lock_ibfk_1` FOREIGN KEY (`ticket`) REFERENCES `Tickets_Ticket`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `Tickets_Lock_ibfk_2` FOREIGN KEY (`user`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 -- Permissions
 INSERT INTO `Permission` (`code`) VALUES
   ('tickets'),

@@ -16,6 +16,8 @@ namespace extensions\itsm;
 
 class ExtConfig
 {
+    public const EXT_VERSION = '1.0.0';
+
     public const ROUTES = array(
         // Devices
         'hosts' => 'extensions\itsm\controllers\HostController',

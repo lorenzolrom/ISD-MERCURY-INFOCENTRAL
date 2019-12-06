@@ -16,6 +16,8 @@ namespace extensions\netuserman;
 
 class ExtConfig
 {
+    public const EXT_VERSION = '1.0.0';
+
     public const ROUTES = array(
         'netuserman' => 'extensions\netuserman\controllers\NetUserController',
         'netgroupman' => 'extensions\netuserman\controllers\NetGroupController'

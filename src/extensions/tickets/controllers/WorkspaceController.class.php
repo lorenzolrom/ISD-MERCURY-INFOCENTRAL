@@ -34,6 +34,7 @@ class WorkspaceController extends Controller
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      * @throws \exceptions\ValidationError
+     * @throws \exceptions\EntryIsBusyException
      */
     public function getResponse(): ?HTTPResponse
     {

@@ -14,7 +14,9 @@
 namespace extensions\tickets\controllers;
 
 
+use exceptions\EntryIsBusyException;
 use extensions\tickets\business\AttributeOperator;
+use extensions\tickets\business\LockOperator;
 use extensions\tickets\business\TeamOperator;
 use extensions\tickets\business\TicketOperator;
 use extensions\tickets\business\WorkspaceOperator;
@@ -65,6 +67,7 @@ class TicketController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\ValidationError
+     * @throws \exceptions\EntryIsBusyException
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -90,7 +93,8 @@ class TicketController extends Controller
                 else if($action == 'linked')
                     return $this->getLinked((int)$param);
 
-                return $this->getTicket((int)$param);
+                // Check if the edit flag was passed
+                return $this->getTicket((int)$param, $action == 'edit' ? TRUE : FALSE);
             }
         }
         else if($this->request->method() === HTTPRequest::POST)
@@ -112,6 +116,8 @@ class TicketController extends Controller
 
             if($action == 'assignees')
                 return $this->assign($param);
+            if($action == 'lock')
+                return $this->lock((int)$param);
 
             return $this->updateTicket((int)$param);
         }
@@ -227,6 +233,7 @@ class TicketController extends Controller
      * @throws SecurityException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\ValidationError
+     * @throws \exceptions\EntryIsBusyException
      */
     private function updateTicket(int $number): HTTPResponse
     {
@@ -239,13 +246,26 @@ class TicketController extends Controller
 
     /**
      * @param int $number
+     * @param bool $lockTicket // should the get create a lock?
      * @return HTTPResponse
      * @throws EntryNotFoundException
+     * @throws SecurityException
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryIsBusyException
      */
-    private function getTicket(int $number): HTTPResponse
+    private function getTicket(int $number, bool $lockTicket = FALSE): HTTPResponse
     {
         $ticket = TicketOperator::getTicket($this->workspace, $number);
+
+        // If a lock was requested, create an initial lock
+        if($lockTicket)
+        {
+            try
+            {
+                LockOperator::updateLock($ticket); // Create a lock for this user
+            }
+            catch(EntryIsBusyException $e){} // Ignore, unable to lock, will be addressed later
+        }
 
         $statusName = TicketOperator::getTicketStatusName($ticket);
 
@@ -266,8 +286,21 @@ class TicketController extends Controller
             'severityName' => ($ticket->getSeverity() == NULL) ? NULL : AttributeOperator::nameFromId((int)$ticket->getSeverity()),
             'desiredDate' => $ticket->getDesiredDate(),
             'scheduledDate' => $ticket->getScheduledDate(),
-            'assignees' => $ticket->getAssigneeCodes()
+            'assignees' => $ticket->getAssigneeCodes(),
+            'locked' => 'no',
+            'lockedTime' => '',
+            'lockedBy' => ''
         );
+
+        // Get lock status
+        $lock = LockOperator::getActiveLock($ticket);
+        if($lock !== NULL AND $lock->getUser() !== CurrentUserController::currentUser()->getId()) // If ticket is locked and current user is not who locked it
+        {
+            $data['locked'] = 'yes';
+            $data['lockedTime'] = $lock->getLastCheckin();
+            $data['lockedBy'] = UserOperator::getUser($lock->getUser())->getUsername();
+        }
+
 
         return new HTTPResponse(HTTPResponse::OK, $data);
     }
@@ -478,5 +511,21 @@ class TicketController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @param int $number
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryIsBusyException
+     */
+    private function lock(int $number): HTTPResponse
+    {
+        $ticket = TicketOperator::getTicket($this->workspace, $number);
+        LockOperator::updateLock($ticket);
+
+        return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 }

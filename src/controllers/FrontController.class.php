@@ -17,6 +17,7 @@ namespace controllers;
 use business\SecretOperator;
 use exceptions\ControllerNotFoundException;
 use exceptions\EntryInUseException;
+use exceptions\EntryIsBusyException;
 use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
 use exceptions\SecurityException;
@@ -108,6 +109,10 @@ class FrontController
             $response = new HTTPResponse(HTTPResponse::NOT_FOUND, array('errors' => array($e->getMessage())));
         }
         catch(EntryInUseException $e)
+        {
+            $response = new HTTPResponse(HTTPResponse::CONFLICT, array('errors' => array($e->getMessage())));
+        }
+        catch(EntryIsBusyException $e)
         {
             $response = new HTTPResponse(HTTPResponse::CONFLICT, array('errors' => array($e->getMessage())));
         }

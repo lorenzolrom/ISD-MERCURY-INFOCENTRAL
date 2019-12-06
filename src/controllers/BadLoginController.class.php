@@ -15,9 +15,6 @@ namespace controllers;
 
 
 use business\BadLoginOperator;
-use exceptions\EntryInUseException;
-use exceptions\EntryNotFoundException;
-use exceptions\ValidationError;
 use models\HTTPRequest;
 use models\HTTPResponse;
 

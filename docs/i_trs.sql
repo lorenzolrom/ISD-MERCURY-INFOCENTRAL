@@ -108,5 +108,14 @@ CREATE TABLE `TRS_OrderItem`(
   CONSTRAINT `TRS_OrderItem_ibfk_3` FOREIGN KEY (`warehouse`) REFERENCES `TRS_Warehouse`(`id`) ON UPDATE CASCADE
 );
 
+-- Link between Organization & Representative
+CREATE TABLE `TRS_OrganizationRepresentative`(
+  `organization` INT(11) UNSIGNED  NOT NULL,
+  `representative` INT(11) UNSIGNED NOT NULL,
+  PRIMARY KEY (`organization`, `representative`),
+  CONSTRAINT `TRS_OrganizationRepresentative_ibfk_1` FOREIGN KEY (`representative`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `TRS_OrganizationRepresentative_ibfk_2` FOREIGN KEY (`organization`) REFERENCES `TRS_Organization`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 -- Permissions
 INSERT INTO `Permission`(`code`) VALUES ('trs');

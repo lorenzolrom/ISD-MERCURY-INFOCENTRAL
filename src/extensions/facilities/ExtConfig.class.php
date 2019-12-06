@@ -16,6 +16,8 @@ namespace extensions\facilities;
 
 class ExtConfig
 {
+    public const EXT_VERSION = '1.0.0';
+
     // Define Ext Routes
     public const ROUTES = array(
         'buildings' => 'extensions\facilities\controllers\BuildingController',

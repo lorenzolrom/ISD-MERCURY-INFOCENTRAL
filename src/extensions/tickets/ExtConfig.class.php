@@ -16,6 +16,8 @@ namespace extensions\tickets;
 
 class ExtConfig
 {
+    public const EXT_VERSION = '1.0.0';
+
     public const ROUTES = array(
         'tickets' => 'extensions\tickets\controllers\TicketsController',
     );
@@ -24,5 +26,7 @@ class ExtConfig
         // Link to be included in the ServiceCenter emails
         'serviceCenterAgentURL' => '', // For agent emails
         'serviceCenterRequestURL' => '', // For customer emails
+
+        'lockTimeoutSeconds' => 5 // Number of seconds of inactivity for a TicketLock to be inactive
     );
 }

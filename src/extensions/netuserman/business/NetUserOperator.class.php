@@ -554,7 +554,11 @@ class NetUserOperator extends Operator
         {
             $c->close();
 
-            $userGUID = self::getUserDetails($newUsername, array('objectguid'))['objectguid'];
+            // Pull CN from dn
+            $cn = explode(',', $dn)[0];
+            $cn = explode('CN=', $cn)[1];
+
+            $userGUID = self::getUserDetails($cn, array('objectguid'))['objectguid'];
 
             $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::CREATE, $userGUID, new NetModel());
 

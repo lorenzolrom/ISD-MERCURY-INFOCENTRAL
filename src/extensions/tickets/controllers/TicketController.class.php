@@ -50,12 +50,13 @@ class TicketController extends Controller
      */
     public function __construct(string $workspace, HTTPRequest $request)
     {
+        // Validate user or secret has permission
         CurrentUserController::validatePermission('tickets-agent');
 
         $this->workspace = WorkspaceOperator::getWorkspace((int)$workspace);
 
-        // User must be in a team assigned to workspace
-        if(!WorkspaceOperator::currentUserInWorkspace($this->workspace))
+        // User must be in a team assigned to workspace, or request must not be from user
+        if(CurrentUserController::isTokenSupplied() AND !WorkspaceOperator::currentUserInWorkspace($this->workspace) )
             throw new SecurityException('You are not a member of this workspace', SecurityException::USER_NO_PERMISSION);
 
         parent::__construct($request);

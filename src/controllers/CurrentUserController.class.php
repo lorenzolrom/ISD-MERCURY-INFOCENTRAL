@@ -54,6 +54,14 @@ class CurrentUserController extends Controller
     }
 
     /**
+     * @return bool
+     */
+    public static function isTokenSupplied(): bool
+    {
+        return isset($_SERVER['HTTP_TOKEN']);
+    }
+
+    /**
      * @return User
      *
      * Gets the currently logged in user (if a Token has been supplied with the header)
@@ -106,27 +114,36 @@ class CurrentUserController extends Controller
             if($e->getCode() !== SecurityException::AUTHENTICATION_REQUIRED)
                 throw $e;
 
-            // Check if secret has permission
-            $secret = FrontController::currentSecret();
-            $permissions = $secret->getPermissions();
-            $hasPerm = FALSE;
-
-            if(!is_array($permissionCode) AND in_array($permissionCode, $permissions))
-                $hasPerm = TRUE;
-            else if(is_array($permissionCode))
-            {
-                foreach($permissionCode as $code)
-                {
-                    if(in_array($code, $permissions))
-                        $hasPerm = TRUE;
-                }
-            }
-
-            if(!$hasPerm)
-                throw new SecurityException(SecurityException::MESSAGES[SecurityException::KEY_NO_PERMISSION], SecurityException::KEY_NO_PERMISSION);
+            return self::validateSecretPermission($permissionCode);
         }
 
         return TRUE;
+    }
+
+    /**
+     * @param $permissionCode
+     * @return bool
+     * @throws DatabaseException
+     * @throws SecurityException
+     */
+    public static function validateSecretPermission($permissionCode): bool
+    {
+        // Check if secret has permission
+        $secret = FrontController::currentSecret();
+        $permissions = $secret->getPermissions();
+
+        if(!is_array($permissionCode) AND in_array($permissionCode, $permissions))
+            return TRUE;
+        else if(is_array($permissionCode))
+        {
+            foreach($permissionCode as $code)
+            {
+                if(in_array($code, $permissions))
+                    return TRUE;
+            }
+        }
+
+        throw new SecurityException(SecurityException::MESSAGES[SecurityException::KEY_NO_PERMISSION], SecurityException::KEY_NO_PERMISSION);
     }
 
     /**

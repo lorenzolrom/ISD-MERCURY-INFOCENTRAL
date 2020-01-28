@@ -348,19 +348,20 @@ class AssetDatabaseHandler extends DatabaseHandler
      * @param string|null $discardDate
      * @param int $verified
      * @param string|null $verifyDate
+     * @param int|null $discardOrder
      * @return Asset
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
     public static function fullUpdate(int $id, ?int $warehouse, string $assetTag, ?int $parent, ?int $location,
                                       ?string $serialNumber, ?string $manufactureDate, ?string $notes, int $discarded,
-                                      ?string $discardDate, int $verified, ?string $verifyDate): Asset
+                                      ?string $discardDate, int $verified, ?string $verifyDate, ?int $discardOrder): Asset
     {
         $handler = new DatabaseConnection();
 
         $update = $handler->prepare('UPDATE `ITSM_Asset` SET `warehouse` = :warehouse, `assetTag` = :assetTag, 
                         `parent` = :parent, `location` = :location, `serialNumber` = :serialNumber, 
-                        `manufactureDate` = :manufactureDate, `notes` = :notes, `discarded` = :discarded, 
+                        `manufactureDate` = :manufactureDate, `notes` = :notes, `discardOrder` = :discardOrder, `discarded` = :discarded, 
                         `discardDate` = :discardDate, `verified` = :verified, `verifyDate` = :verifyDate 
                         WHERE `id` = :id');
         $update->bindParam('id', $id, DatabaseConnection::PARAM_INT);
@@ -371,6 +372,7 @@ class AssetDatabaseHandler extends DatabaseHandler
         $update->bindParam('serialNumber', $serialNumber, DatabaseConnection::PARAM_STR);
         $update->bindParam('manufactureDate', $manufactureDate, DatabaseConnection::PARAM_STR);
         $update->bindParam('notes', $notes, DatabaseConnection::PARAM_STR);
+        $update->bindParam('discardOrder', $discardOrder, DatabaseConnection::PARAM_INT);
         $update->bindParam('discarded', $discarded, DatabaseConnection::PARAM_INT);
         $update->bindParam('discardDate', $discardDate, DatabaseConnection::PARAM_STR);
         $update->bindParam('verified', $verified, DatabaseConnection::PARAM_INT);

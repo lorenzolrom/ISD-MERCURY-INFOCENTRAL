@@ -504,7 +504,7 @@ class AssetOperator extends Operator
 
         AssetDatabaseHandler::fullUpdate($asset->getId(), NULL, $asset->getAssetTag(), NULL,
             NULL, $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(), 1, $date,
-            0, NULL);
+            0, NULL, $discardOrder);
 
         // Remove reference in child assets
         foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)

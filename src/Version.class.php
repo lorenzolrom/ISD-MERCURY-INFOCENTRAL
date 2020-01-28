@@ -14,5 +14,5 @@
 abstract class Version
 {
     const SOFTWARE_TITLE = "Mercury InfoCentral";
-    const CURRENT_VERSION = "3.0.0";
+    const CURRENT_VERSION = "3.0.1";
 }

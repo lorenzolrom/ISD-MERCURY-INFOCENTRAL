@@ -5,7 +5,7 @@ CREATE TABLE `User` (
   `firstName` varchar(30) NOT NULL,
   `lastName` varchar(30) NOT NULL,
   `email` text NOT NULL,
-  `password` char(96) DEFAULT NULL,
+  `password` char(97) DEFAULT NULL,
   `disabled` tinyint(1) NOT NULL DEFAULT '0',
   `authType` enum('loca','ldap') NOT NULL DEFAULT 'loca',
   PRIMARY KEY (`id`),

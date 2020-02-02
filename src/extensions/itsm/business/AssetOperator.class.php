@@ -289,7 +289,7 @@ class AssetOperator extends Operator
 
         AssetDatabaseHandler::fullUpdate($asset->getId(), NULL, $asset->getAssetTag(), $asset->getParent(),
             $location->getId(), $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(),
-            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate());
+            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate(), $asset->getDiscardOrder());
 
         // Also move children
         foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)
@@ -328,7 +328,7 @@ class AssetOperator extends Operator
 
         AssetDatabaseHandler::fullUpdate($asset->getId(), $warehouse, $asset->getAssetTag(), $asset->getParent(),
             NULL, $asset->getSerialNumber(), $asset->getManufactureDate(), $asset->getNotes(),
-            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate());
+            $asset->getDiscarded(), $asset->getDiscardDate(), $asset->getVerified(), $asset->getVerifyDate(), $asset->getDiscardOrder());
 
         // Also move children
         foreach(AssetOperator::getChildren($asset->getAssetTag()) as $child)

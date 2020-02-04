@@ -23,6 +23,7 @@ use exceptions\EntryNotFoundException;
 use exceptions\SecurityException;
 use models\HTTPRequest;
 use models\HTTPResponse;
+use models\Secret;
 use models\Token;
 use models\User;
 
@@ -78,6 +79,16 @@ class CurrentUserController extends Controller
         catch (EntryNotFoundException $e){} // Handled below
 
         throw new SecurityException(SecurityException::MESSAGES[SecurityException::AUTHENTICATION_REQUIRED], SecurityException::AUTHENTICATION_REQUIRED);
+    }
+
+    /**
+     * @return Secret
+     * @throws DatabaseException
+     * @throws SecurityException
+     */
+    public static function currentSecret(): Secret
+    {
+        return FrontController::currentSecret();
     }
 
     /**

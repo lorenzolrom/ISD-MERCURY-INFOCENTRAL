@@ -280,4 +280,70 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
 
         return self::selectById((int)$select->fetchColumn());
     }
+
+    /**
+     * Add a Secret (API Key) to the list of allowed Secrets for the specified workspace
+     *
+     * @param int $workspaceID The ID of the workspace, unsigned int
+     * @param string $secret The 128-character Secret
+     * @return bool True if the Secret was added, or was already present, false if it could not be added
+     * @throws DatabaseException
+     */
+    public static function addSecret(int $workspaceID, string $secret): bool
+    {
+        $c = new DatabaseConnection();
+
+        $i = $c->prepare('INSERT INTO `Tickets_Workspace_Secret`(`workspace`, `secret`) VALUES (:workspace, :secret)');
+        $i->bindParam('workspace', $workspaceID, DatabaseConnection::PARAM_INT);
+        $i->bindParam('secret', $secret, DatabaseConnection::PARAM_STR);
+        $i->execute();
+
+        $c->close();
+
+        return $i->getRowCount() === 1;
+    }
+
+    /**
+     * Remove a Secret (API Key) from the list of API Keys allowed to interact with the specified workspace
+     *
+     * @param int $workspaceID Numerical ID of the workspace
+     * @param string $secret 128-character Secret
+     * @return bool Was the Secret removed?
+     * @throws DatabaseException
+     */
+    public static function delSecret(int $workspaceID, string $secret): bool
+    {
+        $c = new DatabaseConnection();
+
+        $d = $c->prepare('DELETE FROM `Tickets_Workspace_Secret` WHERE `workspace` = :workspace AND `secret` = :secret');
+        $d->bindParam('workspace', $workspaceID, DatabaseConnection::PARAM_INT);
+        $d->bindParam('secret', $secret, DatabaseConnection::PARAM_STR);
+        $d->execute();
+
+        $c->close();
+
+        return $d->getRowCount();
+    }
+
+    /**
+     * Is the supplied Secret allowed to interact with the specified workspace?
+     *
+     * @param int $workspaceID Numerical Workspace ID
+     * @param string $secret 128-character Secret
+     * @return bool
+     * @throws DatabaseException
+     */
+    public static function selSecret(int $workspaceID, string $secret): bool
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `workspace` FROM `Tickets_Workspace_Secret` WHERE `workspace` = :workspace AND `secret` = :secret LIMIT 1');
+        $s->bindParam('workspace', $workspaceID, DatabaseConnection::PARAM_INT);
+        $s->bindParam('secret', $secret, DatabaseConnection::PARAM_STR);
+        $s->execute();
+
+        $c->close();
+
+        return $s->getRowCount() === 1;
+    }
 }

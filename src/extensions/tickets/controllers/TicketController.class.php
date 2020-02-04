@@ -55,9 +55,17 @@ class TicketController extends Controller
 
         $this->workspace = WorkspaceOperator::getWorkspace((int)$workspace);
 
-        // User must be in a team assigned to workspace, or request must not be from user
-        if(CurrentUserController::isTokenSupplied() AND !WorkspaceOperator::currentUserInWorkspace($this->workspace) )
+        // User must be in a team assigned to workspace, or request must be from Secret with access to this workspace
+
+        // If request is not from a user                AND     API Key is not on the list of allowed for this workspace
+        if((!CurrentUserController::isTokenSupplied()) AND (!$this->workspace->isSecretAllowed(CurrentUserController::currentSecret()->getSecret())))
+        {
+            throw new SecurityException('Access to this workspace is not permitted this way', SecurityException::USER_NO_PERMISSION);
+        }
+        // else...  request is from user who does not have permission
+        else if(CurrentUserController::isTokenSupplied() AND !WorkspaceOperator::currentUserInWorkspace($this->workspace))
             throw new SecurityException('You are not a member of this workspace', SecurityException::USER_NO_PERMISSION);
+
 
         parent::__construct($request);
     }

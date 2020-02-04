@@ -15,7 +15,10 @@ namespace extensions\tickets\business;
 
 
 use business\Operator;
+use business\SecretOperator;
 use controllers\CurrentUserController;
+use exceptions\EntryNotFoundException;
+use exceptions\ValidationError;
 use extensions\tickets\database\WorkspaceDatabaseHandler;
 use exceptions\EntryInUseException;
 use extensions\tickets\models\Workspace;
@@ -195,5 +198,55 @@ class WorkspaceOperator extends Operator
         }
 
         return $assignees;
+    }
+
+    /**
+     * @param Workspace $workspace
+     * @param string $secret
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws ValidationError
+     */
+    public static function addSecret(Workspace $workspace, string $secret): bool
+    {
+        try
+        {
+            $secret = SecretOperator::getSecret($secret);
+
+            $h = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace);
+            HistoryRecorder::writeAssocHistory($h, array('systemEntry' => array('Add Secret: ' . $secret->getName())));
+
+            return $workspace->addSecret($secret->getSecret());
+        }
+        catch(EntryNotFoundException $e)
+        {
+            throw new ValidationError(array('Secret Not Valid'));
+        }
+    }
+
+    /**
+     * @param Workspace $workspace
+     * @param string $secret
+     * @return bool
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function delSecret(Workspace $workspace, string $secret): bool
+    {
+        try
+        {
+            $secret = SecretOperator::getSecret($secret);
+
+            $h = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace);
+            HistoryRecorder::writeAssocHistory($h, array('systemEntry' => array('Remove Secret: ' . $secret->getName())));
+
+            return $workspace->delSecret($secret->getSecret());
+        }
+        catch(EntryNotFoundException $e)
+        {
+            throw new ValidationError(array('Secret Not Valid'));
+        }
     }
 }

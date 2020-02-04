@@ -136,9 +136,10 @@ CREATE TABLE `Tickets_Lock` (
 -- Assign an API Key (Secret) access to a workspace when performing a request without a user
 CREATE TABLE `Tickets_Workspace_Secret` (
   `workspace` int(11) unsigned NOT NULL,
-  `secret` char(128) NOT NULL,
+  `secret` int(11) unsigned NOT NULL,
   PRIMARY KEY (`workspace`, `secret`),
-  CONSTRAINT `Tickets_Workspace_Secret_ibfk_1` FOREIGN KEY (`workspace`) REFERENCES `Tickets_Workspace`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `Tickets_Workspace_Secret_ibfk_1` FOREIGN KEY (`workspace`) REFERENCES `Tickets_Workspace`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `Tickets_Workspace_Secret_ibfk_2` FOREIGN KEY (`secret`) references `Secret`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 -- Permissions

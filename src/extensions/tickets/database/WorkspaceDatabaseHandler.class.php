@@ -285,17 +285,17 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
      * Add a Secret (API Key) to the list of allowed Secrets for the specified workspace
      *
      * @param int $workspaceID The ID of the workspace, unsigned int
-     * @param string $secret The 128-character Secret
+     * @param int $secretID The ID of the secret, unsigned int
      * @return bool True if the Secret was added, or was already present, false if it could not be added
      * @throws DatabaseException
      */
-    public static function addSecret(int $workspaceID, string $secret): bool
+    public static function addSecret(int $workspaceID, int $secretID): bool
     {
         $c = new DatabaseConnection();
 
         $i = $c->prepare('INSERT INTO `Tickets_Workspace_Secret`(`workspace`, `secret`) VALUES (:workspace, :secret)');
         $i->bindParam('workspace', $workspaceID, DatabaseConnection::PARAM_INT);
-        $i->bindParam('secret', $secret, DatabaseConnection::PARAM_STR);
+        $i->bindParam('secret', $secretID, DatabaseConnection::PARAM_INT);
         $i->execute();
 
         $c->close();
@@ -307,17 +307,17 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
      * Remove a Secret (API Key) from the list of API Keys allowed to interact with the specified workspace
      *
      * @param int $workspaceID Numerical ID of the workspace
-     * @param string $secret 128-character Secret
+     * @param int $secretID The ID of the Secret
      * @return bool Was the Secret removed?
      * @throws DatabaseException
      */
-    public static function delSecret(int $workspaceID, string $secret): bool
+    public static function delSecret(int $workspaceID, int $secretID): bool
     {
         $c = new DatabaseConnection();
 
         $d = $c->prepare('DELETE FROM `Tickets_Workspace_Secret` WHERE `workspace` = :workspace AND `secret` = :secret');
         $d->bindParam('workspace', $workspaceID, DatabaseConnection::PARAM_INT);
-        $d->bindParam('secret', $secret, DatabaseConnection::PARAM_STR);
+        $d->bindParam('secret', $secretID, DatabaseConnection::PARAM_INT);
         $d->execute();
 
         $c->close();
@@ -329,17 +329,17 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
      * Is the supplied Secret allowed to interact with the specified workspace?
      *
      * @param int $workspaceID Numerical Workspace ID
-     * @param string $secret 128-character Secret
+     * @param int $secretID Secret ID
      * @return bool
      * @throws DatabaseException
      */
-    public static function selSecret(int $workspaceID, string $secret): bool
+    public static function isSecretAllowed(int $workspaceID, int $secretID): bool
     {
         $c = new DatabaseConnection();
 
         $s = $c->prepare('SELECT `workspace` FROM `Tickets_Workspace_Secret` WHERE `workspace` = :workspace AND `secret` = :secret LIMIT 1');
         $s->bindParam('workspace', $workspaceID, DatabaseConnection::PARAM_INT);
-        $s->bindParam('secret', $secret, DatabaseConnection::PARAM_STR);
+        $s->bindParam('secret', $secretID, DatabaseConnection::PARAM_INT);
         $s->execute();
 
         $c->close();

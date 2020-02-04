@@ -68,39 +68,6 @@ class Workspace extends Model
     }
 
     /**
-     * @param string $secret
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public function isSecretAllowed(string $secret): bool
-    {
-        return WorkspaceDatabaseHandler::selSecret($this->id, $secret);
-    }
-
-    /**
-     * @param string $secret
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public function addSecret(string $secret): bool
-    {
-        WorkspaceDatabaseHandler::delSecret($this->id, $secret);
-
-        return WorkspaceDatabaseHandler::addSecret($this->id, $secret);
-    }
-
-    /**
-     * @param string $secret
-     * @return bool
-     * @throws \exceptions\DatabaseException
-     */
-    public function delSecret(string $secret): bool
-    {
-        return WorkspaceDatabaseHandler::delSecret($this->id, $secret);
-    }
-
-
-    /**
      * @param string|null $name
      * @return bool
      * @throws \exceptions\DatabaseException

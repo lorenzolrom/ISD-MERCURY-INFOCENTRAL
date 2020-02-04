@@ -58,7 +58,7 @@ class TicketController extends Controller
         // User must be in a team assigned to workspace, or request must be from Secret with access to this workspace
 
         // If request is not from a user                AND     API Key is not on the list of allowed for this workspace
-        if((!CurrentUserController::isTokenSupplied()) AND (!$this->workspace->isSecretAllowed(CurrentUserController::currentSecret()->getSecret())))
+        if((!CurrentUserController::isTokenSupplied()) AND (!WorkspaceOperator::isSecretAllowed($this->workspace, CurrentUserController::currentSecret())))
         {
             throw new SecurityException('Access to this workspace is not permitted this way', SecurityException::USER_NO_PERMISSION);
         }

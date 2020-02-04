@@ -22,6 +22,7 @@ use exceptions\ValidationError;
 use extensions\tickets\database\WorkspaceDatabaseHandler;
 use exceptions\EntryInUseException;
 use extensions\tickets\models\Workspace;
+use models\Secret;
 use utilities\HistoryRecorder;
 
 class WorkspaceOperator extends Operator
@@ -202,13 +203,24 @@ class WorkspaceOperator extends Operator
 
     /**
      * @param Workspace $workspace
-     * @param string $secret
+     * @param Secret $secret
      * @return bool
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
-     * @throws ValidationError
      */
-    public static function addSecret(Workspace $workspace, string $secret): bool
+    public static function isSecretAllowed(Workspace $workspace, Secret $secret): bool
+    {
+        return WorkspaceDatabaseHandler::isSecretAllowed($workspace->getId(), $secret->getId());
+    }
+
+    /**
+     * @param Workspace $workspace
+     * @param Secret $secret
+     * @return bool
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function addSecret(Workspace $workspace, Secret $secret): bool
     {
         try
         {
@@ -217,7 +229,7 @@ class WorkspaceOperator extends Operator
             $h = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace);
             HistoryRecorder::writeAssocHistory($h, array('systemEntry' => array('Add Secret: ' . $secret->getName())));
 
-            return $workspace->addSecret($secret->getSecret());
+            return WorkspaceDatabaseHandler::addSecret($workspace->getId(), $secret->getId());
         }
         catch(EntryNotFoundException $e)
         {
@@ -242,7 +254,7 @@ class WorkspaceOperator extends Operator
             $h = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace);
             HistoryRecorder::writeAssocHistory($h, array('systemEntry' => array('Remove Secret: ' . $secret->getName())));
 
-            return $workspace->delSecret($secret->getSecret());
+            return WorkspaceDatabaseHandler::delSecret($workspace->getId(), $secret->getId());
         }
         catch(EntryNotFoundException $e)
         {

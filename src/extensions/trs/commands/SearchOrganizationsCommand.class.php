@@ -16,6 +16,7 @@ namespace extensions\trs\commands;
 
 use commands\Command;
 use controllers\CurrentUserController;
+use exceptions\MercuryException;
 use extensions\trs\database\OrganizationDatabaseHandler;
 use extensions\trs\models\Organization;
 
@@ -37,7 +38,7 @@ class SearchOrganizationsCommand implements Command
     private $approved;
 
     private $result = NULL;
-    private $errors = array();
+    private $error = NULL;
 
     /**
      * SearchOrganizations constructor.
@@ -94,10 +95,10 @@ class SearchOrganizationsCommand implements Command
     }
 
     /**
-     * @return string[] An array of error messages
+     * @return MercuryException|null
      */
-    public function getErrors(): array
+    public function getError(): ?MercuryException
     {
-        return $this->errors;
+        return $this->error;
     }
 }

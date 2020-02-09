@@ -81,12 +81,12 @@ class OrganizationDatabaseHandler extends DatabaseHandler
                     $finalTypes[] = $typeCode;
             }
 
-            $q .= " AND `type` IN ('" . implode("', '", $finalTypes) . "'')";
+            $q .= " AND `type` IN ('" . implode("', '", $finalTypes) . "')";
         }
 
         if(is_array($approved) AND !empty($approved))
         {
-            $q .= "AND `approved` IN (" . self::getBooleanString($approved) . ")";
+            $q .= " AND `approved` IN (" . self::getBooleanString($approved) . ")";
         }
         /*
          * End add multi-value fields to query

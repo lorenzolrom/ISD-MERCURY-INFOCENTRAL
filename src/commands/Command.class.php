@@ -13,6 +13,8 @@
 
 namespace commands;
 
+use exceptions\MercuryException;
+
 /**
  * MERCURY 3.0.0
  * This class will be implemented by extensions utilizing commands to perform business operations
@@ -34,7 +36,7 @@ interface Command
     public function getResult();
 
     /**
-     * @return string[] An array of error messages
+     * @return MercuryException|null The exception thrown by execution
      */
-    public function getErrors():array;
+    public function getError(): ?MercuryException;
 }

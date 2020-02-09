@@ -62,7 +62,7 @@ class CreateComputerCommand implements Command
     /**
      * @return string[] An array of error messages
      */
-    public function getErrors(): array
+    public function getError(): array
     {
         return $this->errors;
     }

@@ -15,6 +15,7 @@ namespace extensions\trs\controllers;
 
 
 use controllers\Controller;
+use extensions\trs\commands\GetOrganizationCommand;
 use extensions\trs\commands\SearchOrganizationsCommand;
 use models\HTTPRequest;
 use models\HTTPResponse;
@@ -25,6 +26,7 @@ class OrganizationController extends Controller
     /**
      * @return HTTPResponse|null
      * @throws \exceptions\DatabaseException
+     * @throws \exceptions\MercuryException
      * @throws \exceptions\SecurityException
      */
     public function getResponse(): ?HTTPResponse
@@ -35,6 +37,8 @@ class OrganizationController extends Controller
         {
             if($p1 === NULL)
                 return $this->searchOrganizations();
+            else
+                return $this->getOrganization($p1);
         }
         else if($this->request->method() === HTTPRequest::POST)
         {
@@ -63,5 +67,25 @@ class OrganizationController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $results);
+    }
+
+    /**
+     * @param $id
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\MercuryException
+     * @throws \exceptions\SecurityException
+     */
+    private function getOrganization($id): HTTPResponse
+    {
+        $get = new GetOrganizationCommand((int)$id);
+        if($get->execute())
+        {
+            return new HTTPResponse(HTTPResponse::OK, $get->getResult()->toArray());
+        }
+        else
+        {
+            throw $get->getError();
+        }
     }
 }

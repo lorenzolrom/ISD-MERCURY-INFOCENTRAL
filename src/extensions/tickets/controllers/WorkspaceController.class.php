@@ -14,6 +14,8 @@
 namespace extensions\tickets\controllers;
 
 
+use business\SecretOperator;
+use exceptions\ValidationError;
 use extensions\tickets\business\WorkspaceOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
@@ -267,5 +269,68 @@ class WorkspaceController extends Controller
         $workspace = WorkspaceOperator::getWorkspace((int)$param);
 
         return new HTTPResponse(HTTPResponse::OK, WorkspaceOperator::getAssigneeList($workspace));
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    private function getAllowedSecrets(?string $param): HTTPResponse
+    {
+        $workspace = WorkspaceOperator::getWorkspace((int)$param);
+
+        $secrets = array();
+
+        foreach($workspace->getAllowedSecrets() as $secret)
+        {
+            $secrets[] = array(
+                'id' => $secret->getId(),
+                'name' => $secret->getName()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $secrets);
+    }
+
+    /**
+     * @param string|null $param
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     */
+    private function addAllowedSecret(?string $param): HTTPResponse
+    {
+        $secretID = self::getFormattedBody(array('secretID'))['secretID'];
+        $workspace = WorkspaceOperator::getWorkspace((int)$param);
+
+        try
+        {
+            $secret = SecretOperator::getSecretById($secretID);
+            WorkspaceOperator::addSecret($workspace, $secret);
+            return new HTTPResponse(HTTPResponse::CREATED);
+        }
+        catch(EntryNotFoundException $e)
+        {
+            throw new ValidationError(array('Secret Is Not Valid'));
+        }
+    }
+
+    /**
+     * @param string|null $workspaceID
+     * @param string|null $secretID
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws \exceptions\DatabaseException
+     */
+    private function removeAllowedSecret(?string $workspaceID, ?string $secretID)
+    {
+        $workspace = WorkspaceOperator::getWorkspace((int)$workspaceID);
+        $secret = SecretOperator::getSecretById((int)$secretID);
+
+        WorkspaceOperator::delSecret($workspace, $secret);
     }
 }

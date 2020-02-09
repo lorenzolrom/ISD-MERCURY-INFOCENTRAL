@@ -14,10 +14,13 @@
 namespace extensions\tickets\models;
 
 
+use business\SecretOperator;
+use exceptions\EntryNotFoundException;
 use extensions\tickets\database\TeamDatabaseHandler;
 use extensions\tickets\database\WorkspaceDatabaseHandler;
 use exceptions\ValidationException;
 use models\Model;
+use models\Secret;
 use utilities\Validator;
 
 class Workspace extends Model
@@ -65,6 +68,26 @@ class Workspace extends Model
     public function getTeams(): array
     {
         return TeamDatabaseHandler::selectByWorkspace($this->id);
+    }
+
+    /**
+     * @return Secret[]
+     * @throws \exceptions\DatabaseException
+     */
+    public function getAllowedSecrets(): array
+    {
+        $secrets = array();
+
+        try
+        {
+            foreach(WorkspaceDatabaseHandler::getAllowedSecrets($this->id) as $id)
+            {
+                $secrets[] = SecretOperator::getSecretById($id);
+            }
+        }
+        catch(EntryNotFoundException $e){} // Ignore invalid Secret ID, it should not happen
+
+        return $secrets;
     }
 
     /**

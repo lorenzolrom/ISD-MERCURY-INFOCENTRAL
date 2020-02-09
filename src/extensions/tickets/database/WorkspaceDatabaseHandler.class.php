@@ -326,6 +326,24 @@ class WorkspaceDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $workspaceID
+     * @return array
+     * @throws DatabaseException
+     */
+    public static function getAllowedSecrets(int $workspaceID): array
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `secret` FROM `Tickets_Workspace_Secret` WHERE `workspace` = ?');
+        $s->bindParam(1, $workspaceID, DatabaseConnection::PARAM_INT);
+        $s->execute();
+
+        $c->close();
+
+        return $s->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
+
+    /**
      * Is the supplied Secret allowed to interact with the specified workspace?
      *
      * @param int $workspaceID Numerical Workspace ID

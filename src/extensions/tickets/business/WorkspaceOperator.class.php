@@ -15,10 +15,8 @@ namespace extensions\tickets\business;
 
 
 use business\Operator;
-use business\SecretOperator;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
-use exceptions\ValidationError;
 use extensions\tickets\database\WorkspaceDatabaseHandler;
 use exceptions\EntryInUseException;
 use extensions\tickets\models\Workspace;
@@ -216,49 +214,31 @@ class WorkspaceOperator extends Operator
      * @param Workspace $workspace
      * @param Secret $secret
      * @return bool
-     * @throws ValidationError
+     * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
     public static function addSecret(Workspace $workspace, Secret $secret): bool
     {
-        try
-        {
-            $secret = SecretOperator::getSecret($secret);
+        $h = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace);
+        HistoryRecorder::writeAssocHistory($h, array('systemEntry' => array('Add Secret: ' . $secret->getName())));
 
-            $h = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace);
-            HistoryRecorder::writeAssocHistory($h, array('systemEntry' => array('Add Secret: ' . $secret->getName())));
-
-            return WorkspaceDatabaseHandler::addSecret($workspace->getId(), $secret->getId());
-        }
-        catch(EntryNotFoundException $e)
-        {
-            throw new ValidationError(array('Secret Not Valid'));
-        }
+        return WorkspaceDatabaseHandler::addSecret($workspace->getId(), $secret->getId());
     }
 
     /**
      * @param Workspace $workspace
-     * @param string $secret
+     * @param Secret $secret
      * @return bool
-     * @throws ValidationError
+     * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\SecurityException
      */
-    public static function delSecret(Workspace $workspace, string $secret): bool
+    public static function delSecret(Workspace $workspace, Secret $secret): bool
     {
-        try
-        {
-            $secret = SecretOperator::getSecret($secret);
+        $h = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace);
+        HistoryRecorder::writeAssocHistory($h, array('systemEntry' => array('Remove Secret: ' . $secret->getName())));
 
-            $h = HistoryRecorder::writeHistory('Tickets_Workspace', HistoryRecorder::MODIFY, $workspace->getId(), $workspace);
-            HistoryRecorder::writeAssocHistory($h, array('systemEntry' => array('Remove Secret: ' . $secret->getName())));
-
-            return WorkspaceDatabaseHandler::delSecret($workspace->getId(), $secret->getId());
-        }
-        catch(EntryNotFoundException $e)
-        {
-            throw new ValidationError(array('Secret Not Valid'));
-        }
+        return WorkspaceDatabaseHandler::delSecret($workspace->getId(), $secret->getId());
     }
 }

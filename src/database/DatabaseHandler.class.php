@@ -56,5 +56,4 @@ abstract class DatabaseHandler
 
         return "'" . implode("', '", $array) . "'";
     }
-
 }

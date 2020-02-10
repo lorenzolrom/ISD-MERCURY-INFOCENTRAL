@@ -16,6 +16,7 @@ namespace extensions\trs\database;
 
 use database\DatabaseConnection;
 use database\DatabaseHandler;
+use database\PreparedStatement;
 use exceptions\EntryNotFoundException;
 use extensions\trs\models\Organization;
 
@@ -116,5 +117,94 @@ class OrganizationDatabaseHandler extends DatabaseHandler
         }
 
         return $organizations;
+    }
+
+    /**
+     * @param string $name
+     * @param string $type
+     * @param string $phone
+     * @param string $email
+     * @param string $street
+     * @param string $city
+     * @param string $state
+     * @param string $zip
+     * @param int $approved
+     * @return Organization
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function insert(string $name, string $type, string $phone, string $email, string $street,
+                                  string $city, string $state, string $zip, int $approved): Organization
+    {
+        $params = array('name', 'type', 'phone', 'email', 'street', 'city', 'state', 'zip', 'approved');
+
+        $c = new DatabaseConnection();
+
+        $i = $c->prepare(PreparedStatement::buildQueryString('TRS_Organization', PreparedStatement::INSERT, $params));
+
+        $i->bindParams(array(
+            'name' => $name,
+            'type' => $type,
+            'phone' => $phone,
+            'email' => $email,
+            'street'=> $street,
+            'city' => $city,
+            'state' => $state,
+            'zip' => $zip,
+            'approved' => $approved
+        ));
+
+        $i->execute();
+
+        $id = $c->getLastInsertId();
+
+
+        $c->close();
+
+        return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @param string $name
+     * @param string $type
+     * @param string $phone
+     * @param string $email
+     * @param string $street
+     * @param string $city
+     * @param string $state
+     * @param string $zip
+     * @param int $approved
+     * @return Organization
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function update(int $id, string $name, string $type, string $phone, string $email, string $street,
+                                  string $city, string $state, string $zip, int $approved): Organization
+    {
+        $params = array('id', 'name', 'type', 'phone', 'email', 'street', 'city', 'state', 'zip', 'approved');
+
+        $c = new DatabaseConnection();
+
+        $u = $c->prepare(PreparedStatement::buildQueryString('TRS_Organization', PreparedStatement::UPDATE, $params));
+
+        $u->bindParams(array(
+            'id' => $id,
+            'name' => $name,
+            'type' => $type,
+            'phone' => $phone,
+            'email' => $email,
+            'street'=> $street,
+            'city' => $city,
+            'state' => $state,
+            'zip' => $zip,
+            'approved' => $approved
+        ));
+
+        $u->execute();
+
+        $c->close();
+
+        return self::selectById($id);
     }
 }

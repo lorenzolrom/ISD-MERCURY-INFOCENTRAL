@@ -18,6 +18,11 @@ use exceptions\DatabaseException;
 
 class PreparedStatement
 {
+    public const INSERT = 2;
+    public const UPDATE = 3;
+    public const SELECT = 1;
+    public const DELETE = 4;
+
     private $statement; // Stored SQL query statement
 
     /**
@@ -110,5 +115,80 @@ class PreparedStatement
     public function fetchObject(string $className)
     {
         return $this->statement->fetchObject($className);
+    }
+
+    /**
+     * Bulk bind parameters to query
+     * @param array $params
+     * @return bool
+     */
+    public function bindParams(array $params): bool
+    {
+        foreach(array_keys($params) as $param)
+        {
+            $type = DatabaseConnection::PARAM_STR; // Default to STR
+
+            if(is_int($params[$param]))
+                $type = DatabaseConnection::PARAM_INT;
+
+            $this->statement->bindParam($param, $params[$param], $type);
+        }
+
+        return TRUE;
+    }
+
+    /**
+     * Generate a query, specifying parameters.  This will generate the query with PDO parameters
+     * NOTE: for UPDATE this function will assume the use of `id` as the unique field
+     * @param string $table
+     * @param int $type
+     * @param array $params
+     * @return string|null
+     */
+    public static function buildQueryString(string $table, int $type, array $params): ?string
+    {
+        if($type === self::INSERT)
+        {
+            // Start query
+            $q = 'INSERT INTO `' . $table .'` (';
+
+            foreach($params as $param)
+            {
+                $q .= "`$param`,";
+            }
+
+            $q = rtrim($q, ',');
+
+            // Switch to values
+            $q .= ') VALUES (';
+
+            foreach($params as $param)
+            {
+                $q .= ":$param,";
+            }
+
+            $q = rtrim($q, ',');
+
+            // Close query
+            $q .= ')';
+
+            return $q;
+        }
+        else if($type === self::UPDATE)
+        {
+            $q = 'UPDATE `' . $table . '` SET ';
+
+            foreach($params as $param)
+            {
+                $q .= "`$param` = :$param,";
+            }
+
+            $q = rtrim($q, ',');
+            $q .= ' WHERE `id` = :id';
+
+            return $q;
+        }
+
+        return NULL;
     }
 }

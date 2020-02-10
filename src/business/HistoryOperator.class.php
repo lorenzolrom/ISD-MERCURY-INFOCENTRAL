@@ -54,11 +54,13 @@ class HistoryOperator extends Operator
         'team' => 'Tickets_Team',
         'ticket' => 'Tickets_Ticket',
         'netuser' => '!NETUSER',
-        'netgroup' => '!NETGROUP'
+        'netgroup' => '!NETGROUP',
+        'trsorganization' => 'TRS_Organization'
     );
 
     // Associate table with permissions
     private const TABLE_PERMISSIONS = array(
+        'TRS_Organization' => 'trs_organizations-r',
         'Tickets_Workspace' => 'tickets-admin',
         'Tickets_Team' => 'tickets-admin',
         'Tickets_Ticket' => 'tickets-agent',
@@ -82,7 +84,7 @@ class HistoryOperator extends Operator
         'Bulletin' => 'settings',
         'Role' => 'settings',
         'Secret' => 'api-settings',
-        'User' => 'settings'
+        'User' => 'settings',
     );
 
     /**

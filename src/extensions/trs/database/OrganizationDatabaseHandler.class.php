@@ -120,39 +120,18 @@ class OrganizationDatabaseHandler extends DatabaseHandler
     }
 
     /**
-     * @param string $name
-     * @param string $type
-     * @param string $phone
-     * @param string $email
-     * @param string $street
-     * @param string $city
-     * @param string $state
-     * @param string $zip
-     * @param int $approved
+     * @param array $args Assoc array of all parameters and their values
      * @return Organization
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(string $name, string $type, string $phone, string $email, string $street,
-                                  string $city, string $state, string $zip, int $approved): Organization
+    public static function insert(array $args): Organization
     {
-        $params = array('name', 'type', 'phone', 'email', 'street', 'city', 'state', 'zip', 'approved');
-
         $c = new DatabaseConnection();
 
-        $i = $c->prepare(PreparedStatement::buildQueryString('TRS_Organization', PreparedStatement::INSERT, $params));
+        $i = $c->prepare(PreparedStatement::buildQueryString('TRS_Organization', PreparedStatement::INSERT, Organization::FIELDS));
 
-        $i->bindParams(array(
-            'name' => $name,
-            'type' => $type,
-            'phone' => $phone,
-            'email' => $email,
-            'street'=> $street,
-            'city' => $city,
-            'state' => $state,
-            'zip' => $zip,
-            'approved' => $approved
-        ));
+        $i->bindParams($args);
 
         $i->execute();
 
@@ -166,45 +145,41 @@ class OrganizationDatabaseHandler extends DatabaseHandler
 
     /**
      * @param int $id
-     * @param string $name
-     * @param string $type
-     * @param string $phone
-     * @param string $email
-     * @param string $street
-     * @param string $city
-     * @param string $state
-     * @param string $zip
-     * @param int $approved
+     * @param array $args
      * @return Organization
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function update(int $id, string $name, string $type, string $phone, string $email, string $street,
-                                  string $city, string $state, string $zip, int $approved): Organization
+    public static function update(int $id, array $args): Organization
     {
-        $params = array('id', 'name', 'type', 'phone', 'email', 'street', 'city', 'state', 'zip', 'approved');
-
         $c = new DatabaseConnection();
 
-        $u = $c->prepare(PreparedStatement::buildQueryString('TRS_Organization', PreparedStatement::UPDATE, $params));
+        $u = $c->prepare(PreparedStatement::buildQueryString('TRS_Organization', PreparedStatement::UPDATE, Organization::FIELDS));
 
-        $u->bindParams(array(
-            'id' => $id,
-            'name' => $name,
-            'type' => $type,
-            'phone' => $phone,
-            'email' => $email,
-            'street'=> $street,
-            'city' => $city,
-            'state' => $state,
-            'zip' => $zip,
-            'approved' => $approved
-        ));
+        $u->bindParams(array_merge($args, array('id' => $id)));
 
         $u->execute();
 
         $c->close();
 
         return self::selectById($id);
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     */
+    public static function delete(int $id): bool
+    {
+        $c = new DatabaseConnection();
+
+        $d = $c->prepare('DELETE FROM `TRS_Organization` WHERE `id` = ?');
+        $d->bindParam(1, $id, DatabaseConnection::PARAM_INT);
+        $d->execute();
+
+        $c->close();
+
+        return $d->getRowCount() === 1;
     }
 }

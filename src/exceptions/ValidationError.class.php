@@ -23,7 +23,7 @@ use Throwable;
  *
  * @package exceptions
  */
-class ValidationError extends \Exception
+class ValidationError extends MercuryException
 {
     private $errors;
 

@@ -16,6 +16,7 @@ namespace utilities;
 
 use business\AttributeOperator;
 use business\UserOperator;
+use exceptions\ValidationError;
 use exceptions\ValidationException;
 
 class Validator
@@ -177,6 +178,48 @@ class Validator
         // alnumdss
         if(isset($rules['alnumdss']) AND !self::alnumDashSpaceSlashOnly($value))
             throw new ValidationException("{$rules['name']} must consist of letters, numbers, '-', '/', and spaces only", ValidationException::VALUE_IS_NOT_VALID);
+
+        return TRUE;
+    }
+
+    /**
+     * @param string $class
+     * @param array $params The names of variables to validate
+     * @param array $vals An associative array of params and values
+     * @param bool $useUnderscored // Also uses validation functions starting with an underscore
+     * @return bool
+     * @throws ValidationError
+     */
+    public static function validateClass(string $class, array $params, array $vals, bool $useUnderscored = FALSE): bool
+    {
+        $errors = array();
+
+        // Ensure that each param is represented in vals
+        foreach($params as $param)
+        {
+            if(!isset($vals[$param]))
+                $vals[$param] = NULL;
+        }
+
+        foreach(array_keys($vals) as $val)
+        {
+            $func = 'validate' . ucfirst($val);
+
+            try{$class::$func($vals[$val]);}
+            catch(ValidationException $e){$errors[] = $e->getMessage();}
+            catch(\Error $e){} // Catch function not defined
+
+            if($useUnderscored)
+            {
+                $func = '_validate' . ucfirst($val);
+                try{$class::$func($vals[$val]);}
+                catch(ValidationException $e){$errors[] = $e->getMessage();}
+                catch(\Error $e){} // Catch function not defined
+            }
+        }
+
+        if(!empty($errors))
+            throw new ValidationError($errors);
 
         return TRUE;
     }

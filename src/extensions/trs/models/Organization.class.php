@@ -19,6 +19,19 @@ use utilities\Validator;
 
 class Organization extends Model
 {
+    // Database fields
+    public const FIELDS = array(
+        'name',
+        'type',
+        'phone',
+        'email',
+        'street',
+        'city',
+        'state',
+        'zip',
+        'approved'
+    );
+
     // Valid Org types
     public const TYPES = array('partner', 'donor');
 
@@ -62,6 +75,11 @@ class Organization extends Model
         'name' => 'Zip Code',
         'lower' => 5,
         'upper' => 10
+    );
+
+    private const APPROVED_RULES = array(
+        'name' => 'Approved',
+        'acceptable' => array('0', '1')
     );
 
     public $id;
@@ -241,5 +259,16 @@ class Organization extends Model
     public static function validateZip(?string $zip): bool
     {
         return Validator::validate(self::ZIP_RULES, $zip);
+    }
+
+    /**
+     * @param string|null $approved
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateApproved(?string $approved): bool
+    {
+        return Validator::validate(self::APPROVED_RULES, $approved);
     }
 }

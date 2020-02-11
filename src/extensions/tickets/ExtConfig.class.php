@@ -29,4 +29,16 @@ class ExtConfig
 
         'lockTimeoutSeconds' => 5 // Number of seconds of inactivity for a TicketLock to be inactive
     );
+
+    public const HISTORY_OBJECTS = array(
+        'workspace' => 'Tickets_Workspace',
+        'team' => 'Tickets_Team',
+        'ticket' => 'Tickets_Ticket',
+    );
+
+    public const HISTORY_PERMISSIONS = array(
+        'Tickets_Workspace' => 'tickets-admin',
+        'Tickets_Team' => 'tickets-admin',
+        'Tickets_Ticket' => 'tickets-agent',
+    );
 }

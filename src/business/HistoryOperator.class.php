@@ -31,56 +31,15 @@ class HistoryOperator extends Operator
 {
     // Convert friendly name to table
     private const OBJECTS = array(
-        'hostcategory' => 'ITSM_HostCategory',
-        'building' => 'FacilitiesCore_Building',
-        'location' => 'FacilitiesCore_Location',
-        'floorplan' => 'Facilities_Floorplan',
-        'asset' => 'ITSM_Asset',
-        'commodity' => 'ITSM_Commodity',
-        'host' => 'ITSM_Host',
-        'vendor' => 'ITSM_Vendor',
-        'warehouse' => 'ITSM_Warehouse',
-        'registrar' => 'ITSM_Registrar',
-        'vhost' => 'ITSM_VHost',
-        'urlalias' => 'NIS_URLAlias',
-        'application' => 'ITSM_Application',
+
         'bulletin' => 'Bulletin',
         'role' => 'Role',
         'secret' => 'Secret',
         'user' => 'User',
-        'purchaseorder' => 'ITSM_PurchaseOrder',
-        'discardorder' => 'ITSM_DiscardOrder',
-        'workspace' => 'Tickets_Workspace',
-        'team' => 'Tickets_Team',
-        'ticket' => 'Tickets_Ticket',
-        'netuser' => '!NETUSER',
-        'netgroup' => '!NETGROUP',
-        'trsorganization' => 'TRS_Organization'
     );
 
     // Associate table with permissions
     private const TABLE_PERMISSIONS = array(
-        'TRS_Organization' => 'trs_organizations-r',
-        'Tickets_Workspace' => 'tickets-admin',
-        'Tickets_Team' => 'tickets-admin',
-        'Tickets_Ticket' => 'tickets-agent',
-        'FacilitiesCore_Building' => 'facilitiescore_facilities-r',
-        'FacilitiesCore_Location' => 'facilitiescore_facilities-r',
-        'Facilities_Floorplan' => 'facilitiescore_floorplans-r',
-        'ITSM_Asset' => 'itsm_inventory-assets-r',
-        'ITSM_Commodity' => 'itsm_inventory-commodities-r',
-        'ITSM_Host' => 'itsm_devices-hosts-r',
-        'ITSM_Vendor' => 'itsm_inventory-vendors-r',
-        'ITSM_Warehouse' => 'itsm_inventory-warehouses-r',
-        'ITSM_Registrar' => 'itsm_web-registrars-r',
-        'ITSM_VHost' => 'itsm_web-vhosts-r',
-        'NIS_URLAlias' => 'itsm_web-aliases-rw',
-        'ITSM_Application' => 'itsm_ait-apps-r',
-        'ITSM_HostCategory' => 'itsmmonitor-hosts-w',
-        'ITSM_PurchaseOrder' => 'itsm_inventory-purchaseorders-r',
-        'ITSM_DiscardOrder' => 'itsm_inventory-discards-r',
-        '!NETUSER' => 'netuserman-read',
-        '!NETGROUP' => 'netuserman-readgroups',
         'Bulletin' => 'settings',
         'Role' => 'settings',
         'Secret' => 'api-settings',
@@ -99,17 +58,42 @@ class HistoryOperator extends Operator
      */
     public static function getHistory(string $objectName, string $index, string $action = '%', string $username = '%'): array
     {
+        $objects = self::OBJECTS;
+        $tablePermissions = self::TABLE_PERMISSIONS;
+
+        // Import history from extensions
+        foreach(\Config::OPTIONS['enabledExtensions'] as $extension)
+        {
+            $extConfigName = "extensions\\$extension\\ExtConfig"; // Build name of extension's ExtConfig
+
+            // Skip if ExtConfig is not defined
+            if(!class_exists($extConfigName))
+                continue;
+
+            // Merge HISTORY_OBJECTS and HISTORY_PERMISSIONS into OBJECTS and TABLE_PERMISSIONS
+            $extConfig = new $extConfigName();
+
+            if(defined("$extConfigName::HISTORY_OBJECTS"))
+                $objects = array_merge($objects, $extConfig::HISTORY_OBJECTS);
+
+            if(defined("$extConfigName::HISTORY_PERMISSIONS"))
+                $tablePermissions = array_merge($tablePermissions, $extConfig::HISTORY_PERMISSIONS);
+        }
+
         // Error if table is not defined in the permissions array
-        if(!isset(self::OBJECTS[$objectName]))
+        if(!isset($objects[$objectName]))
             throw new EntryNotFoundException('Object type not found', EntryNotFoundException::PRIMARY_KEY_NOT_FOUND);
 
-        $tableName = self::OBJECTS[$objectName];
+        $tableName = $objects[$objectName];
 
-        if(!isset(self::TABLE_PERMISSIONS[$tableName]))
+        if(!isset($tablePermissions[$tableName]))
             throw new SecurityException('Object type does not have security filter', SecurityException::USER_NO_PERMISSION);
 
-        CurrentUserController::validatePermission(self::TABLE_PERMISSIONS[$tableName]);
+        CurrentUserController::validatePermission($tablePermissions[$tableName]);
 
+        /**
+         * Special scenarios
+         */
         if($tableName == 'ITSM_Asset') // Assets use their asset tags as 'primary' keys
             $index = (string)AssetOperator::idFromAssetTag($index);
         else if($tableName == 'ITSM_Application') // Convert Number to ID

@@ -99,4 +99,14 @@ class ExtConfig
             'useraccountcontrol' // Disable and password expire status
         )
     );
+
+    public const HISTORY_OBJECTS = array(
+        'netuser' => '!NETUSER',
+        'netgroup' => '!NETGROUP',
+    );
+
+    public const HISTORY_PERMISSIONS = array(
+        '!NETUSER' => 'netuserman-read',
+        '!NETGROUP' => 'netuserman-readgroups',
+    );
 }

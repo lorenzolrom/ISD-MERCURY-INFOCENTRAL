@@ -25,4 +25,16 @@ class ExtConfig
         'floorplans' => 'extensions\facilities\controllers\FloorplanController',
         'spaces' => 'extensions\facilities\controllers\SpaceController'
     );
+
+    public const HISTORY_OBJECTS = array(
+        'building' => 'FacilitiesCore_Building',
+        'location' => 'FacilitiesCore_Location',
+        'floorplan' => 'Facilities_Floorplan',
+    );
+
+    public const HISTORY_PERMISSIONS = array(
+        'FacilitiesCore_Building' => 'facilitiescore_facilities-r',
+        'FacilitiesCore_Location' => 'facilitiescore_facilities-r',
+        'Facilities_Floorplan' => 'facilitiescore_floorplans-r',
+    );
 }

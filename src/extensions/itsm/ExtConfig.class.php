@@ -52,4 +52,34 @@ class ExtConfig
         'dhcpUser' => '', // Username to remote into dhcp server
         'dhcpLogPath' => '' // Log to path on remote dhcp server
     );
+
+    public const HISTORY_OBJECTS = array(
+        'hostcategory' => 'ITSM_HostCategory',
+        'asset' => 'ITSM_Asset',
+        'commodity' => 'ITSM_Commodity',
+        'host' => 'ITSM_Host',
+        'vendor' => 'ITSM_Vendor',
+        'warehouse' => 'ITSM_Warehouse',
+        'registrar' => 'ITSM_Registrar',
+        'vhost' => 'ITSM_VHost',
+        'urlalias' => 'NIS_URLAlias',
+        'application' => 'ITSM_Application',
+        'purchaseorder' => 'ITSM_PurchaseOrder',
+        'discardorder' => 'ITSM_DiscardOrder',
+    );
+
+    public const HISTORY_PERMISSIONS = array(
+        'ITSM_Asset' => 'itsm_inventory-assets-r',
+        'ITSM_Commodity' => 'itsm_inventory-commodities-r',
+        'ITSM_Host' => 'itsm_devices-hosts-r',
+        'ITSM_Vendor' => 'itsm_inventory-vendors-r',
+        'ITSM_Warehouse' => 'itsm_inventory-warehouses-r',
+        'ITSM_Registrar' => 'itsm_web-registrars-r',
+        'ITSM_VHost' => 'itsm_web-vhosts-r',
+        'NIS_URLAlias' => 'itsm_web-aliases-rw',
+        'ITSM_Application' => 'itsm_ait-apps-r',
+        'ITSM_HostCategory' => 'itsmmonitor-hosts-w',
+        'ITSM_PurchaseOrder' => 'itsm_inventory-purchaseorders-r',
+        'ITSM_DiscardOrder' => 'itsm_inventory-discards-r',
+    );
 }

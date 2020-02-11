@@ -23,4 +23,12 @@ class ExtConfig
     );
 
     public const OPTIONS = array();
+
+    public const HISTORY_OBJECTS = array(
+        'trsorganization' => 'TRS_Organization'
+    );
+
+    public const HISTORY_PERMISSIONS = array(
+        'TRS_Organization' => 'trs_organizations-r'
+    );
 }

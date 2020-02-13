@@ -6,8 +6,8 @@
  * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/10/2020
- * Time: 3:51 PM
+ * Date: 2/13/2020
+ * Time: 2:09 PM
  */
 
 
@@ -17,26 +17,26 @@ namespace extensions\trs\commands;
 use commands\Command;
 use controllers\CurrentUserController;
 use exceptions\MercuryException;
-use extensions\trs\database\OrganizationDatabaseHandler;
-use extensions\trs\models\Organization;
+use exceptions\ValidationError;
+use extensions\trs\database\CommodityCategoryDatabaseHandler;
+use extensions\trs\models\CommodityCategory;
 use utilities\HistoryRecorder;
+use utilities\Validator;
 
-class DeleteOrganizationCommand implements Command
+class UpdateCommodityCategoryCommand implements Command
 {
-    private const PERMISSION = 'trs_organizations-w';
+    private const PERMISSION = 'trs_commodities-a';
 
     private $result = NULL;
     private $error = NULL;
 
-    private $org; // Organization object
+    private $cc = NULL; // The commodity category object
+    private $args = NULL;
 
-    /**
-     * DeleteOrganizationCommand constructor.
-     * @param Organization $org
-     */
-    public function __construct(Organization $org)
+    public function __construct(CommodityCategory $cc, array $args)
     {
-        $this->org = $org;
+        $this->cc = $cc;
+        $this->args = $args;
     }
 
     /**
@@ -50,13 +50,21 @@ class DeleteOrganizationCommand implements Command
     {
         CurrentUserController::validatePermission(self::PERMISSION);
 
-        // History
-        HistoryRecorder::writeHistory('TRS_Organization', HistoryRecorder::DELETE, $this->org->getId(), $this->org);
+        try
+        {
+            Validator::validateClass('extensions\trs\models\CommodityCategory', CommodityCategory::FIELDS, $this->args);
+        }
+        catch(ValidationError $e)
+        {
+            $this->error = $e;
+            return FALSE;
+        }
 
-        // Delete
-        $this->result = OrganizationDatabaseHandler::delete($this->org->id);
+        HistoryRecorder::writeHistory('TRS_CommodityCategory', HistoryRecorder::MODIFY, $this->cc->getId(), $this->cc, $this->args);
 
-        return $this->result;
+        CommodityCategoryDatabaseHandler::update($this->cc->getId(), $this->args['name']);
+
+        return TRUE;
     }
 
     /**

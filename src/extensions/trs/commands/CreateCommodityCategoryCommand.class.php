@@ -6,8 +6,8 @@
  * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/10/2020
- * Time: 3:13 PM
+ * Date: 2/13/2020
+ * Time: 2:02 PM
  */
 
 
@@ -18,22 +18,22 @@ use commands\Command;
 use controllers\CurrentUserController;
 use exceptions\MercuryException;
 use exceptions\ValidationError;
-use extensions\trs\database\OrganizationDatabaseHandler;
-use extensions\trs\models\Organization;
+use extensions\trs\database\CommodityCategoryDatabaseHandler;
+use extensions\trs\models\CommodityCategory;
 use utilities\HistoryRecorder;
 use utilities\Validator;
 
-class CreateOrganizationCommand implements Command
+class CreateCommodityCategoryCommand implements Command
 {
-    private const PERMISSION = 'trs_organizations-w';
-
-    private $args = array();
+    private const PERMISSION = 'trs_commodities-a';
 
     private $result = NULL;
     private $error = NULL;
 
+    private $args = array();
+
     /**
-     * CreateOrganizationCommand constructor.
+     * CreateCommodityCategoryCommand constructor.
      * @param array $args
      */
     public function __construct(array $args)
@@ -52,10 +52,9 @@ class CreateOrganizationCommand implements Command
     {
         CurrentUserController::validatePermission(self::PERMISSION);
 
-        // Validate fields against Organization class
         try
         {
-            Validator::validateClass('extensions\trs\models\Organization', Organization::FIELDS, $this->args);
+            Validator::validateClass('extensions\trs\models\CommodityCategory', CommodityCategory::FIELDS, $this->args);
         }
         catch(ValidationError $e)
         {
@@ -63,19 +62,17 @@ class CreateOrganizationCommand implements Command
             return FALSE;
         }
 
-        // Create Organization
-        $org = OrganizationDatabaseHandler::insert($this->args);
+        $cc = CommodityCategoryDatabaseHandler::insert($this->args['name']);
 
-        // Create History record
-        HistoryRecorder::writeHistory('TRS_Organization', HistoryRecorder::CREATE, $org->getId(), $org);
+        HistoryRecorder::writeHistory('TRS_CommodityCategory', HistoryRecorder::CREATE, $cc->getId(), $cc);
 
-        $this->result = $org;
+        $this->result = $cc;
 
         return TRUE;
     }
 
     /**
-     * @return Organization The output of a successful command, defined by the command
+     * @return CommodityCategory The output of a successful command, defined by the command
      */
     public function getResult()
     {

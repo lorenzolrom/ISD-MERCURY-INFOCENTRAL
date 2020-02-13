@@ -6,34 +6,32 @@
  * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/10/2020
- * Time: 3:51 PM
+ * Date: 2/11/2020
+ * Time: 10:25 AM
  */
 
 
 namespace extensions\trs\commands;
 
 
+use business\UserOperator;
 use commands\Command;
 use controllers\CurrentUserController;
+use exceptions\EntryNotFoundException;
 use exceptions\MercuryException;
-use extensions\trs\database\OrganizationDatabaseHandler;
+use extensions\trs\database\OrgRepresentativeDatabaseHandler;
 use extensions\trs\models\Organization;
-use utilities\HistoryRecorder;
+use models\User;
 
-class DeleteOrganizationCommand implements Command
+class GetRepresentativesCommand implements Command
 {
-    private const PERMISSION = 'trs_organizations-w';
+    private const PERMISSION = 'trs_organizations-r';
 
     private $result = NULL;
     private $error = NULL;
 
-    private $org; // Organization object
+    private $org = NULL;
 
-    /**
-     * DeleteOrganizationCommand constructor.
-     * @param Organization $org
-     */
     public function __construct(Organization $org)
     {
         $this->org = $org;
@@ -43,24 +41,32 @@ class DeleteOrganizationCommand implements Command
      * Executes the instructions of the command
      * @return bool Was the command successful?
      * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
     public function execute(): bool
     {
         CurrentUserController::validatePermission(self::PERMISSION);
 
-        // History
-        HistoryRecorder::writeHistory('TRS_Organization', HistoryRecorder::DELETE, $this->org->getId(), $this->org);
+        // Get all numerical user IDs
+        $userIds = OrgRepresentativeDatabaseHandler::select($this->org->getId());
+        $users = array();
 
-        // Delete
-        $this->result = OrganizationDatabaseHandler::delete($this->org->id);
+        // Convert user IDs to user
+        foreach($userIds as $userId)
+        {
+            try
+            {
+                $users[] = UserOperator::getUser($userId);
+            }
+            catch(EntryNotFoundException $e){} // Ignore, this will not occur
+        }
 
-        return $this->result;
+        $this->result = $users;
+        return TRUE;
     }
 
     /**
-     * @return mixed The output of a successful command, defined by the command
+     * @return User[] The output of a successful command, defined by the command
      */
     public function getResult()
     {

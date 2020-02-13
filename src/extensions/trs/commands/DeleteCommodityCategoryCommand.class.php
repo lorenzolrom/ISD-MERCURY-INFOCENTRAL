@@ -6,8 +6,8 @@
  * INS WEBNOC API
  *
  * User: lromero
- * Date: 2/10/2020
- * Time: 3:51 PM
+ * Date: 2/13/2020
+ * Time: 2:15 PM
  */
 
 
@@ -17,26 +17,26 @@ namespace extensions\trs\commands;
 use commands\Command;
 use controllers\CurrentUserController;
 use exceptions\MercuryException;
-use extensions\trs\database\OrganizationDatabaseHandler;
-use extensions\trs\models\Organization;
+use extensions\trs\database\CommodityCategoryDatabaseHandler;
+use extensions\trs\models\CommodityCategory;
 use utilities\HistoryRecorder;
 
-class DeleteOrganizationCommand implements Command
+class DeleteCommodityCategoryCommand implements Command
 {
-    private const PERMISSION = 'trs_organizations-w';
+    public const PERMISSION = 'trs_commodities-a';
 
-    private $result = NULL;
-    private $error = NULL;
+    private $result;
+    private $error;
 
-    private $org; // Organization object
+    private $cc; // CommodityCategory object
 
     /**
-     * DeleteOrganizationCommand constructor.
-     * @param Organization $org
+     * DeleteCommodityCategoryCommand constructor.
+     * @param CommodityCategory $cc
      */
-    public function __construct(Organization $org)
+    public function __construct(CommodityCategory $cc)
     {
-        $this->org = $org;
+        $this->cc = $cc;
     }
 
     /**
@@ -50,11 +50,9 @@ class DeleteOrganizationCommand implements Command
     {
         CurrentUserController::validatePermission(self::PERMISSION);
 
-        // History
-        HistoryRecorder::writeHistory('TRS_Organization', HistoryRecorder::DELETE, $this->org->getId(), $this->org);
+        HistoryRecorder::writeHistory('TRS_CommodityCategory', HistoryRecorder::DELETE, $this->cc->getId(), $this->cc);
 
-        // Delete
-        $this->result = OrganizationDatabaseHandler::delete($this->org->id);
+        $this->result = CommodityCategoryDatabaseHandler::delete($this->cc->getId());
 
         return $this->result;
     }

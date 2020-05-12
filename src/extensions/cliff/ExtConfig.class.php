@@ -20,16 +20,19 @@ class ExtConfig
 
     public const ROUTES = array(
         'locksystems' => 'extensions\cliff\controllers\SystemController',
-        'lockkeys' => 'extensions\cliff\controllers\KeyController'
+        'lockkeys' => 'extensions\cliff\controllers\KeyController',
+        'lockcores' => 'extensions\cliff\controllers\CoreController'
     );
 
     public const HISTORY_OBJECTS = array(
         'locksystems' => 'CLIFF_System',
-        'lockkeys' => 'CLIFF_Key'
+        'lockkeys' => 'CLIFF_Key',
+        'lockcores' => 'CLIFF_Core'
     );
 
     public const HISTORY_PERMISSIONS = array(
         'CLIFF_System' => 'cliff-r',
-        'CLIFF_Key' => 'cliff-r'
+        'CLIFF_Key' => 'cliff-r',
+        'CLIFF_Core' => 'cliff-r'
     );
 }

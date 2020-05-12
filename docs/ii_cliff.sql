@@ -1,0 +1,49 @@
+CREATE TABLE `CLIFF_System` (
+  `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `code` VARCHAR(16) NOT NULL,
+  `name` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`code`)
+);
+
+CREATE TABLE `CLIFF_Key` (
+  `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `system` INT(11) UNSIGNED NOT NULL,
+  `stamp` VARCHAR(32) NOT NULL,
+  `bitting` TEXT NOT NULL,
+  `type` TEXT NOT NULL,
+  `keyway` TEXT NOT NULL,
+  `notes` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`system`, `stamp`),
+  FOREIGN KEY (`system`) REFERENCES `CLIFF_System`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE `CLIFF_Core` (
+  `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `system` INT(11) UNSIGNED NOT NULL,
+  `stamp` VARCHAR(32) NOT NULL,
+  `pinData` TEXT NOT NULL,
+  `type` TEXT NOT NULL,
+  `keyway` TEXT NOT NULL,
+  `notes` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`system`, `stamp`),
+  FOREIGN KEY (`system`) REFERENCES `CLIFF_System`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE `CLIFF_Core_Location` (
+  `core` INT(11) UNSIGNED NOT NULL,
+  `location` INT(11) UNSIGNED NOT NULL,
+  FOREIGN KEY (`core`) REFERENCES `CLIFF_Core`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (`location`) REFERENCES `FacilitiesCore_Location`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE `CLIFF_KeyIssue` (
+  `key` INT(11) UNSIGNED NOT NULL,
+  `serial` INT(11) UNSIGNED NOT NULL,
+  `issuedTo` TEXT NOT NULL,
+  PRIMARY KEY (`key`, `serial`)
+);
+
+INSERT INTO `Permission` VALUES ('cliff-r'), ('cliff-w');

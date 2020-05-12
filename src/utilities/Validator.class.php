@@ -41,12 +41,17 @@ class Validator
      */
     public static function alnumDashSpaceOnly(string $value): bool
     {
-        return preg_match("/^[A-Za-z0-9- ]+$/", $value);
+        return preg_match("/^[A-Za-z0-9- .]+$/", $value);
     }
 
     public static function alnumDashSpaceSlashOnly(string $value): bool
     {
         return preg_match("/^[A-Za-z0-9- \/]+$/", $value);
+    }
+
+    public static function alnumDashSpacePeriodOnly(string $value): bool
+    {
+        return preg_match("/^[A-Za-z0-9- .]+$/", $value);
     }
 
     /**
@@ -178,6 +183,10 @@ class Validator
         // alnumdss
         if(isset($rules['alnumdss']) AND !self::alnumDashSpaceSlashOnly($value))
             throw new ValidationException("{$rules['name']} must consist of letters, numbers, '-', '/', and spaces only", ValidationException::VALUE_IS_NOT_VALID);
+
+        // alnumdsp
+        if(isset($rules['alnumdss']) AND !self::alnumDashSpacePeriodOnly($value))
+            throw new ValidationException("{$rules['name']} must consist of letters, numbers, '-', '.', and spaces only", ValidationException::VALUE_IS_NOT_VALID);
 
         return TRUE;
     }

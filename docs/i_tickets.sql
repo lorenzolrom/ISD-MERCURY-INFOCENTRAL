@@ -8,7 +8,7 @@ CREATE TABLE `Tickets_Workspace` (
 CREATE TABLE Tickets_Attribute (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `workspace` int(11) unsigned NOT NULL,
-  `type` enum('type', 'status', 'category', 'severity') NOT NULL,
+  `type` enum('type', 'status', 'category', 'severity', 'closureCode') NOT NULL,
   `code` char(4) NOT NULL,
   `name` TEXT NOT NULL,
   PRIMARY KEY (`id`),
@@ -140,6 +140,20 @@ CREATE TABLE `Tickets_Workspace_Secret` (
   PRIMARY KEY (`workspace`, `secret`),
   CONSTRAINT `Tickets_Workspace_Secret_ibfk_1` FOREIGN KEY (`workspace`) REFERENCES `Tickets_Workspace`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `Tickets_Workspace_Secret_ibfk_2` FOREIGN KEY (`secret`) references `Secret`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE `Tickets_Widget` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user` int(11) unsigned NOT NULL,
+  `workspace` int(11) unsigned NOT NULL,
+  `search` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user` (`user`),
+  KEY `workspace` (`workspace`),
+  KEY `search` (`search`),
+  CONSTRAINT `Tickets_Widget_ibfk_1` FOREIGN KEY (`user`) REFERENCES `User` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Tickets_Widget_ibfk_2` FOREIGN KEY (`workspace`) REFERENCES `Tickets_Workspace` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Tickets_Widget_ibfk_3` FOREIGN KEY (`search`) REFERENCES `Tickets_Search` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Permissions

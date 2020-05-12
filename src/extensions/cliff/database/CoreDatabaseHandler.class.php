@@ -48,6 +48,34 @@ class CoreDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $system
+     * @param string $stamp
+     * @return Core
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectBySystemStamp(int $system, string $stamp): Core
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `CLIFF_Core`.`id`, `system`, `stamp`, `pinData`, `type`, `keyway`, `notes`, 
+            `CLIFF_System`.`code` as `systemCode`, `CLIFF_System`.`name` as `systemName` FROM `CLIFF_Core` INNER JOIN 
+            `CLIFF_System` ON `system` = `CLIFF_System`.`id` WHERE `CLIFF_Core`.`system` = ? AND `CLIFF_Core`.`stamp` = ? LIMIT 1');
+
+        $s->bindParam(1, $system, DatabaseConnection::PARAM_INT);
+        $s->bindParam(2, $stamp, DatabaseConnection::PARAM_STR);
+
+        $s->execute();
+
+        $c->close();
+
+        if($s->getRowCount() !== 1)
+            throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
+
+        return $s->fetchObject('extensions\cliff\models\Core');
+    }
+
+    /**
      * @param string $systemCode
      * @param string $stamp
      * @param string $type

@@ -21,7 +21,8 @@ class ExtConfig
     public const ROUTES = array(
         'locksystems' => 'extensions\cliff\controllers\SystemController',
         'lockkeys' => 'extensions\cliff\controllers\KeyController',
-        'lockcores' => 'extensions\cliff\controllers\CoreController'
+        'lockcores' => 'extensions\cliff\controllers\CoreController',
+        'lockprocess' => 'extensions\cliff\controllers\ProcessController'
     );
 
     public const HISTORY_OBJECTS = array(

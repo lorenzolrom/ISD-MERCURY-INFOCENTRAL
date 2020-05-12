@@ -19,6 +19,7 @@ use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use extensions\cliff\database\KeyDatabaseHandler;
 use extensions\cliff\models\Key;
+use extensions\cliff\utilities\KeySequencer;
 use utilities\HistoryRecorder;
 
 class KeyOperator extends Operator
@@ -135,5 +136,19 @@ class KeyOperator extends Operator
     {
         HistoryRecorder::writeHistory('CLIFF_Key', HistoryRecorder::DELETE, $key->getId(), $key);
         return KeyDatabaseHandler::delete($key->getId());
+    }
+
+    /**
+     * @param array $vals
+     * @return int
+     * @throws EntryNotFoundException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function sequenceKeys(array $vals): int
+    {
+        $ks = new KeySequencer();
+        return $ks->sequenceKeys((string)$vals['systemCode'], (string)$vals['stamp'], (string)$vals['type'], (string)$vals['keyway'], (string)$vals['c1'], (string)$vals['c2'], (string)$vals['c3'], (string)$vals['c4'], (string)$vals['c5'], (string)$vals['c6'], (string)$vals['c7'], (int)$vals['seqStart'], (int)$vals['seqEnd'], (int)$vals['padding']);
     }
 }

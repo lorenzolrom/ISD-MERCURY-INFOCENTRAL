@@ -18,7 +18,10 @@ use business\Operator;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use extensions\cliff\database\CoreDatabaseHandler;
+use extensions\cliff\database\KeyDatabaseHandler;
 use extensions\cliff\models\Core;
+use extensions\cliff\utilities\CoreBuilder;
+use extensions\cliff\utilities\KeySolver;
 use utilities\HistoryRecorder;
 
 class CoreOperator extends Operator
@@ -135,5 +138,156 @@ class CoreOperator extends Operator
     {
         HistoryRecorder::writeHistory('CLIFF_Core', HistoryRecorder::DELETE, $core->getId(), $core);
         return CoreDatabaseHandler::delete($core->getId());
+    }
+
+    /**
+     * Solves all keys that will operate the specified core.
+     *
+     * @param Core $core
+     * @return array // A 2-D array of bitting codes, with each record also containing a KeyID if the bitting
+     *      matches a key within the same system.
+     * @throws \exceptions\DatabaseException
+     */
+    public static function readCore(Core $core): array
+    {
+        $bittings = array(); // Final array, holding bittings and matching key IDs
+        $bittings['control'] = array();
+        $bittings['operating'] = array();
+
+        $ks = new KeySolver();
+
+        $ksCore = $ks->getCore($core->getId());
+
+        $controlBitting = $ks->getTipToBowString($ks->getControlBitting($ksCore));
+        $controlID = KeyDatabaseHandler::selectIDBySystemBitting($core->getSystem(), $controlBitting);
+
+        $bittings['control'] = array('bitting' => $controlBitting, 'key' => $controlID);
+
+        $rawBittings = $ks->getWorkingKeys($ksCore);
+
+        $rawBittingStrings = array();
+
+        foreach($rawBittings as $bitting)
+        {
+            $rawBittingStrings[] = $ks->getTipToBowString($bitting);
+        }
+
+        sort($rawBittingStrings);
+
+        foreach($rawBittingStrings as $bitting)
+        {
+            $key = KeyDatabaseHandler::selectIDBySystemBitting($core->getSystem(), $bitting);
+
+            $bittings['operating'][] = array(
+                'bitting' => $bitting,
+                'key' => $key
+            );
+
+        }
+
+        return $bittings;
+    }
+
+    /**
+     * @param string $systemCode Code for the system containing keys, cores
+     * @param string $controlStamp Stamp ONLY for the key acting as control
+     * @param string $operatingStamps Stamps, separated by commas, of keys operating this core
+     * @param string|null $targetCoreCode Optional, the stamp of the core this data will be applied to
+     * @return array // 2-D array of pin data (NOT the formatted string)
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function buildCore(string $systemCode, string $controlStamp, string $operatingStamps, ?string $targetCoreCode = NULL): array
+    {
+        try
+        {
+            $system = SystemOperator::getByCode($systemCode);
+            $control = KeyDatabaseHandler::selectBySystemStamp($system->getId(), $controlStamp);
+
+            $operating = array();
+
+            foreach(explode(',', $operatingStamps) as $stamp)
+            {
+                $operating[] = KeyDatabaseHandler::selectBySystemStamp($system->getId(), $stamp);
+            }
+
+            $cb = new CoreBuilder();
+            $pinArray = $cb->buildCore($control, $operating);
+
+            //Write to target core, if specified
+            if($targetCoreCode !== NULL AND strlen($targetCoreCode) > 0)
+            {
+                $tempPinArray = array(); // Hold imploded rows
+
+                foreach($pinArray as $row)
+                {
+                    $tempPinArray[] = implode(',', $row);
+                }
+
+                $pinData = implode('|', $tempPinArray);
+
+                $core = CoreDatabaseHandler::selectBySystemStamp($system->getId(), $targetCoreCode);
+                CoreOperator::update($core, array(
+                    'systemCode' => $system->getCode(),
+                    'stamp' => $core->getStamp(),
+                    'pinData' => $pinData,
+                    'type' => $core->getType(),
+                    'keyway' => $core->getKeyway(),
+                    'notes' => $core->getNotes()
+                ));
+            }
+
+            return $pinArray;
+        }
+        catch(EntryNotFoundException $e)
+        {
+            throw new ValidationError(array('Control, operating, or core data is invalid'));
+        }
+    }
+
+    /**
+     * @param string $systemCode
+     * @param string $coreStamps
+     * @return array // Key bitting data
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     */
+    public static function compareCores(string $systemCode, string $coreStamps): array
+    {
+        try
+        {
+            $system = SystemOperator::getByCode($systemCode);
+            $coreStamps = explode(',', $coreStamps);
+
+            $cores = array();
+
+            foreach($coreStamps as $stamp)
+            {
+                $cores[] = CoreDatabaseHandler::selectBySystemStamp($system->getId(), $stamp);
+            }
+
+            $ks = new KeySolver();
+            $commonKeys = $ks->getCommon($cores);
+
+            $keys = array();
+
+            foreach($commonKeys as $commonKey)
+            {
+                $key = KeyDatabaseHandler::selectIDBySystemBitting($system->getId(), $commonKey);
+
+                $keys[] = array(
+                    'bitting' => $commonKey,
+                    'key' => $key
+                );
+            }
+
+            return $keys;
+
+        }
+        catch(EntryNotFoundException $e)
+        {
+            throw new ValidationError(array('System or core stamps are invalid'));
+        }
     }
 }

@@ -214,4 +214,29 @@ class CoreDatabaseHandler extends DatabaseHandler
 
         return $s->getRowCount() === 1;
     }
+
+    /**
+     * @param string $building
+     * @param string $location
+     * @return Core[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectByLocation(string $building, string $location): array
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `CLIFF_Core`.*, `CLIFF_System`.`code` as `systemCode`, `CLIFF_System`.`name` as `systemName` 
+                  FROM `CLIFF_Core` INNER JOIN `CLIFF_System` ON `system` = `CLIFF_System`.`id` 
+                  WHERE `CLIFF_Core`.`id` IN 
+                  (SELECT `core` FROM `CLIFF_CoreLocation` WHERE `building` LIKE :building AND `location` LIKE :location)
+                  ORDER BY `systemCode`, `stamp`');
+
+        $s->bindParam('building', $building, DatabaseConnection::PARAM_STR);
+        $s->bindParam('location', $location, DatabaseConnection::PARAM_STR);
+        $s->execute();
+
+        $c->close();
+
+        return $s->fetchAll(DatabaseConnection::FETCH_CLASS, 'extensions\cliff\models\Core');
+    }
 }

@@ -38,6 +38,13 @@ class CoreController extends Controller
         $p1 = $this->request->next();
         $p2 = $this->request->next();
 
+        if($p1 !== NULL AND $p2 === 'locations') // Redirect to Location controller
+        {
+            $core = CoreOperator::get((int)$p1);
+            $clc = new CoreLocationController($core, $this->request);
+            return $clc->getResponse();
+        }
+
         if($this->request->method() === HTTPRequest::GET)
         {
             if($p1 === NULL)

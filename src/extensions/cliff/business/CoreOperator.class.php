@@ -18,8 +18,10 @@ use business\Operator;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use extensions\cliff\database\CoreDatabaseHandler;
+use extensions\cliff\database\CoreLocationDatabaseHandler;
 use extensions\cliff\database\KeyDatabaseHandler;
 use extensions\cliff\models\Core;
+use extensions\cliff\models\CoreLocation;
 use extensions\cliff\utilities\CoreBuilder;
 use extensions\cliff\utilities\KeySolver;
 use utilities\HistoryRecorder;
@@ -289,5 +291,93 @@ class CoreOperator extends Operator
         {
             throw new ValidationError(array('System or core stamps are invalid'));
         }
+    }
+
+    /**
+     * @param Core $core
+     * @param array $vals
+     * @return CoreLocation
+     * @throws EntryNotFoundException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function createLocation(Core $core, array $vals): CoreLocation
+    {
+        $errs = array();
+
+        if(strlen((string)$vals['building']) < 1)
+            $errs[] = "Building is required";
+
+        if(strlen((string)$vals['location']) < 1)
+            $errs[] = "Location is required";
+
+        if(!empty($errs))
+            throw new ValidationError($errs);
+
+        $location = CoreLocationDatabaseHandler::insert($core->getId(), (string)$vals['building'], (string)$vals['location'], (string)$vals['notes']);
+        HistoryRecorder::writeHistory('CLIFF_CoreLocation', HistoryRecorder::CREATE, $location->getId(), $location);
+
+        return $location;
+    }
+
+    /**
+     * @param Core $core
+     * @return array
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getLocations(Core $core): array
+    {
+        return CoreLocationDatabaseHandler::selectByCore($core->getId());
+    }
+
+    /**
+     * @param int $id
+     * @return CoreLocation
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getLocation(int $id): CoreLocation
+    {
+        return CoreLocationDatabaseHandler::selectById($id);
+    }
+
+    /**
+     * @param CoreLocation $location
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function deleteLocation(CoreLocation $location): bool
+    {
+        HistoryRecorder::writeHistory('CLIFF_CoreLocation', HistoryRecorder::DELETE, $location->getId(), $location);
+        return CoreLocationDatabaseHandler::delete($location->getId());
+    }
+
+    /**
+     * @param CoreLocation $cl
+     * @param array $vals
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws ValidationError
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function updateLocation(CoreLocation $cl, array $vals): bool
+    {
+        $errs = array();
+
+        if(strlen((string)$vals['building']) < 1)
+            $errs[] = "Building is required";
+
+        if(strlen((string)$vals['location']) < 1)
+            $errs[] = "Location is required";
+
+        if(!empty($errs))
+            throw new ValidationError($errs);
+
+        HistoryRecorder::writeHistory('CLIFF_CoreLocation', HistoryRecorder::MODIFY, $cl->getId(), $cl, $vals);
+        return CoreLocationDatabaseHandler::update($cl->getId(), (string)$vals['building'], (string)$vals['location'], (string)$vals['notes']);
     }
 }

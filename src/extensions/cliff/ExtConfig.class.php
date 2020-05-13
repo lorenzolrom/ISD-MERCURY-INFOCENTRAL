@@ -22,18 +22,23 @@ class ExtConfig
         'locksystems' => 'extensions\cliff\controllers\SystemController',
         'lockkeys' => 'extensions\cliff\controllers\KeyController',
         'lockcores' => 'extensions\cliff\controllers\CoreController',
-        'lockprocess' => 'extensions\cliff\controllers\ProcessController'
+        'lockprocess' => 'extensions\cliff\controllers\ProcessController',
+        'lockadvanced' => 'extensions\cliff\controllers\AdvancedController'
     );
 
     public const HISTORY_OBJECTS = array(
         'locksystems' => 'CLIFF_System',
         'lockkeys' => 'CLIFF_Key',
-        'lockcores' => 'CLIFF_Core'
+        'lockcores' => 'CLIFF_Core',
+        'lockkeyissue' => 'CLIFF_KeyIssue',
+        'lockcorelocation' => 'CLIFF_CoreLocation'
     );
 
     public const HISTORY_PERMISSIONS = array(
         'CLIFF_System' => 'cliff-r',
         'CLIFF_Key' => 'cliff-r',
-        'CLIFF_Core' => 'cliff-r'
+        'CLIFF_Core' => 'cliff-r',
+        'CLIFF_KeyIssue' => 'cliff-r',
+        'CLIFF_CoreLocation' => 'cliff-r'
     );
 }

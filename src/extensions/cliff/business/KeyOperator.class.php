@@ -18,7 +18,9 @@ use business\Operator;
 use exceptions\EntryNotFoundException;
 use exceptions\ValidationError;
 use extensions\cliff\database\KeyDatabaseHandler;
+use extensions\cliff\database\KeyIssueDatabaseHandler;
 use extensions\cliff\models\Key;
+use extensions\cliff\models\KeyIssue;
 use extensions\cliff\utilities\KeySequencer;
 use utilities\HistoryRecorder;
 
@@ -150,5 +152,84 @@ class KeyOperator extends Operator
     {
         $ks = new KeySequencer();
         return $ks->sequenceKeys((string)$vals['systemCode'], (string)$vals['stamp'], (string)$vals['type'], (string)$vals['keyway'], (string)$vals['c1'], (string)$vals['c2'], (string)$vals['c3'], (string)$vals['c4'], (string)$vals['c5'], (string)$vals['c6'], (string)$vals['c7'], (int)$vals['seqStart'], (int)$vals['seqEnd'], (int)$vals['padding']);
+    }
+
+    /**
+     * @param Key $key
+     * @param array $vals
+     * @return KeyIssue
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     * @throws ValidationError
+     */
+    public static function issueKey(Key $key, array $vals): KeyIssue
+    {
+        $errs = array();
+
+        // Validate serial not in use
+        if(!ctype_digit($vals['serial']))
+            $errs[] = "Serial must be an integer";
+        else if(KeyIssueDatabaseHandler::serialInUse($key->getId(), (int)$vals['serial']))
+            $errs[] = "Serial is in use";
+
+        if(strlen((string)$vals['issuedTo']) < 1)
+            $errs[] = "Issued-to is required";
+
+        if(!empty($errs))
+            throw new ValidationError($errs);
+
+        $issue = KeyIssueDatabaseHandler::insert($key->getId(), (int)$vals['serial'], (string)$vals['issuedTo']);
+        HistoryRecorder::writeHistory('CLIFF_KeyIssue', HistoryRecorder::CREATE, $issue->getId(), $issue);
+
+        return $issue;
+    }
+
+    /**
+     * @param Key $key
+     * @return Key[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getKeyIssues(Key $key): array
+    {
+        return KeyIssueDatabaseHandler::selectByKey($key->getId());
+    }
+
+    /**
+     * @param int $id
+     * @return KeyIssue
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getKeyIssue(int $id): KeyIssue
+    {
+        return KeyIssueDatabaseHandler::selectById($id);
+    }
+
+    /**
+     * @param KeyIssue $issue
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function deleteIssue(KeyIssue $issue): bool
+    {
+        HistoryRecorder::writeHistory('CLIFF_KeyIssue', HistoryRecorder::DELETE, $issue->getId(), $issue);
+        return KeyIssueDatabaseHandler::delete($issue->getId());
+    }
+
+    /**
+     * @param KeyIssue $issue
+     * @param string $issuedTo
+     * @return bool
+     * @throws EntryNotFoundException
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\SecurityException
+     */
+    public static function updateIssue(KeyIssue $issue, string $issuedTo): bool
+    {
+        HistoryRecorder::writeHistory('CLIFF_KeyIssue', HistoryRecorder::MODIFY, $issue->getId(), $issue, array('issuedTo' => $issuedTo));
+        return KeyIssueDatabaseHandler::update($issue->getId(), $issuedTo);
     }
 }

@@ -240,4 +240,25 @@ class KeyDatabaseHandler extends DatabaseHandler
 
         return $s->fetch();
     }
+
+    /**
+     * @param string $issuedTo
+     * @return Key[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectByIssuedTo(string $issuedTo): array
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `CLIFF_Key`.*, `CLIFF_System`.`code` as `systemCode`, `CLIFF_System`.`name` as `systemName`
+                FROM `CLIFF_Key` INNER JOIN `CLIFF_System` ON `system` = `CLIFF_System`.`id`
+                WHERE `CLIFF_Key`.`id` IN (SELECT `key` FROM `CLIFF_KeyIssue` WHERE `issuedTo` LIKE :issuedTo)
+                ORDER BY `systemCode`, `stamp`');
+        $s->bindParam('issuedTo', $issuedTo, DatabaseConnection::PARAM_STR);
+        $s->execute();
+
+        $c->close();
+
+        return $s->fetchAll(DatabaseConnection::FETCH_CLASS, 'extensions\cliff\models\Key');
+    }
 }

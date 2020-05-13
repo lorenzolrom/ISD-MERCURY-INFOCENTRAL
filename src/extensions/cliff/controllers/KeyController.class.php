@@ -38,6 +38,13 @@ class KeyController extends Controller
         $p1 = $this->request->next();
         $p2 = $this->request->next();
 
+        if($p1 !== NULL AND $p2 === 'issues') // Redirect to Issue controller
+        {
+            $key = KeyOperator::get((int)$p1);
+            $kic = new KeyIssueController($key, $this->request);
+            return $kic->getResponse();
+        }
+
         if($this->request->method() === HTTPRequest::GET)
         {
             if($p1 === NULL)

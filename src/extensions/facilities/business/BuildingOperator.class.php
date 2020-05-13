@@ -102,10 +102,12 @@ class BuildingOperator extends Operator
      */
     public static function deleteBuilding(Building $building): bool
     {
-        HistoryRecorder::writeHistory('FacilitiesCore_Building', HistoryRecorder::DELETE, $building->getId(), $building);
+        foreach(LocationOperator::getLocationsByBuilding($building) as $location)
+        {
+            LocationOperator::deleteLocation($location);
+        }
 
-        // Delete locations
-        LocationDatabaseHandler::deleteByBuilding($building->getId());
+        HistoryRecorder::writeHistory('FacilitiesCore_Building', HistoryRecorder::DELETE, $building->getId(), $building);
 
         BuildingDatabaseHandler::delete($building->getId());
 

@@ -129,10 +129,10 @@ class KeySolver
 
     /**
      * @param int $id
-     * @return array|null
+     * @return array
      * @throws \exceptions\DatabaseException
      */
-    function getCore(int $id): ?array
+    function getCore(int $id): array
     {
         try
         {
@@ -140,7 +140,7 @@ class KeySolver
             $pins = $core->getPinData();
 
             if(strlen($pins) === 0)
-                return NULL;
+                return array();
 
             $rawLines = explode("|", $pins);
             $core = array();
@@ -154,7 +154,7 @@ class KeySolver
         }
         catch(EntryNotFoundException $e)
         {
-            return NULL;
+            return array();
         }
     }
 

@@ -76,6 +76,28 @@ class KeyDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $systemID
+     * @return Key[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectBySystem(int $systemID): array
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `CLIFF_Key`.`id`, `system`, `stamp`, `bitting`, `type`, `keyway`, `notes`, 
+            `CLIFF_System`.`code` as `systemCode`, `CLIFF_System`.`name` as `systemName` FROM `CLIFF_Key` INNER JOIN 
+            `CLIFF_System` ON `system` = `CLIFF_System`.`id` WHERE `CLIFF_Key`.`system` = ?');
+
+        $s->bindParam(1, $systemID, DatabaseConnection::PARAM_INT);
+
+        $s->execute();
+
+        $c->close();
+
+        return $s->fetchAll(DatabaseConnection::FETCH_CLASS, 'extensions\cliff\models\Key');
+    }
+
+    /**
      * @param string $systemCode
      * @param string $stamp
      * @param string $bitting

@@ -138,6 +138,9 @@ class CoreOperator extends Operator
      */
     public static function delete(Core $core): bool
     {
+        foreach(self::getLocations($core) as $location)
+            self::deleteLocation($location);
+
         HistoryRecorder::writeHistory('CLIFF_Core', HistoryRecorder::DELETE, $core->getId(), $core);
         return CoreDatabaseHandler::delete($core->getId());
     }

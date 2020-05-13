@@ -16,6 +16,8 @@ namespace extensions\cliff\business;
 
 use business\Operator;
 use exceptions\ValidationError;
+use extensions\cliff\database\CoreDatabaseHandler;
+use extensions\cliff\database\KeyDatabaseHandler;
 use extensions\cliff\database\SystemDatabaseHandler;
 use extensions\cliff\models\System;
 use utilities\HistoryRecorder;
@@ -75,6 +77,14 @@ class SystemOperator extends Operator
      */
     public static function delete(System $system): bool
     {
+        // Delete cores
+        foreach(CoreDatabaseHandler::selectBySystem($system->getId()) as $core)
+            CoreOperator::delete($core);
+
+        // Delete keys
+        foreach(KeyDatabaseHandler::selectBySystem($system->getId()) as $key)
+            KeyOperator::delete($key);
+
         HistoryRecorder::writeHistory('CLIFF_System', HistoryRecorder::DELETE, $system->getId(), $system);
         return SystemDatabaseHandler::delete($system->getId());
     }

@@ -76,6 +76,28 @@ class CoreDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param int $system
+     * @return Core[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectBySystem(int $system): array
+    {
+        $c = new DatabaseConnection();
+
+        $s = $c->prepare('SELECT `CLIFF_Core`.`id`, `system`, `stamp`, `pinData`, `type`, `keyway`, `notes`, 
+            `CLIFF_System`.`code` as `systemCode`, `CLIFF_System`.`name` as `systemName` FROM `CLIFF_Core` INNER JOIN 
+            `CLIFF_System` ON `system` = `CLIFF_System`.`id` WHERE `CLIFF_Core`.`system` = ?');
+
+        $s->bindParam(1, $system, DatabaseConnection::PARAM_INT);
+
+        $s->execute();
+
+        $c->close();
+
+        return $s->fetchAll(DatabaseConnection::FETCH_CLASS, 'extensions\cliff\models\Core');
+    }
+
+    /**
      * @param string $systemCode
      * @param string $stamp
      * @param string $type

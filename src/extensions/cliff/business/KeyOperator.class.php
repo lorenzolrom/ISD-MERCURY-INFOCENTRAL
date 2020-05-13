@@ -136,6 +136,9 @@ class KeyOperator extends Operator
      */
     public static function delete(Key $key): bool
     {
+        foreach(KeyOperator::getKeyIssues($key) as $issue)
+            self::deleteIssue($issue);
+
         HistoryRecorder::writeHistory('CLIFF_Key', HistoryRecorder::DELETE, $key->getId(), $key);
         return KeyDatabaseHandler::delete($key->getId());
     }

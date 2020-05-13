@@ -27,9 +27,9 @@ class ExtConfig
     );
 
     public const HISTORY_OBJECTS = array(
-        'locksystems' => 'CLIFF_System',
-        'lockkeys' => 'CLIFF_Key',
-        'lockcores' => 'CLIFF_Core',
+        'locksystem' => 'CLIFF_System',
+        'lockkey' => 'CLIFF_Key',
+        'lockcore' => 'CLIFF_Core',
         'lockkeyissue' => 'CLIFF_KeyIssue',
         'lockcorelocation' => 'CLIFF_CoreLocation'
     );

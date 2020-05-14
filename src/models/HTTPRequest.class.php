@@ -30,18 +30,15 @@ class HTTPRequest
     private $method;
     private $uriParts;
     private $body;
-    private $key;
 
     /**
      * HTTPRequest constructor.
-     * @param Secret $key Requesting service's key
      * @param string $method HTTP request method
      * @param array $uriParts Route (after base URI) being requested
      * @param array|null $body
      */
-    public function __construct(Secret $key, string $method, array $uriParts, ?array $body = NULL)
+    public function __construct(string $method, array $uriParts, ?array $body = NULL)
     {
-        $this->key = $key;
         $this->method = $method;
         $this->body = $body;
         $this->uriParts = $uriParts;
@@ -53,14 +50,6 @@ class HTTPRequest
     public function method(): string
     {
         return $this->method;
-    }
-
-    /**
-     * @return array
-     */
-    public function getUriParts(): array
-    {
-        return $this->uriParts;
     }
 
     /**

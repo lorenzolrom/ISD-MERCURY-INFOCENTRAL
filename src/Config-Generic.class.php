@@ -26,6 +26,9 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
 
         'salt' => 'your_salt_here',
         'allowMultipleSessions' => FALSE,
+        'allowAccessWithoutSecret' => FALSE, // Set this to true to allow access without a Secret
+        // A valid session Token is required, and for user-less reads a valid Secret with the correct permissions
+        // will be required
 
         // Define extensions to be enabled
         'enabledExtensions' => array(

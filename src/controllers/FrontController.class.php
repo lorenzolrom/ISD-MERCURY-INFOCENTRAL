@@ -75,8 +75,9 @@ class FrontController
                     $method = HTTPRequest::GET;
             }
 
-            // Get secret
-            $key = self::currentSecret();
+            // Check for valid Secret if not allowing access without one
+            if(!\Config::OPTIONS['allowAccessWithoutSecret'])
+                self::currentSecret();
 
             // Remove baseURI
             $pos = strpos($_SERVER['REQUEST_URI'], \Config::OPTIONS['baseURI']);
@@ -92,7 +93,7 @@ class FrontController
             $reqURI = explode('/', $reqURI);
 
             // Create request
-            $request = new HTTPRequest($key, $method, $reqURI, self::getRequestBodyAsArray());
+            $request = new HTTPRequest($method, $reqURI, self::getRequestBodyAsArray());
 
             $response = ControllerFactory::getController($request)->getResponse();
 
@@ -138,6 +139,7 @@ class FrontController
 
         // Reply to the request
         header('Content-type: application/vnd.api+json');
+        header("Access-Control-Allow-Origin: *");
 
         // Request has been set
         if($response !== NULL)

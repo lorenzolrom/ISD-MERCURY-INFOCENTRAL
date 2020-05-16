@@ -28,7 +28,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
      * @param int $id
      * @return Application
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function selectById(int $id): Application
     {
@@ -50,7 +50,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
      * @param int $number
      * @return Application
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function selectByNumber(int $number): Application
     {
@@ -101,7 +101,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
      * @param string $vhost
      * @param array $status
      * @return Application[]
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function select(string $number = "%", string $name = "%", string $description = "%", string $ownerUsername = "%", $type = array(),
                                   $publicFacing = array(), $lifeExpectancy = array(), $dataVolume = array(), $authType = array(), string $port = "%",
@@ -179,7 +179,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
     /**
      * @param int $id
      * @return bool
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function doApplicationsReferenceHost(int $id): bool
     {
@@ -197,7 +197,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
     /**
      * @param int $id
      * @return bool
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function doApplicationsReferenceVHost(int $id): bool
     {
@@ -226,7 +226,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
      * @param string $port
      * @return Application
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function insert(int $number, string $name, string $description, int $owner, int $type, int $status,
                                   int $publicFacing, int $lifeExpectancy, int $dataVolume, int $authType,
@@ -273,7 +273,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
      * @param string $port
      * @return Application
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function update(int $id, string $name, string $description, int $owner, int $type, int $status,
                                   int $publicFacing, int $lifeExpectancy, int $dataVolume, int $authType,
@@ -307,7 +307,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
     /**
      * @param int $id
      * @return bool
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function delete(int $id): bool
     {
@@ -326,7 +326,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
      * @param int $id
      * @param string $type
      * @return Host[]
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function getHosts(int $id, string $type): array
     {
@@ -353,7 +353,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
     /**
      * @param int $id
      * @return VHost[]
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function getVHosts(int $id): array
     {
@@ -378,7 +378,7 @@ class ApplicationDatabaseHandler extends DatabaseHandler
 
     /**
      * @return int
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function nextNumber(): int
     {

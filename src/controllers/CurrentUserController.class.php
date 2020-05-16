@@ -20,12 +20,15 @@ use business\TokenOperator;
 use business\UserOperator;
 use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
+use exceptions\JWTException;
+use exceptions\LDAPException;
 use exceptions\SecurityException;
 use models\HTTPRequest;
 use models\HTTPResponse;
 use models\Secret;
 use models\Token;
 use models\User;
+use utilities\JWTHandler;
 
 class CurrentUserController extends Controller
 {
@@ -47,6 +50,19 @@ class CurrentUserController extends Controller
                 TokenOperator::validateToken($token);
 
                 return $token;
+            }
+            else if(isset($_SERVER['HTTP_JWT']))
+            {
+                // Get JWT and verify it is legitimate
+                $jwt = JWTHandler::currentToken();
+                JWTHandler::checkAuthenticity($jwt);
+
+                $sessionToken = JWTHandler::getPayload($jwt);
+
+                if(!isset($sessionToken['session']))
+                    throw new JWTException(JWTException::MESSAGES[JWTException::JWT_PAYLOAD_INVALID], JWTException::JWT_PAYLOAD_INVALID);
+
+                return TokenOperator::getToken($sessionToken['session']);
             }
         }
         catch (EntryNotFoundException $e){} // Handled below
@@ -159,10 +175,10 @@ class CurrentUserController extends Controller
 
     /**
      * @return HTTPResponse|null
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      * @throws EntryNotFoundException
      * @throws SecurityException
-     * @throws \exceptions\LDAPException
+     * @throws LDAPException
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -368,7 +384,7 @@ class CurrentUserController extends Controller
      * @return HTTPResponse
      * @throws DatabaseException
      * @throws SecurityException
-     * @throws \exceptions\LDAPException
+     * @throws LDAPException
      * @throws EntryNotFoundException
      */
     private function changePassword(): HTTPResponse
@@ -399,8 +415,8 @@ class CurrentUserController extends Controller
 
     /**
      * @return HTTPResponse
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
+     * @throws DatabaseException
+     * @throws SecurityException
      */
     private function getUserBulletins(): HTTPResponse
     {

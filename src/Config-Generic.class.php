@@ -29,6 +29,11 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
         'allowAccessWithoutSecret' => FALSE, // Set this to true to allow access without a Secret
         // A valid session Token is required, and for user-less reads a valid Secret with the correct permissions
         // will be required
+        'accessControlAllowAllOrigins' => FALSE, // This sets Access-Control-Allowed-Origins to '*'
+        'authenticationMethods' => array( // Defines allowed authentication methods, valid entries are 'default' and 'v2'
+            'default', // Default token-string authentication
+            'v2' // JWT
+        ),
 
         // Define extensions to be enabled
         'enabledExtensions' => array(

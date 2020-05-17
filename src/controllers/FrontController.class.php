@@ -59,6 +59,7 @@ class FrontController
         // Set headers
         header('Content-type: application/vnd.api+json');
         header('Access-Control-Allow-Headers: secret, token, jwt, content-type');
+        header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
 
         // If all origins are allowed, put them here
         if(Config::OPTIONS['accessControlAllowAllOrigins'])

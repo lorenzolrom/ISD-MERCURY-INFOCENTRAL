@@ -62,7 +62,9 @@ class CurrentUserController extends Controller
                 if(!isset($sessionToken['session']))
                     throw new JWTException(JWTException::MESSAGES[JWTException::JWT_PAYLOAD_INVALID], JWTException::JWT_PAYLOAD_INVALID);
 
-                return TokenOperator::getToken($sessionToken['session']);
+                $token = TokenOperator::getToken($sessionToken['session']);
+                TokenOperator::validateToken($token);
+                return $token;
             }
         }
         catch (EntryNotFoundException $e){} // Handled below

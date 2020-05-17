@@ -182,9 +182,13 @@ class AuthenticateController extends Controller
         $jwt = $base64UrlHeader . "." . $base64UrlPayload . "." . $signature;
 
         return new HTTPResponse(HTTPResponse::CREATED, array(
-            'access_token' => $jwt,
-            'token_type' => 'JWT',
-            'expires_in' => 3600
+            'username' => $user->getUsername(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'permissions' => $user->getPermissions(),
+            'accessToken' => $jwt,
+            'tokenType' => 'JWT',
+            'expiresIn' => 3600
         ));
     }
 }

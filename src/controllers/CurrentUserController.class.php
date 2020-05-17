@@ -410,7 +410,7 @@ class CurrentUserController extends Controller
         $errors = UserOperator::changePassword($user, $oldPassword, $newPassword, $confirmPassword);
 
         if(!empty($errors))
-            return new HTTPResponse(HTTPResponse::CONFLICT, $errors);
+            return new HTTPResponse(HTTPResponse::CONFLICT, array('errors' => $errors));
 
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }

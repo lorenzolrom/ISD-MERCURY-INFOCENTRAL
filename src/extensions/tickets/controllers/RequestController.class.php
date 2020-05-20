@@ -14,6 +14,9 @@
 namespace extensions\tickets\controllers;
 
 
+use exceptions\DatabaseException;
+use exceptions\SecurityException;
+use exceptions\ValidationError;
 use extensions\tickets\business\AttributeOperator;
 use extensions\tickets\business\TicketOperator;
 use extensions\tickets\business\WorkspaceOperator;
@@ -30,9 +33,9 @@ class RequestController extends Controller
     /**
      * @return HTTPResponse|null
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
-     * @throws \exceptions\ValidationError
+     * @throws DatabaseException
+     * @throws SecurityException
+     * @throws ValidationError
      */
     public function getResponse(): ?HTTPResponse
     {
@@ -44,7 +47,12 @@ class RequestController extends Controller
         {
             if($param == 'attributes')
             {
-                return $this->getAttributesOfType((string)$this->request->next());
+                $next = $this->request->next();
+
+                if($next === NULL)
+                    return $this->getAllAttributes();
+                else
+                    return $this->getAttributesOfType((string)$next);
             }
 
             if($param == 'open')
@@ -80,7 +88,7 @@ class RequestController extends Controller
     /**
      * @return HTTPResponse
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     private function getOpenRequests(): HTTPResponse
     {
@@ -90,7 +98,7 @@ class RequestController extends Controller
     /**
      * @return HTTPResponse
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     private function getClosedRequests(): HTTPResponse
     {
@@ -102,7 +110,7 @@ class RequestController extends Controller
      * @param int $number
      * @return HTTPResponse
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     private function getRequest(int $workspace, int $number): HTTPResponse
     {
@@ -128,7 +136,7 @@ class RequestController extends Controller
      * @param int $number
      * @return HTTPResponse
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     private function getUpdates(int $workspace, int $number): HTTPResponse
     {
@@ -150,9 +158,9 @@ class RequestController extends Controller
     /**
      * @return HTTPResponse
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
-     * @throws \exceptions\ValidationError
+     * @throws DatabaseException
+     * @throws SecurityException
+     * @throws ValidationError
      */
     private function newRequest(): HTTPResponse
     {
@@ -166,9 +174,9 @@ class RequestController extends Controller
      * @param int $request
      * @return HTTPResponse
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
-     * @throws \exceptions\ValidationError
+     * @throws DatabaseException
+     * @throws SecurityException
+     * @throws ValidationError
      */
     private function updateRequest(int $workspace, int $request): HTTPResponse
     {
@@ -183,7 +191,7 @@ class RequestController extends Controller
      * @param array $tickets
      * @return HTTPResponse
      * @throws EntryNotFoundException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     private function returnRequests(array $tickets): HTTPResponse
     {
@@ -211,7 +219,7 @@ class RequestController extends Controller
     /**
      * @param string $type
      * @return HTTPResponse
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      * @throws EntryNotFoundException
      */
     private function getAttributesOfType(string $type): HTTPResponse
@@ -226,6 +234,35 @@ class RequestController extends Controller
                 'code' => $attr->getCode(),
                 'name' => $attr->getName()
             );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * @return HTTPResponse
+     * @throws EntryNotFoundException
+     * @throws DatabaseException
+     */
+    private function getAllAttributes(): HTTPResponse
+    {
+        $data = array();
+
+        $attributeTypes = array('category', 'type');
+
+        foreach($attributeTypes as $type)
+        {
+            $data[$type] = array();
+
+            foreach (AttributeOperator::getAllOfType(WorkspaceOperator::getRequestPortal(), $type) as $attr)
+            {
+                $data[$type][] = array(
+                    'id' => $attr->getId(),
+                    'type' => $attr->getType(),
+                    'code' => $attr->getCode(),
+                    'name' => $attr->getName()
+                );
+            }
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);

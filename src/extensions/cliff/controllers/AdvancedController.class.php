@@ -4,7 +4,7 @@
  * part of LLR Services Group - www.llrweb.com/isd
  *
  * Mercury Application Platform
- * InfoScape
+ * InfoCentral
  *
  * User: lromero
  * Date: 5/13/2020

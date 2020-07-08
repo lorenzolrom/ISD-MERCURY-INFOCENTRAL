@@ -2,7 +2,7 @@
 CREATE TABLE `ITSM_Host` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `asset` int(11) unsigned NOT NULL,
-  `ipAddress` varchar(39) NOT NULL,
+  `ipAddress` varchar(255) NOT NULL,
   `macAddress` char(17) NOT NULL,
   `notes` text,
   `systemName` varchar(64) NOT NULL,

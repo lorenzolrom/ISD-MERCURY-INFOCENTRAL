@@ -1,13 +1,13 @@
 ![logo](docs/man_img/mercury_logo.png)
  
 # MERCURY Technical Manual  
-LLR Technologies & Associated Services  
-Information Systems Development
+LLR Information Systems Development  
+part of LLR Services Group - www.llrweb.com/isd  
 
-## About LLR Technologies
+## About LLR Information Systems Development
 
-LLR Technologies is an organization that provides technology services to organizations and individuals.  The Information
-Systems and Development division designs and implements software solutions to satisfy business needs.
+LLR Information Systems Development is a part of LLR Services Group, providing organizations and individuals with 
+customized information processing applications to satisfy information management and workflow needs.
 
 ## About Mercury
 

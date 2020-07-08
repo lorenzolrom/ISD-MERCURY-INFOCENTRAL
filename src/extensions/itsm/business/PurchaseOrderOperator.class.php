@@ -1,9 +1,10 @@
 <?php
 /**
- * LLR Technologies & Associated Services
- * Information Systems Development
+ * LLR Information Systems Development
+ * part of LLR Services Group - www.llrweb.com/isd
  *
- * INS WEBNOC API
+ * Mercury Application Platform
+ * InfoScape
  *
  * User: lromero
  * Date: 4/15/2019

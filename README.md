@@ -1,4 +1,4 @@
-![logo](docs/man_img/mercury_logo.png)
+![logo](docs/man_img/mercury_logo_dark.png)
  
 # MERCURY Technical Manual  
 LLR Information Systems Development  

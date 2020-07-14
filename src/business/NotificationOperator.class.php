@@ -136,7 +136,7 @@ class NotificationOperator extends Operator
         $sendCount = 0;
 
         // Send email?
-        if($email)
+        if($email AND \Config::OPTIONS['emailEnabled'])
         {
             $mailer = new Mailer($title, $message, $users);
             $mailer->send();

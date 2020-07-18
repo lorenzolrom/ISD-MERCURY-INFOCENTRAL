@@ -50,6 +50,7 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
         'ldapDomain' => 'DOMAIN', // Domain prefix for user accounts
         'ldapDomainDn' => 'dc=domain, dc=local',
         'ldapPrincipalSuffix' => '@domain.local',
+        'ldapTLSAttempts' => 10, // Number of times to attempt to startTLS with the domain controller
 
         'ldapUsername' => 'domain_admin',
         'ldapPassword' => 'domain_password',

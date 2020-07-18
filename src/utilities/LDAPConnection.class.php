@@ -83,7 +83,17 @@ class LDAPConnection
         if(!ldap_set_option($this->connection, LDAP_OPT_REFERRALS, 0))
             throw new LDAPException(LDAPException::MESSAGES[LDAPException::FAILED_DISABLE_REFERRALS], LDAPException::FAILED_DISABLE_REFERRALS);
 
-        if(!ldap_start_tls($this->connection))
+        $tlsStarted = FALSE;
+
+        for($i = 0; $i < \Config::OPTIONS['ldapTLSAttempts']; $i++)
+        {
+            $tlsStarted = @ldap_start_tls($this->connection);
+
+            if($tlsStarted)
+                break;
+        }
+
+        if(!$tlsStarted)
             throw new LDAPException(LDAPException::MESSAGES[LDAPException::FAILED_START_TLS], LDAPException::FAILED_START_TLS);
     }
 

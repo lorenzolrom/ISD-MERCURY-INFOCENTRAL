@@ -1,7 +1,7 @@
 <?php
 /**
- * LLR Information Systems Development
- * part of LLR Services Group - www.llrweb.com/isd
+ * LLR Technologies
+ * part of LLR Enterprises - www.llrweb.com/technologies
  *
  * Mercury Application Platform
  * InfoCentral
@@ -54,6 +54,9 @@ abstract class Config_Generic // THIS FILE MUST BE RENAMED Config.class.php
 
         'ldapUsername' => 'domain_admin',
         'ldapPassword' => 'domain_password',
+
+        'ldapDefaultRoles' => array(), // Default Roles to be given to LDAP users created by the system
+                                        // Must be an array of role *IDs* retrieved from database, or empty
 
         'emailEnabled' => FALSE,
         'emailHost' => 'ssl://email_server',

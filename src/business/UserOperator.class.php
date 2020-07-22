@@ -1,7 +1,7 @@
 <?php
 /**
- * LLR Information Systems Development
- * part of LLR Services Group - www.llrweb.com/isd
+ * LLR Technologies
+ * part of LLR Enterprises - www.llrweb.com/technologies
  *
  * Mercury Application Platform
  * InfoCentral
@@ -325,7 +325,7 @@ class UserOperator extends Operator
                         self::createUser(array(
                             'username' => strtolower($username),
                             'authType' => 'ldap',
-                            'roles' => array()
+                            'roles' => \Config::OPTIONS['ldapDefaultRoles']
                         ), TRUE);
 
                         // Re-attempt the sign-in

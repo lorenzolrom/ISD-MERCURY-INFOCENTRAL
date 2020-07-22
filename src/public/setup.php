@@ -1,8 +1,8 @@
 <h1>Random Values for New Mercury Installation:</h1>
 <?php
 /**
- * LLR Information Systems Development
- * part of LLR Services Group - www.llrweb.com/isd
+ * LLR Technologies
+ * part of LLR Enterprises - www.llrweb.com/technologies
  *
  * Mercury Application Platform
  * InfoCentral

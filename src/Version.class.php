@@ -1,7 +1,7 @@
 <?php
 /**
- * LLR Information Systems Development
- * part of LLR Services Group - www.llrweb.com/isd
+ * LLR Technologies
+ * part of LLR Enterprises - www.llrweb.com/technologies
  *
  * Mercury Application Platform
  * InfoCentral
@@ -15,5 +15,5 @@
 abstract class Version
 {
     const SOFTWARE_TITLE = "Mercury InfoCentral";
-    const CURRENT_VERSION = "4.2.2";
+    const CURRENT_VERSION = "4.2.3";
 }

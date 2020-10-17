@@ -18,6 +18,7 @@ namespace models;
 use business\NotificationOperator;
 use business\RoleOperator;
 use business\UserOperator;
+use database\PermissionDatabaseHandler;
 use exceptions\ValidationException;
 use utilities\Validator;
 
@@ -150,18 +151,7 @@ class User extends Model
      */
     public function getPermissions(): array
     {
-        $permissions = array();
-
-        foreach(RoleOperator::getUserRoles($this) as $role)
-        {
-            foreach($role->getPermissions() as $permission)
-            {
-                if(!in_array($permission->getCode(), $permissions))
-                    $permissions[] = $permission->getCode();
-            }
-        }
-
-        return $permissions;
+        return PermissionDatabaseHandler::selectPermissionsByUser($this->id);
     }
 
     /**

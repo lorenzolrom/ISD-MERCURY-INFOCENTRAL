@@ -195,4 +195,24 @@ class PermissionDatabaseHandler extends DatabaseHandler
 
         return $roles;
     }
+
+    /**
+     * Select all permission codes for the specified user
+     * in one query
+     * @param int $user ID of the user to check
+     * @return string[] List of all permission codes this user has
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectPermissionsByUser(int $user): array
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT DISTINCT `permission` FROM `Role_Permission` WHERE `role` IN (SELECT `role` FROM `User_Role` WHERE `user` = ?)');
+        $select->bindParam(1, $user, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0);
+    }
 }

@@ -2,7 +2,7 @@
 <?php
 /**
  * LLR Technologies
- * part of LLR Enterprises - www.llrweb.com/technologies
+ * part of LLR Enterprises - www.llrweb.com/tech
  *
  * Mercury Application Platform
  * InfoCentral

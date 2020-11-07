@@ -16,6 +16,9 @@ namespace extensions\itsm\models;
 
 
 use database\AttributeDatabaseHandler;
+use exceptions\DatabaseException;
+use exceptions\EntryNotFoundException;
+use extensions\itsm\business\WebServerOperator;
 use extensions\itsm\database\HostDatabaseHandler;
 use extensions\itsm\database\RegistrarDatabaseHandler;
 use extensions\itsm\database\VHostDatabaseHandler;
@@ -33,7 +36,7 @@ class VHost extends Model
         'SUBDOMAIN_TAKEN' => 'Subdomain already in use on domain',
         'NAME_LENGTH' => 'Name must be between 1 and 64 characters',
         'NAME_INVALID' => 'Name must consist of letters, numbers, -, and spaces only',
-        'HOST_INVALID' => 'Host I.P. address not found',
+        'HOST_INVALID' => 'Web Server Not Found',
         'REGISTRAR_INVALID' => 'Registrar not found',
         'STATUS' => 'Status is not valid',
         'RENEW COST' => 'Renew cost must be a non-negative number',
@@ -188,7 +191,7 @@ class VHost extends Model
      * @param string|null $domain
      * @return bool
      * @throws ValidationException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function validateSubDomain(?string $subdomain, ?string $domain): bool
     {
@@ -236,7 +239,7 @@ class VHost extends Model
      * @param string|null $hostIP
      * @return bool
      * @throws ValidationException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function validateHostIP(?string $hostIP): bool
     {
@@ -247,6 +250,18 @@ class VHost extends Model
         // host exists with IP
         if(!HostDatabaseHandler::isIPAddressInUse($hostIP))
             throw new ValidationException(self::MESSAGES['HOST_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
+        else
+            $host = HostDatabaseHandler::selectIdFromIPAddress($hostIP); // Get host ID from valid IP
+
+        // Server exists for host
+        try
+        {
+            WebServerOperator::get($host); // Attempt to get the web server from host ID
+        }
+        catch(EntryNotFoundException $e)
+        {
+            throw new ValidationException(self::MESSAGES['HOST_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
+        }
 
         return TRUE;
     }
@@ -255,7 +270,7 @@ class VHost extends Model
      * @param string|null $registrarCode
      * @return bool
      * @throws ValidationException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function validateRegistrarCode(?string $registrarCode): bool
     {
@@ -274,7 +289,7 @@ class VHost extends Model
      * @param string|null $statusCode
      * @return bool
      * @throws ValidationException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function validateStatusCode(?string $statusCode): bool
     {

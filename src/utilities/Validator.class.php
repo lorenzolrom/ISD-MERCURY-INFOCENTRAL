@@ -72,7 +72,7 @@ class Validator
     {
         return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domainName)
             AND preg_match("/^.{1,253}$/", $domainName)
-            AND preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domainName));
+            AND preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*\/$/", $domainName));
     }
 
     /**
@@ -84,6 +84,15 @@ class Validator
     {
         $d = \DateTime::createFromFormat($format, $date);
         return $d AND $d->format($format) == $date;
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public static function validUnixFilePath(string $path): bool
+    {
+        return preg_match('/^\/[A-Za-z-.\/]+$/', $path);
     }
 
     /**
@@ -188,6 +197,10 @@ class Validator
         // alnumdsp
         if(isset($rules['alnumdss']) AND !self::alnumDashSpacePeriodOnly($value))
             throw new ValidationException("{$rules['name']} must consist of letters, numbers, '-', '.', and spaces only", ValidationException::VALUE_IS_NOT_VALID);
+
+        // unixpath
+        if(isset($rules['unixpath']) AND !self::validUnixFilePath($value))
+            throw new ValidationException("{$rules['name']} must be a valid UNIX path", ValidationException::VALUE_IS_NOT_VALID);
 
         return TRUE;
     }

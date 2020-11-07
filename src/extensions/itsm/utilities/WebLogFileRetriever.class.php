@@ -32,7 +32,7 @@ class WebLogFileRetriever
     public static function getLogFileList(string $path): array
     {
         $logs = array('access' => array(), 'error' => array());
-
+        
         if(!self::validPath($path) OR !is_dir($path))
             return $logs;
 

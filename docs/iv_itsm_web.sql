@@ -1,3 +1,11 @@
+-- WEB SERVER
+CREATE TABLE `ITSM_WebServer` (
+    `host` int(11) unsigned NOT NULL PRIMARY KEY,
+    `webroot` TEXT NOT NULL,
+    `logpath` TEXT NOT NULL,
+    CONSTRAINT `ITSM_WebServer_ibfk_1` FOREIGN KEY (`host`) REFERENCES `ITSM_Host`(`id`) ON UPDATE CASCADE
+);
+
 -- REGISTRAR
 CREATE TABLE `ITSM_Registrar` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -28,7 +36,7 @@ CREATE TABLE `ITSM_VHost` (
   KEY `host` (`host`),
   KEY `registrar` (`registrar`),
   KEY `status` (`status`),
-  CONSTRAINT `ITSM_VHost_ibfk_1` FOREIGN KEY (`host`) REFERENCES `ITSM_Host` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `ITSM_VHost_ibfk_1` FOREIGN KEY (`host`) REFERENCES `ITSM_WebServer` (`host`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_VHost_ibfk_2` FOREIGN KEY (`registrar`) REFERENCES `ITSM_Registrar` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `ITSM_VHost_ibfk_3` FOREIGN KEY (`status`) REFERENCES `Attribute` (`id`) ON UPDATE CASCADE
 );
@@ -62,4 +70,6 @@ INSERT INTO `Permission` (`code`) VALUES
   ('itsm_web-registrars-w'),
   ('itsm_web-vhosts-r'),
   ('itsm_web-vhosts-w'),
-  ('itsm_weblogs');
+  ('itsm_weblogs'),
+  ('itsm_web-servers-r'),
+  ('itsm_web-servers-w');

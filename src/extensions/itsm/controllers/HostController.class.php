@@ -37,7 +37,7 @@ class HostController extends Controller
      */
     public function getResponse(): ?HTTPResponse
     {
-        CurrentUserController::validatePermission(array('itsm_devices-hosts-r', 'itsm_ait-apps-w'));
+        CurrentUserController::validatePermission(array('itsm_devices-hosts-r', 'itsm_ait-apps-w', 'itsm_web-servers-w'));
 
         $param = $this->request->next();
 

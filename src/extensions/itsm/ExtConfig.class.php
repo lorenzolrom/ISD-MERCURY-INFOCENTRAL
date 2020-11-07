@@ -42,6 +42,9 @@ class ExtConfig
 
         // DHCP Logs
         'dhcplogs' => 'extensions\itsm\controllers\DHCPLogController',
+
+        // Web Servers
+        'webservers' => 'extensions\itsm\controllers\WebServerController'
     );
 
     public const OPTIONS = array(
@@ -67,6 +70,7 @@ class ExtConfig
         'application' => 'ITSM_Application',
         'purchaseorder' => 'ITSM_PurchaseOrder',
         'discardorder' => 'ITSM_DiscardOrder',
+        'webserver' => 'ITSM_WebServer'
     );
 
     public const HISTORY_PERMISSIONS = array(
@@ -82,5 +86,6 @@ class ExtConfig
         'ITSM_HostCategory' => 'itsmmonitor-hosts-w',
         'ITSM_PurchaseOrder' => 'itsm_inventory-purchaseorders-r',
         'ITSM_DiscardOrder' => 'itsm_inventory-discards-r',
+        'ITSM_WebServer' => 'itsm_web-servers-r'
     );
 }

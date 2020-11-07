@@ -92,7 +92,7 @@ class Validator
      */
     public static function validUnixFilePath(string $path): bool
     {
-        return preg_match('/^\/[A-Za-z-.\/]+$/', $path);
+        return preg_match('/^\/[A-Za-z0-9-.\/]+$/', $path);
     }
 
     /**

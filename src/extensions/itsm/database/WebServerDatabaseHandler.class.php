@@ -94,18 +94,20 @@ class WebServerDatabaseHandler extends DatabaseHandler
      * @param int $host
      * @param string $webroot
      * @param string $logpath
+     * @param string $confpath
      * @return WebServer
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(int $host, string $webroot, string $logpath): WebServer
+    public static function insert(int $host, string $webroot, string $logpath, string $confpath): WebServer
     {
         $c = new DatabaseConnection();
 
-        $i = $c->prepare('INSERT INTO `ITSM_WebServer` VALUES (:host, :webroot, :logpath)');
+        $i = $c->prepare('INSERT INTO `ITSM_WebServer` VALUES (:host, :webroot, :logpath, :confpath)');
         $i->bindParam('host', $host, DatabaseConnection::PARAM_INT);
         $i->bindParam('webroot', $webroot, DatabaseConnection::PARAM_STR);
         $i->bindParam('logpath', $logpath, DatabaseConnection::PARAM_STR);
+        $i->bindParam('confpath', $confpath, DatabaseConnection::PARAM_STR);
         $i->execute();
 
         $c->close();
@@ -120,13 +122,14 @@ class WebServerDatabaseHandler extends DatabaseHandler
      * @return bool
      * @throws \exceptions\DatabaseException
      */
-    public static function update(int $host, string $webroot, string $logpath): bool
+    public static function update(int $host, string $webroot, string $logpath, string $confpath): bool
     {
         $c = new DatabaseConnection();
 
-        $u = $c->prepare('UPDATE `ITSM_WebServer` SET `webroot` = :webroot, `logpath` = :logpath WHERE `host` = :host');
+        $u = $c->prepare('UPDATE `ITSM_WebServer` SET `webroot` = :webroot, `logpath` = :logpath, `confpath` = :confpath WHERE `host` = :host');
         $u->bindParam('webroot', $webroot, DatabaseConnection::PARAM_STR);
         $u->bindParam('logpath', $logpath, DatabaseConnection::PARAM_STR);
+        $u->bindParam('confpath', $confpath, DatabaseConnection::PARAM_STR);
         $u->bindParam('host', $host, DatabaseConnection::PARAM_INT);
         $u->execute();
 

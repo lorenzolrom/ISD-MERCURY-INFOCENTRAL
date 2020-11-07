@@ -3,6 +3,7 @@ CREATE TABLE `ITSM_WebServer` (
     `host` int(11) unsigned NOT NULL PRIMARY KEY,
     `webroot` TEXT NOT NULL,
     `logpath` TEXT NOT NULL,
+    `confpath` TEXT NOT NULL,
     CONSTRAINT `ITSM_WebServer_ibfk_1` FOREIGN KEY (`host`) REFERENCES `ITSM_Host`(`id`) ON UPDATE CASCADE
 );
 

@@ -23,9 +23,17 @@ class WebServer extends Model
         'null' => FALSE
     );
 
+    private const CONFPATH_RULES = array(
+        'name' => 'Configuration Path',
+        'unixpath' => TRUE,
+        'lower' => 1,
+        'null' => FALSE
+    );
+
     public $host; // INT, id of the Host this WebServer is running on
     public $webroot; // TEXT, the absolute path on the remote server that contains all site directories
     public $logpath; // TEXT, the absolute path on the remote server that contains all site logs
+    public $confpath; // TEXT, the absolute path on the remote server that contains all apache site configurations
 
     // Variables from Host table that will be included from query join, immutable
     public $ipAddress; // I.P. address of remote server
@@ -53,6 +61,14 @@ class WebServer extends Model
     public function getLogpath(): string
     {
         return $this->logpath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfpath(): string
+    {
+        return $this->confpath;
     }
 
     /**
@@ -91,5 +107,16 @@ class WebServer extends Model
     public static function validateLogpath(?string $val): bool
     {
         return Validator::validate(self::LOGPATH_RULES, $val);
+    }
+
+    /**
+     * @param string|null $val
+     * @return bool
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\ValidationException
+     */
+    public static function validateConfpath(?string $val): bool
+    {
+        return Validator::validate(self::CONFPATH_RULES, $val);
     }
 }

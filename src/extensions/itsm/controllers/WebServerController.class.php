@@ -14,8 +14,8 @@ use models\HTTPResponse;
 
 class WebServerController extends Controller
 {
-    private const INSERT_FIELDS = array('host', 'webroot', 'logpath');
-    private const UPDATE_FIELDS = array('webroot', 'logpath');
+    private const INSERT_FIELDS = array('host', 'webroot', 'logpath', 'confpath');
+    private const UPDATE_FIELDS = array('webroot', 'logpath', 'confpath');
     private const SEARCH_FIELDS = array('ipAddress', 'systemName');
 
     /**

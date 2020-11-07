@@ -33,7 +33,7 @@ class WebServerOperator extends Operator
         if(!HostDatabaseHandler::selectIPAndNameById((int)$vals['host']))
             throw new ValidationError(array('Host does not exist'));
 
-        $webServer = WebServerDatabaseHandler::insert((int)$vals['host'], $vals['webroot'], $vals['logpath']);
+        $webServer = WebServerDatabaseHandler::insert((int)$vals['host'], $vals['webroot'], $vals['logpath'], $vals['confpath']);
 
         HistoryRecorder::writeHistory('ITSM_WebServer', HistoryRecorder::CREATE, $webServer->getHost(), $webServer);
         return array('host' => $webServer->getHost());
@@ -57,7 +57,7 @@ class WebServerOperator extends Operator
             throw new ValidationError(array('Host cannot be changed, delete and re-create on different host'));
 
         HistoryRecorder::writeHistory('ITSM_WebServer', HistoryRecorder::MODIFY, $ws->getHost(), $ws, $vals);
-        return WebServerDatabaseHandler::update($ws->getHost(), $vals['webroot'], $vals['logpath']);
+        return WebServerDatabaseHandler::update($ws->getHost(), $vals['webroot'], $vals['logpath'], $vals['confpath']);
     }
 
     /**

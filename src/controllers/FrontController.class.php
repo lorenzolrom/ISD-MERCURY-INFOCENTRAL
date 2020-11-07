@@ -146,6 +146,15 @@ class FrontController
         {
             $response = new HTTPResponse(HTTPResponse::CONFLICT, array('errors' => $e->getErrors()));
         }
+        catch(DatabaseException $e)
+        {
+            $message = $e->getPrevious()->getMessage();
+
+            if(strpos($message, 'delete or update a parent row')) // If this is caused by a foreign constraing issue
+                $response = new HTTPResponse(HTTPResponse::CONFLICT, array('errors' => array(EntryInUseException::MESSAGES[EntryInUseException::ENTRY_IN_USE])));
+            else
+                $response = new HTTPResponse(HTTPResponse::INTERNAL_SERVER_ERROR, array('errors' => array($e->getMessage())));
+        }
         catch(Exception $e)
         {
             $response = new HTTPResponse(HTTPResponse::INTERNAL_SERVER_ERROR, array('errors' => array($e->getMessage())));

@@ -85,11 +85,11 @@ class VHostOperator extends Operator
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public static function createVHost(?string $subdomain, ?string $domain, ?string $name, ?string $hostIP,
+    public static function createVHost(?string $subdomain, ?string $domain, ?string $name, ?string $systemName,
                                  ?string $registrarCode, ?string $statusCode, ?string $renewCost, ?string $registerDate,
                                  ?string $expireDate, ?string $notes,  ?string $webRoot, ?string $logPath): array
     {
-        $errors = self::validateSubmission($subdomain, $domain, $name, $hostIP, $registrarCode, $statusCode, $renewCost,
+        $errors = self::validateSubmission($subdomain, $domain, $name, $systemName, $registrarCode, $statusCode, $renewCost,
             $registerDate, $expireDate);
 
         if(!empty($errors))
@@ -107,8 +107,8 @@ class VHostOperator extends Operator
         // Status code
         $status = AttributeOperator::idFromCode('itsm', 'wdns', $statusCode);
 
-        // Host from IP
-        $host = HostDatabaseHandler::selectIdFromIPAddress($hostIP);
+        // Host from system name
+        $host = HostDatabaseHandler::selectIdFromSystemName($systemName);
 
         // Registrar
         $registrar = RegistrarDatabaseHandler::selectIdByCode($registrarCode);
@@ -138,7 +138,7 @@ class VHostOperator extends Operator
      * @param string|null $subdomain
      * @param string|null $domain
      * @param string|null $name
-     * @param string|null $hostIP
+     * @param string|null $systemName
      * @param string|null $registrarCode
      * @param string|null $statusCode
      * @param string|null $renewCost
@@ -152,11 +152,11 @@ class VHostOperator extends Operator
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    public static function updateVHost(VHost $vhost, ?string $subdomain, ?string $domain, ?string $name, ?string $hostIP,
+    public static function updateVHost(VHost $vhost, ?string $subdomain, ?string $domain, ?string $name, ?string $systemName,
                                         ?string $registrarCode, ?string $statusCode, ?string $renewCost, ?string $registerDate,
                                         ?string $expireDate, ?string $notes, ?string $webRoot, ?string $logPath): array
     {
-        $errors = self::validateSubmission($subdomain, $domain, $name, $hostIP, $registrarCode, $statusCode, $renewCost,
+        $errors = self::validateSubmission($subdomain, $domain, $name, $systemName, $registrarCode, $statusCode, $renewCost,
             $registerDate, $expireDate, $vhost);
 
         if(!empty($errors))
@@ -174,8 +174,8 @@ class VHostOperator extends Operator
         // Status code
         $status = AttributeOperator::idFromCode('itsm', 'wdns', $statusCode);
 
-        // Host from IP
-        $host = HostDatabaseHandler::selectIdFromIPAddress($hostIP);
+        // Host from systme name
+        $host = HostDatabaseHandler::selectIdFromSystemName($systemName);
 
         // Registrar
         $registrar = RegistrarDatabaseHandler::selectIdByCode($registrarCode);
@@ -234,7 +234,7 @@ class VHostOperator extends Operator
      * @param string|null $subdomain
      * @param string|null $domain
      * @param string|null $name
-     * @param string|null $hostIP
+     * @param string|null $systemName
      * @param string|null $registrarCode
      * @param string|null $statusCode
      * @param string|null $renewCost
@@ -244,7 +244,7 @@ class VHostOperator extends Operator
      * @return array
      * @throws \exceptions\DatabaseException
      */
-    private static function validateSubmission(?string $subdomain, ?string $domain, ?string $name, ?string $hostIP,
+    private static function validateSubmission(?string $subdomain, ?string $domain, ?string $name, ?string $systemName,
                                                ?string $registrarCode, ?string $statusCode, ?string $renewCost,
                                                ?string $registerDate, ?string $expireDate, ?VHost $vhost = NULL): array
     {
@@ -265,8 +265,8 @@ class VHostOperator extends Operator
         try{VHost::validateName($name);}
         catch(ValidationException $e){$errors[] = $e->getMessage();}
 
-        // host IP
-        try{VHost::validateHostIP($hostIP);}
+        // server hostname
+        try{VHost::validateHostSystemName($systemName);}
         catch(ValidationException $e){$errors[] = $e->getMessage();}
 
         // status code

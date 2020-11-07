@@ -16,12 +16,12 @@ namespace extensions\itsm\controllers;
 
 
 use business\AttributeOperator;
-use extensions\itsm\business\HostOperator;
 use extensions\itsm\business\RegistrarOperator;
 use extensions\itsm\business\VHostOperator;
 use controllers\Controller;
 use controllers\CurrentUserController;
 use exceptions\EntryNotFoundException;
+use extensions\itsm\business\WebServerOperator;
 use models\HTTPRequest;
 use models\HTTPResponse;
 use extensions\itsm\utilities\WebLogFileRetriever;
@@ -99,6 +99,7 @@ class VHostController extends Controller
     private function getById(string $param): HTTPResponse
     {
         $vhost = VHostOperator::getVHost((int)$param);
+        $server = WebServerOperator::get($vhost->getHost());
 
         $data = array(
             'id' => $vhost->getId(),
@@ -106,7 +107,8 @@ class VHostController extends Controller
             'domain' => $vhost->getDomain(),
             'name' => $vhost->getName(),
             'host' => $vhost->getHost(),
-            'ipAddress' => HostOperator::getIPAddressById($vhost->getHost()),
+            'systemName' => $server->getSystemName(),
+            'ipAddress' => $server->getIpAddress(),
             'registrar' => $vhost->getRegistrar(),
             'registrarCode' => RegistrarOperator::codeFromId($vhost->getRegistrar()),
             'registrarName' => RegistrarOperator::nameFromId($vhost->getRegistrar()),
@@ -166,6 +168,7 @@ class VHostController extends Controller
 
         foreach ($vhosts as $vhost)
         {
+            $ws = WebServerOperator::get($vhost->getHost());
             $results[] = array(
                 'id' => $vhost->getId(),
                 'subdomain' => $vhost->getSubdomain(),
@@ -176,7 +179,7 @@ class VHostController extends Controller
                 'status' => AttributeOperator::codeFromId($vhost->getStatus()),
                 'statusName' => AttributeOperator::nameFromId($vhost->getStatus()),
                 'host' => $vhost->getHost(),
-                'hostName' => HostOperator::getDisplayNameById($vhost->getHost())
+                'systemName' => $ws->getSystemName()
             );
         }
 

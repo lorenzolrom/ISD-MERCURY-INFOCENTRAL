@@ -71,8 +71,8 @@ class Validator
     public static function validDomainName(string $domainName): bool
     {
         return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domainName)
-            AND preg_match("/^.{1,253}$/", $domainName)
-            AND preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*\/$/", $domainName));
+            && preg_match("/^.{1,253}$/", $domainName)
+            && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domainName));
     }
 
     /**

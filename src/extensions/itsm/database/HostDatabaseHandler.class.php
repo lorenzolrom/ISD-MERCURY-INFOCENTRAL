@@ -210,6 +210,24 @@ class HostDatabaseHandler extends DatabaseHandler
     }
 
     /**
+     * @param string $systemName
+     * @return int|null
+     * @throws \exceptions\DatabaseException
+     */
+    public static function selectIdFromSystemName(string $systemName): ?int
+    {
+        $handler = new DatabaseConnection();
+
+        $select = $handler->prepare('SELECT `id` FROM `ITSM_Host` WHERE `systemName` = ? LIMIT 1');
+        $select->bindParam(1, $systemName, DatabaseConnection::PARAM_STR);
+        $select->execute();
+
+        $handler->close();
+
+        return $select->getRowCount() === 1 ? $select->fetchColumn() : NULL;
+    }
+
+    /**
      * @param string $ipAddress
      * @return bool
      * @throws \exceptions\DatabaseException

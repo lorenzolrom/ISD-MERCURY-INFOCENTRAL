@@ -236,27 +236,27 @@ class VHost extends Model
     }
 
     /**
-     * @param string|null $hostIP
+     * Validates if the supplied system name is a valid web server
+     * @param string|null $systemName
      * @return bool
-     * @throws ValidationException
      * @throws DatabaseException
+     * @throws ValidationException
      */
-    public static function validateHostIP(?string $hostIP): bool
+    public static function validateHostSystemName(?string $systemName): bool
     {
         // not null
-        if($hostIP === NULL)
+        if($systemName === NULL)
             throw new ValidationException(self::MESSAGES['HOST_INVALID'], ValidationException::VALUE_IS_NULL);
 
-        // host exists with IP
-        if(!HostDatabaseHandler::isIPAddressInUse($hostIP))
-            throw new ValidationException(self::MESSAGES['HOST_INVALID'], ValidationException::VALUE_IS_NOT_VALID);
-        else
-            $host = HostDatabaseHandler::selectIdFromIPAddress($hostIP); // Get host ID from valid IP
+        // Check if Host ID exists for system name
+        $hostId = HostDatabaseHandler::selectIdFromSystemName($systemName);
 
-        // Server exists for host
+        if($hostId === NULL)
+            throw new ValidationException(self::MESSAGES['HOST_INVALID'], ValidationException::VALUE_IS_NULL);
+
         try
         {
-            WebServerOperator::get($host); // Attempt to get the web server from host ID
+            WebServerOperator::get($hostId);
         }
         catch(EntryNotFoundException $e)
         {

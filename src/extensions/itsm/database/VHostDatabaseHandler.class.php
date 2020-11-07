@@ -60,7 +60,7 @@ class VHostDatabaseHandler extends DatabaseHandler
                                   string $registrarCode = "%", $status = array()): array
     {
         $query = "SELECT id FROM ITSM_VHost WHERE domain LIKE :domain AND subdomain LIKE :subdomain AND name LIKE :name 
-                            AND (host IN (SELECT id FROM ITSM_Host WHERE asset IN (SELECT id FROM ITSM_Asset WHERE assetTag LIKE :host) OR host IN(SELECT `id` FROM `ITSM_Host` WHERE `ipAddress` LIKE :host)) 
+                            AND (host IN (SELECT id FROM ITSM_Host WHERE asset IN (SELECT id FROM ITSM_Asset WHERE assetTag LIKE :host) OR host IN(SELECT `id` FROM `ITSM_Host` WHERE `ipAddress` LIKE :host) OR host IN(SELECT `id` FROM `ITSM_Host` WHERE `systemName` LIKE :host)) 
                             AND registrar IN (SELECT id FROM ITSM_Registrar WHERE code LIKE :registrarCode))";
 
         // Add status filter, if it is supplied

@@ -27,7 +27,7 @@ use models\HTTPResponse;
 class ApplicationController extends Controller
 {
     const FIELDS = array('number', 'name', 'description', 'owner', 'type', 'publicFacing', 'lifeExpectancy',
-        'dataVolume', 'authType', 'port', 'host', 'vhost', 'status', 'webHosts', 'appHosts', 'dataHosts', 'vHosts');
+        'dataVolume', 'authType', 'port', 'host', 'vhost', 'status', 'appHosts', 'dataHosts', 'vHosts');
 
     /**
      * @return HTTPResponse|null
@@ -111,7 +111,6 @@ class ApplicationController extends Controller
             'authTypeName' => AttributeOperator::nameFromId($application->getAuthType()),
             'port' => $application->getPort(),
             'appHosts' => array(),
-            'webHosts' => array(),
             'dataHosts' => array(),
             'vHosts' => array()
         );
@@ -120,16 +119,6 @@ class ApplicationController extends Controller
         foreach(ApplicationOperator::getAppHosts($application) as $host)
         {
             $data['appHosts'][] = array(
-                'id' => $host->getId(),
-                'systemName' => $host->getSystemName(),
-                'ipAddress' => $host->getIpAddress()
-            );
-        }
-
-        // Get web hosts
-        foreach(ApplicationOperator::getWebHosts($application) as $host)
-        {
-            $data['webHosts'][] = array(
                 'id' => $host->getId(),
                 'systemName' => $host->getSystemName(),
                 'ipAddress' => $host->getIpAddress()

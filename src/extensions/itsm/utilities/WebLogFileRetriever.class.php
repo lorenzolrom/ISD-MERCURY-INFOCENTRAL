@@ -14,7 +14,9 @@
 
 namespace extensions\itsm\utilities;
 
+use extensions\itsm\business\WebServerOperator;
 use extensions\itsm\ExtConfig;
+use extensions\itsm\models\VHost;
 
 /**
  * Class WebLogFileRetriever
@@ -84,5 +86,26 @@ class WebLogFileRetriever
         }
 
         return FALSE;
+    }
+
+    /**
+     * Retrieve the logs from remote servers using information about the VHost's host
+     * @param VHost $vHost
+     * @throws \exceptions\DatabaseException
+     * @throws \exceptions\EntryNotFoundException
+     */
+    public static function _getLogFileList(VHost $vHost)
+    {
+        // Retrieve the host of the website
+        $server = WebServerOperator::get($vHost->getHost());
+        $remoteAddress = $server->getIpAddress();
+
+        // TODO SSH into server using a shared key
+
+        // TODO append vhost logpath to server's logpath
+        // Remove trailing / if present from server logpath
+        // Add leading /, if not present, to vhost logpath
+        // Remote the server logpath if it was included in the vhost
+        // pull the list of log files
     }
 }

@@ -93,9 +93,9 @@ class VHost extends Model
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getHost(): int
+    public function getHost(): ?int
     {
         return $this->host;
     }

@@ -55,7 +55,7 @@ class VHostOperator extends Operator
     public static function search(string $domain = "%", string $subdomain = "%", string $name = "%", string $host = "%",
                                   string $registrarCode = "%", $status = array()): array
     {
-        return VHostDatabaseHandler::select($domain, $subdomain, $name, $host, $registrarCode, $status);
+        return VHostDatabaseHandler::select($domain, $subdomain, $name, trim($host), $registrarCode, $status);
     }
 
     /**
@@ -107,8 +107,13 @@ class VHostOperator extends Operator
         // Status code
         $status = AttributeOperator::idFromCode('itsm', 'wdns', $statusCode);
 
-        // Host from system name
-        $host = HostDatabaseHandler::selectIdFromSystemName($systemName);
+        $host = NULL;
+
+        if($statusCode !== 'expi') // If vhost is not expired
+        {
+            // Host from system name
+            $host = HostDatabaseHandler::selectIdFromSystemName($systemName);
+        }
 
         // Registrar
         $registrar = RegistrarDatabaseHandler::selectIdByCode($registrarCode);
@@ -128,7 +133,7 @@ class VHostOperator extends Operator
             'expireDate' => $expireDate,
             'webRoot' => $webRoot,
             'logPath' => $logPath
-        ));
+        ), array('host'));
 
         return array('id' => $vhost->getId());
     }
@@ -174,8 +179,13 @@ class VHostOperator extends Operator
         // Status code
         $status = AttributeOperator::idFromCode('itsm', 'wdns', $statusCode);
 
-        // Host from systme name
-        $host = HostDatabaseHandler::selectIdFromSystemName($systemName);
+        $host = NULL;
+
+        if($statusCode !== 'expi') // If vhost is not expired
+        {
+            // Host from system name
+            $host = HostDatabaseHandler::selectIdFromSystemName($systemName);
+        }
 
         // Registrar
         $registrar = RegistrarDatabaseHandler::selectIdByCode($registrarCode);
@@ -193,7 +203,7 @@ class VHostOperator extends Operator
             'expireDate' => $expireDate,
             'webRoot' => $webRoot,
             'logPath' => $logPath
-        ));
+        ), array('host'));
 
         $vhost = VHostDatabaseHandler::update($vhost->getId(), $domain, $subdomain, $name, $host, $registrar, $status, (float)$renewCost, (string)$notes, $registerDate, $expireDate, $webRoot, $logPath);
 
@@ -265,13 +275,16 @@ class VHostOperator extends Operator
         try{VHost::validateName($name);}
         catch(ValidationException $e){$errors[] = $e->getMessage();}
 
-        // server hostname
-        try{VHost::validateHostSystemName($systemName);}
-        catch(ValidationException $e){$errors[] = $e->getMessage();}
-
         // status code
         try{VHost::validateStatusCode($statusCode);}
         catch(ValidationException $e){$errors[] = $e->getMessage();}
+
+        // server hostname
+        if($statusCode !== 'expi') // Skip this validation if EXPIred
+        {
+            try{VHost::validateHostSystemName($systemName);}
+            catch(ValidationException $e){$errors[] = $e->getMessage();}
+        }
 
         // renew cost
         try{VHost::validateRenewCost($renewCost);}

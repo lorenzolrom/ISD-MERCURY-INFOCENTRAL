@@ -485,6 +485,18 @@ class TicketOperator extends Operator
     }
 
     /**
+     * @param Workspace $w
+     * @param int $month
+     * @param int $year
+     * @return Ticket[]
+     * @throws \exceptions\DatabaseException
+     */
+    public static function getTicketsScheduledForMonth(Workspace $w, int $month, int $year): array
+    {
+        return TicketDatabaseHandler::selectByWorkspaceScheduledMonth($w->getId(), $month, $year);
+    }
+
+    /**
      * @param Ticket $ticket
      * @param array $assignees This should be array of strings containing team ID or "team ID"-"user ID"
      * @param bool $deleteExisting

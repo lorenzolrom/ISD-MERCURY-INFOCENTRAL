@@ -128,16 +128,6 @@ class ApplicationOperator extends Operator
      * @return Host[]
      * @throws \exceptions\DatabaseException
      */
-    public static function getWebHosts(Application $application): array
-    {
-        return ApplicationDatabaseHandler::getHosts($application->getId(), 'webh');
-    }
-
-    /**
-     * @param Application $application
-     * @return Host[]
-     * @throws \exceptions\DatabaseException
-     */
     public static function getDataHosts(Application $application): array
     {
         return ApplicationDatabaseHandler::getHosts($application->getId(), 'data');
@@ -179,22 +169,18 @@ class ApplicationOperator extends Operator
 
         if($vals['dataHosts'] === NULL)
             $vals['dataHosts'] = array();
-        if($vals['webHosts'] === NULL)
-            $vals['webHosts'] = array();
         if($vals['appHosts'] === NULL)
             $vals['appHosts'] = array();
         if($vals['vHosts'] === NULL)
             $vals['vHosts'] = array();
 
         ApplicationDatabaseHandler::setVHosts($application->getId(), $vals['vHosts']);
-        ApplicationDatabaseHandler::setHosts($application->getId(), 'webh', $vals['webHosts']);
         ApplicationDatabaseHandler::setHosts($application->getId(), 'data', $vals['dataHosts']);
         ApplicationDatabaseHandler::setHosts($application->getId(), 'apph', $vals['appHosts']);
 
         $history = HistoryRecorder::writeHistory('ITSM_Application', HistoryRecorder::CREATE, $application->getId(), $application);
 
         $newHosts = array(
-            'webHosts' => $vals['webHosts'],
             'appHosts' => $vals['appHosts'],
             'dataHosts' => $vals['dataHosts'],
             'vHosts' => $vals['vHosts']
@@ -230,15 +216,12 @@ class ApplicationOperator extends Operator
 
         if($vals['dataHosts'] === NULL)
             $vals['dataHosts'] = array();
-        if($vals['webHosts'] === NULL)
-            $vals['webHosts'] = array();
         if($vals['appHosts'] === NULL)
             $vals['appHosts'] = array();
         if($vals['vHosts'] === NULL)
             $vals['vHosts'] = array();
 
         $newHosts = array(
-            'webHosts' => $vals['webHosts'],
             'appHosts' => $vals['appHosts'],
             'dataHosts' => $vals['dataHosts'],
             'vHosts' => $vals['vHosts']
@@ -251,7 +234,6 @@ class ApplicationOperator extends Operator
             $vals['lifeExpectancy'], $vals['dataVolume'], $vals['authType'], $vals['port']);
 
         ApplicationDatabaseHandler::setVHosts($application->getId(), $vals['vHosts']);
-        ApplicationDatabaseHandler::setHosts($application->getId(), 'webh', $vals['webHosts']);
         ApplicationDatabaseHandler::setHosts($application->getId(), 'data', $vals['dataHosts']);
         ApplicationDatabaseHandler::setHosts($application->getId(), 'apph', $vals['appHosts']);
 

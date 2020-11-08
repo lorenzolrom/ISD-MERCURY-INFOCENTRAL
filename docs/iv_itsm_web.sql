@@ -24,7 +24,7 @@ CREATE TABLE `ITSM_VHost` (
   `domain` text NOT NULL,
   `subdomain` text NOT NULL,
   `name` varchar(64) NOT NULL,
-  `host` int(11) unsigned NOT NULL,
+  `host` int(11) unsigned DEFAULT NULL,
   `registrar` int(11) unsigned NOT NULL,
   `status` int(11) unsigned NOT NULL,
   `renewCost` float(11,2) NOT NULL,

@@ -18,6 +18,7 @@ namespace extensions\itsm\database;
 use database\DatabaseConnection;
 use database\DatabaseHandler;
 use exceptions\EntryNotFoundException;
+use exceptions\ValidationError;
 use extensions\itsm\models\VHost;
 
 class VHostDatabaseHandler extends DatabaseHandler
@@ -59,14 +60,24 @@ class VHostDatabaseHandler extends DatabaseHandler
     public static function select(string $domain = "%", string $subdomain = "%", string $name = "%", string $host = "%",
                                   string $registrarCode = "%", $status = array()): array
     {
-        $query = "SELECT id FROM ITSM_VHost WHERE domain LIKE :domain AND subdomain LIKE :subdomain AND name LIKE :name 
-                            AND (host IN (SELECT id FROM ITSM_Host WHERE asset IN (SELECT id FROM ITSM_Asset WHERE assetTag LIKE :host) OR host IN(SELECT `id` FROM `ITSM_Host` WHERE `ipAddress` LIKE :host) OR host IN(SELECT `id` FROM `ITSM_Host` WHERE `systemName` LIKE :host)) 
-                            AND registrar IN (SELECT id FROM ITSM_Registrar WHERE code LIKE :registrarCode))";
+        $query = "SELECT id FROM ITSM_VHost WHERE domain LIKE :domain AND subdomain LIKE :subdomain AND name LIKE :name  
+                            AND registrar IN (SELECT id FROM ITSM_Registrar WHERE code LIKE :registrarCode)";
+
+        // Add host filter, if it is supplied
+        $checkHost = false;
+        if($host !== '%' AND $host !== '%%')
+        {
+            $checkHost = true;
+            $query .= ' AND (host IN (SELECT id FROM ITSM_Host WHERE asset IN 
+                (SELECT id FROM ITSM_Asset WHERE assetTag LIKE :host) 
+                OR host IN(SELECT `id` FROM `ITSM_Host` WHERE `ipAddress` LIKE :host) 
+                OR host IN(SELECT `id` FROM `ITSM_Host` WHERE `systemName` LIKE :host))) ';
+        }
 
         // Add status filter, if it is supplied
         if(is_array($status) AND !empty($status))
         {
-            $query .= " AND `status` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'wdns' AND `code` IN (" . self::getAttributeCodeString($status) . "))";
+            $query .= " AND `status` IN (SELECT `id` FROM `Attribute` WHERE `extension` = 'itsm' AND `type` = 'wdns' AND `code` IN (" . self::getAttributeCodeString($status) . ")) ";
         }
 
         $query .= "ORDER BY `domain`, `subdomain` ASC";
@@ -79,7 +90,10 @@ class VHostDatabaseHandler extends DatabaseHandler
         $select->bindParam('subdomain', $subdomain, DatabaseConnection::PARAM_STR);
         $select->bindParam('name', $name, DatabaseConnection::PARAM_STR);
         $select->bindParam('registrarCode', $registrarCode, DatabaseConnection::PARAM_STR);
-        $select->bindParam('host', $host, DatabaseConnection::PARAM_STR);
+
+        if($checkHost)
+            $select->bindParam('host', $host, DatabaseConnection::PARAM_STR);
+
         $select->execute();
 
         $handler->close();
@@ -115,7 +129,7 @@ class VHostDatabaseHandler extends DatabaseHandler
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function insert(string $domain, string $subdomain, string $name, int $host, int $registrar,
+    public static function insert(string $domain, string $subdomain, string $name, ?int $host, int $registrar,
                                   int $status, float $renewCost, string $notes, string $registerDate,
                                   ?string $expireDate, ?string $webRoot, ?string $logPath): VHost
     {
@@ -162,7 +176,7 @@ class VHostDatabaseHandler extends DatabaseHandler
      * @throws EntryNotFoundException
      * @throws \exceptions\DatabaseException
      */
-    public static function update(int $id, string $domain, string $subdomain, string $name, int $host, int $registrar,
+    public static function update(int $id, string $domain, string $subdomain, string $name, ?int $host, int $registrar,
                                   int $status, float $renewCost, string $notes, string $registerDate,
                                   ?string $expireDate, ?string $webRoot, ?string $logPath): VHost
     {
@@ -265,96 +279,4 @@ class VHostDatabaseHandler extends DatabaseHandler
 
         return $check->getRowCount() === 1;
     }
-
-//    /**
-//     * @param int $id
-//     * @return bool
-//     * @throws \exceptions\DatabaseException
-//     */
-//    public static function addUser(int $id): bool
-//    {
-//        $handler = new DatabaseConnection();
-//
-//        $insert = $handler->prepare('INSERT INTO `ITSM_VHost_Manager` (`vhost`, `user`) VALUES (:vhost, :user)');
-//        $insert->bindParam('vhost', $id, DatabaseConnection::PARAM_INT);
-//        $insert->bindParam('user', $id, DatabaseConnection::PARAM_INT);
-//        $insert->execute();
-//
-//        $handler->close();
-//
-//        return $insert->getRowCount() === 1;
-//    }
-//
-//    /**
-//     * @param int $id
-//     * @param int $user
-//     * @return bool
-//     * @throws \exceptions\DatabaseException
-//     */
-//    public static function removeUser(int $id, int $user): bool
-//    {
-//        $handler = new DatabaseConnection();
-//
-//        $delete = $handler->prepare('DELETE FROM `ITSM_VHost_Manager` WHERE `vhost` = :vhost AND `user` = :user');
-//        $delete->bindParam('vhost', $id, DatabaseConnection::PARAM_INT);
-//        $delete->bindParam('user', $user, DatabaseConnection::PARAM_INT);
-//        $delete->execute();
-//
-//        $handler->close();
-//
-//        return $delete->getRowCount();
-//    }
-//
-//    /**
-//     * @param int $id
-//     * @return User[]
-//     * @throws \exceptions\DatabaseException
-//     */
-//    public static function getUsers(int $id): array
-//    {
-//        $handler = new DatabaseConnection();
-//
-//        $select = $handler->prepare('SELECT `user` FROM `ITSM_VHost_Manager` WHERE `vhost` = ?');
-//        $select->bindParam(1, $id, DatabaseConnection::PARAM_INT);
-//        $select->execute();
-//
-//        $handler->close();
-//
-//        $users = array();
-//
-//        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
-//        {
-//            try{$users[] = UserDatabaseHandler::selectById($id);}
-//            catch(EntryNotFoundException $e){}
-//        }
-//
-//        return $users;
-//    }
-//
-//    /**
-//     * @param int $user
-//     * @return VHost[]
-//     * @throws \exceptions\DatabaseException
-//     */
-//    public static function selectByUser(int $user): array
-//    {
-//        $handler = new DatabaseConnection();
-//
-//        $select = $handler->prepare('SELECT `vhost` FROM `ITSM_VHost_Manager` WHERE `user` = ?');
-//        $select->bindParam(1, $user, DatabaseConnection::PARAM_INT);
-//        $select->execute();
-//
-//        $handler->close();
-//
-//        $vhosts = array();
-//
-//        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
-//        {
-//            try{$vhosts[] = self::selectById($id);}
-//            catch(EntryNotFoundException $e){}
-//        }
-//
-//        return $vhosts;
-//    }
-
 }

@@ -19,6 +19,7 @@ use database\DatabaseConnection;
 use database\DatabaseHandler;
 use exceptions\DatabaseException;
 use exceptions\EntryNotFoundException;
+use exceptions\ValidationError;
 use extensions\tickets\models\Ticket;
 use utilities\Validator;
 
@@ -769,5 +770,36 @@ class TicketDatabaseHandler extends DatabaseHandler
             throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND);
 
         return self::selectById($select->fetchColumn());
+    }
+
+    /**
+     * Selects tickets in the specified workspace that are scheduled for the supplied month and year
+     * @param int $workspace ID of the workspace
+     * @param int $year YYYY year
+     * @param int $month MM month
+     * @return Ticket[]
+     * @throws DatabaseException
+     */
+    public static function selectByWorkspaceScheduledMonth(int $workspace, int $year, int $month): array
+    {
+        $c = new DatabaseConnection();
+
+        $select = $c->prepare('SELECT `id` FROM `Tickets_Ticket` WHERE `workspace` = :workspace AND `scheduledDate` IS NOT NULL AND YEAR(`scheduledDate`) = :year AND MONTH(`scheduledDate`) = :month');
+        $select->bindParam('workspace', $workspace, DatabaseConnection::PARAM_INT);
+        $select->bindParam('year', $year, DatabaseConnection::PARAM_INT);
+        $select->bindParam('month', $month, DatabaseConnection::PARAM_INT);
+        $select->execute();
+
+        $c->close();
+
+        $tickets = array();
+
+        foreach($select->fetchAll(DatabaseConnection::FETCH_COLUMN, 0) as $id)
+        {
+            try{$tickets[] = self::selectById($id);}
+            catch(EntryNotFoundException $e){}
+        }
+
+        return $tickets;
     }
 }

@@ -39,6 +39,8 @@ use extensions\tickets\models\Ticket;
  */
 class TicketController extends Controller
 {
+    private const CALENDAR_FIELDS = array('month', 'year');
+
     private $workspace;
 
     /**
@@ -115,6 +117,8 @@ class TicketController extends Controller
                 return $this->search();
             else if($param === 'quickSearch')
                 return $this->quickSearch();
+            else if($param == 'calendar')
+                return $this->getTicketsScheduledForMonth();
             else if($action == 'link')
                 return $this->link($param);
             else
@@ -313,6 +317,38 @@ class TicketController extends Controller
 
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * Return array of tickets scheduled for the supplied month, organized by date
+     * @return HTTPResponse
+     * @throws \exceptions\DatabaseException
+     */
+    private function getTicketsScheduledForMonth(): HTTPResponse
+    {
+        $fields = self::getFormattedBody(self::CALENDAR_FIELDS);
+        $tickets = TicketOperator::getTicketsScheduledForMonth($this->workspace, (int)$fields['year'], (int)$fields['month']);
+
+        $ticketsByDate = array();
+
+        // Organize tickets by date
+        foreach($tickets as $ticket)
+        {
+            $scheduledDate = $ticket->getScheduledDate();
+
+            if(!in_array($scheduledDate, array_keys($ticketsByDate)))
+            {
+                $ticketsByDate[$scheduledDate] = array();
+            }
+
+            $ticketsByDate[$scheduledDate][] = array(
+                'number' => $ticket->getNumber(),
+                'title' => $ticket->getTitle(),
+                'status' => $ticket->getStatus()
+            );
+        }
+
+        return new HTTPResponse(HTTPResponse::OK, $ticketsByDate);
     }
 
     /**

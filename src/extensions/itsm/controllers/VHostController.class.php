@@ -99,7 +99,16 @@ class VHostController extends Controller
     private function getById(string $param): HTTPResponse
     {
         $vhost = VHostOperator::getVHost((int)$param);
-        $server = WebServerOperator::get($vhost->getHost());
+
+        $systemName = '';
+        $ipAddress = '';
+
+        if($vhost->getHost())
+        {
+            $server = WebServerOperator::get($vhost->getHost());
+            $systemName = $server->getSystemName();
+            $ipAddress = $server->getIpAddress();
+        }
 
         $data = array(
             'id' => $vhost->getId(),
@@ -107,8 +116,8 @@ class VHostController extends Controller
             'domain' => $vhost->getDomain(),
             'name' => $vhost->getName(),
             'host' => $vhost->getHost(),
-            'systemName' => $server->getSystemName(),
-            'ipAddress' => $server->getIpAddress(),
+            'systemName' => $systemName,
+            'ipAddress' => $ipAddress,
             'registrar' => $vhost->getRegistrar(),
             'registrarCode' => RegistrarOperator::codeFromId($vhost->getRegistrar()),
             'registrarName' => RegistrarOperator::nameFromId($vhost->getRegistrar()),
@@ -168,7 +177,13 @@ class VHostController extends Controller
 
         foreach ($vhosts as $vhost)
         {
-            $ws = WebServerOperator::get($vhost->getHost());
+            $systemName = '';
+
+            if($vhost->getHost())
+            {
+                $ws = WebServerOperator::get($vhost->getHost());
+                $systemName = $ws->getSystemName();
+            }
             $results[] = array(
                 'id' => $vhost->getId(),
                 'subdomain' => $vhost->getSubdomain(),
@@ -179,7 +194,7 @@ class VHostController extends Controller
                 'status' => AttributeOperator::codeFromId($vhost->getStatus()),
                 'statusName' => AttributeOperator::nameFromId($vhost->getStatus()),
                 'host' => $vhost->getHost(),
-                'systemName' => $ws->getSystemName()
+                'systemName' => $systemName
             );
         }
 

@@ -39,8 +39,6 @@ use extensions\tickets\models\Ticket;
  */
 class TicketController extends Controller
 {
-    private const CALENDAR_FIELDS = array('month', 'year');
-
     private $workspace;
 
     /**
@@ -93,6 +91,16 @@ class TicketController extends Controller
                 return $this->getOpen();
             else if($param == 'closed')
                 return $this->getClosed();
+            else if($param == 'calendar')
+            {
+                // Get year
+                $year = (int)$this->request->next();
+
+                // Get month
+                $month = (int)$this->request->next();
+
+                return $this->getTicketsScheduledForMonth($year, $month);
+            }
             else
             {
                 $action = $this->request->next();
@@ -106,7 +114,7 @@ class TicketController extends Controller
                     return $this->getLinked((int)$param);
 
                 // Check if the edit flag was passed
-                return $this->getTicket((int)$param, $action == 'edit' ? TRUE : FALSE);
+                return $this->getTicket((int)$param, $action == 'edit');
             }
         }
         else if($this->request->method() === HTTPRequest::POST)
@@ -117,8 +125,6 @@ class TicketController extends Controller
                 return $this->search();
             else if($param === 'quickSearch')
                 return $this->quickSearch();
-            else if($param == 'calendar')
-                return $this->getTicketsScheduledForMonth();
             else if($action == 'link')
                 return $this->link($param);
             else
@@ -321,13 +327,15 @@ class TicketController extends Controller
 
     /**
      * Return array of tickets scheduled for the supplied month, organized by date
+     * @param int $year
+     * @param int $month
      * @return HTTPResponse
      * @throws \exceptions\DatabaseException
      */
-    private function getTicketsScheduledForMonth(): HTTPResponse
+    private function getTicketsScheduledForMonth(int $year, int $month): HTTPResponse
     {
-        $fields = self::getFormattedBody(self::CALENDAR_FIELDS);
-        $tickets = TicketOperator::getTicketsScheduledForMonth($this->workspace, (int)$fields['year'], (int)$fields['month']);
+
+        $tickets = TicketOperator::getTicketsScheduledForMonth($this->workspace, $year, $month);
 
         $ticketsByDate = array();
 

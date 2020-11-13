@@ -46,7 +46,8 @@ abstract class HistoryRecorder
         // Format name of old variables
         foreach(array_keys($rawOldValues) as $varName)
         {
-            if(preg_match('/^[A-Za-z]/', $varName)) // Check if the parameter is public, this means it will not start with a special character
+            //if(preg_match('/^[A-Za-z]/', $varName))
+            if(preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $varName)) // Check if the parameter is public, this means it will not start with a special character
             {
                 $shortVarName = $varName;
             }

@@ -25,7 +25,6 @@ class ExtHistoryOperator
     {
         if($index !== "" AND $index !== "%") // only check if index is set
         {
-            $index = (int)$index;
             if($tableName == '!NETUSER') // Convert username to GUID
             {
                 try

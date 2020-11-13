@@ -22,6 +22,7 @@ use exceptions\RouteException;
 use exceptions\SecurityException;
 use models\HTTPRequest;
 use models\HTTPResponse;
+use utilities\HistoryRecorder;
 
 class HistoryController extends Controller
 {
@@ -72,8 +73,8 @@ class HistoryController extends Controller
 
         foreach(HistoryOperator::getHistory($args['object'], $args['index'], $args['action'], $args['username']) as $history)
         {
-            // Skip returning this record if it does not contain any changes
-            if(empty($history->getItems()))
+            // Skip returning this record if it does not contain any changes, and is not a delete record
+            if(empty($history->getItems()) AND ($history->getAction() !== HistoryRecorder::DELETE))
                 continue;
 
             $data[] = array(

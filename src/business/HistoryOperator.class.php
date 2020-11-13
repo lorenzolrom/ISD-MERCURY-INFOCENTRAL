@@ -54,8 +54,10 @@ class HistoryOperator extends Operator
      */
     public static function getHistory(string $objectName, string $index = "%", string $action = '%', string $username = '%'): array
     {
-        $objects = self::getMergedHistoryObjects();
-        $tablePermissions = self::getMergedHistoryPermissions();
+        $mergedOptions = self::getMergedOptions(true, true, true);
+        $objects = $mergedOptions['objects'];
+        $tablePermissions = $mergedOptions['permissions'];
+        $customScenarios = $mergedOptions['customOperators'];
 
         // Error if table is not defined in the permissions array
         if(!isset($objects[$objectName]))
@@ -69,7 +71,6 @@ class HistoryOperator extends Operator
         CurrentUserController::validatePermission($tablePermissions[$tableName]);
 
         // Check if table requires an ExtHistoryOperator
-        $customScenarios = self::getTablesWithCustomHistoryOperators();
         if(in_array($tableName, array_keys($customScenarios)))
         {
             // Get the result of the extension's custom ExtHistoryOperator
@@ -87,8 +88,9 @@ class HistoryOperator extends Operator
      */
     public static function getHistoryObjects(): array
     {
-        $objects = self::getMergedHistoryObjects();
-        $requiredPermissions = self::getMergedHistoryPermissions();
+        $mergedOptions = self::getMergedOptions(true, true);
+        $objects = $mergedOptions['objects'];
+        $requiredPermissions = $mergedOptions['permissions'];
 
         // Array of current user's permissions
         $currentUserPermissions = CurrentUserController::currentUser()->getPermissions();
@@ -111,90 +113,66 @@ class HistoryOperator extends Operator
     }
 
     /**
-     * Get a merged set of history objects from all extensions
-     * @return array|string[]
+     * @param bool $includeObjects Include [operators]?
+     * @param bool $includePermissions Include [permissions]?
+     * @param bool $includeCustomOperators Include [customOperators]?
+     * @return array
      */
-    private static function getMergedHistoryObjects(): array
+    private static function getMergedOptions(bool $includeObjects = false, bool $includePermissions = false, bool $includeCustomOperators = false): array
     {
-        $objects = self::OBJECTS;
+        $mergedOptions = array();
 
-        foreach(Config::OPTIONS['enabledExtensions'] as $extension)
+        if($includeObjects)
+            $mergedOptions['objects'] = array();
+        if($includePermissions)
+            $mergedOptions['permissions'] = array();
+        if($includeCustomOperators)
+            $mergedOptions['customOperators'] = array();
+
+        foreach(Config::OPTIONS['enabledExtensions'] as $extensionName)
         {
-            $extConfigName = "extensions\\$extension\\ExtConfig"; // Build name of extension's ExtConfig
+            // Build name of extension's ExtConfig class
+            $extConfigName = "extensions\\$extensionName\\ExtConfig";
 
             // Skip if ExtConfig is not defined
             if(!class_exists($extConfigName))
                 continue;
 
-            // Merge HISTORY_OBJECTS into OBJECTS
-            $extConfig = new $extConfigName();
+            // Instantiate new ExtConfig
+            $extConfig = new $extConfigName;
 
-            if(defined("$extConfigName::HISTORY_OBJECTS"))
-                $objects = array_merge($objects, $extConfig::HISTORY_OBJECTS);
-        }
-
-        return $objects;
-    }
-
-    /**
-     * Get a merged set of permissions for history objects from all extensions
-     * @return array|string[]
-     */
-    private static function getMergedHistoryPermissions(): array
-    {
-        $tablePermissions = self::TABLE_PERMISSIONS;
-
-        // Import objects and permissions from extensions
-        foreach(Config::OPTIONS['enabledExtensions'] as $extension)
-        {
-            $extConfigName = "extensions\\$extension\\ExtConfig"; // Build name of extension's ExtConfig
-
-            // Skip if ExtConfig is not defined
-            if(!class_exists($extConfigName))
-                continue;
-
-            // Merge HISTORY_PERMISSIONS into TABLE_PERMISSIONS
-            $extConfig = new $extConfigName();
-
-            if(defined("$extConfigName::HISTORY_PERMISSIONS"))
-                $tablePermissions = array_merge($tablePermissions, $extConfig::HISTORY_PERMISSIONS);
-        }
-
-        return $tablePermissions;
-    }
-
-    /**
-     * Get an array of table names that require an extensions custom ExtHistoryOperator
-     * @return array with table names as the keys, and instances of the appropriate ExtHistoryOperators as values
-     */
-    private static function getTablesWithCustomHistoryOperators(): array
-    {
-        $customOperators = array();
-
-        foreach(Config::OPTIONS['enabledExtensions'] as $extension)
-        {
-            $extConfigName = "extensions\\$extension\\ExtConfig"; // Build name of extension's ExtConfig
-
-            // Skip if ExtConfig is not defined
-            if(!class_exists($extConfigName))
-                continue;
-
-            $extConfig = new $extConfigName();
-
-            if(defined("$extConfigName::HISTORY_CUSTOM_OPERATOR") AND is_array($extConfig::HISTORY_CUSTOM_OPERATOR))
+            // History Object Types
+            if($includeObjects)
             {
-                $extHistoryOperatorName = "extensions\\$extension\utilities\ExtHistoryOperator";
-                if(class_exists($extHistoryOperatorName))
+                if(defined("$extConfigName::HISTORY_OBJECTS"))
+                    $mergedOptions['objects'] = array_merge($mergedOptions['objects'], $extConfig::HISTORY_OBJECTS);
+            }
+
+            // History Table Permissions
+            if($includePermissions)
+            {
+                if(defined("$extConfigName::HISTORY_PERMISSIONS"))
+                    $mergedOptions['permissions'] = array_merge($mergedOptions['permissions'], $extConfig::HISTORY_PERMISSIONS);
+            }
+
+            // Custom History Scenarios
+            if($includeCustomOperators)
+            {
+                if(defined("$extConfigName::HISTORY_CUSTOM_OPERATOR") AND is_array($extConfig::HISTORY_CUSTOM_OPERATOR))
                 {
-                    $extHistoryOperator = new $extHistoryOperatorName;
-                    foreach($extConfig::HISTORY_CUSTOM_OPERATOR as $tableName)
+                    $extHistoryOperatorName = "extensions\\$extensionName\utilities\ExtHistoryOperator";
+                    if(class_exists($extHistoryOperatorName))
                     {
-                        $customOperators[$tableName] = $extHistoryOperator;
+                        $extHistoryOperator = new $extHistoryOperatorName;
+                        foreach($extConfig::HISTORY_CUSTOM_OPERATOR as $tableName)
+                        {
+                            $mergedOptions['customOperators'][$tableName] = $extHistoryOperator;
+                        }
                     }
                 }
             }
         }
 
-        return $customOperators;
+        return $mergedOptions;
     }
 }

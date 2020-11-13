@@ -92,6 +92,7 @@ class HistoryController extends Controller
      * Return a list of history object types that the current user has access to search
      * @return HTTPResponse
      * @throws DatabaseException
+     * @throws SecurityException
      */
     private function getHistoryObjects(): HTTPResponse
     {

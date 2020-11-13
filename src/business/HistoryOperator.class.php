@@ -116,30 +116,28 @@ class HistoryOperator extends Operator
      * Return a list of history objects that the current user has permission for
      * @return array
      * @throws DatabaseException
+     * @throws SecurityException
      */
     public static function getHistoryObjects(): array
     {
         $objects = self::getMergedHistoryObjects();
-        $permissions = self::getMergedHistoryPermissions();
+        $requiredPermissions = self::getMergedHistoryPermissions();
+
+        // Array of current user's permissions
+        $currentUserPermissions = CurrentUserController::currentUser()->getPermissions();
 
         // Objects that the user has permission to view
         $validObjects = array();
 
         foreach(array_keys($objects) as $object)
         {
-            $permission = $permissions[$object]; // Get the permission code associated with the table of this object
+            $permission = $requiredPermissions[$objects[$object]]; // Get the permission code associated with the table of this object
 
-            try
-            {
-                CurrentUserController::validatePermission($permission);
+            // Does the current user have permission to do this?
+            if(!in_array($permission, $currentUserPermissions))
+                continue;
 
-                // If above statement passes, add to list
-                $validObjects[] = $object;
-            }
-            catch(SecurityException $se)
-            {
-                // Do nothing...
-            }
+            $validObjects[] = $object;
         }
 
         return $validObjects;

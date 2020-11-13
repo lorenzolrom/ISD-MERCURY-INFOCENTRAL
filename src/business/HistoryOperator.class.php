@@ -15,6 +15,8 @@
 namespace business;
 
 
+use Config;
+use exceptions\DatabaseException;
 use exceptions\LDAPException;
 use extensions\itsm\business\ApplicationOperator;
 use extensions\itsm\business\AssetOperator;
@@ -54,32 +56,13 @@ class HistoryOperator extends Operator
      * @param string $username
      * @return History[]
      * @throws SecurityException
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      * @throws EntryNotFoundException
      */
     public static function getHistory(string $objectName, string $index, string $action = '%', string $username = '%'): array
     {
-        $objects = self::OBJECTS;
-        $tablePermissions = self::TABLE_PERMISSIONS;
-
-        // Import history from extensions
-        foreach(\Config::OPTIONS['enabledExtensions'] as $extension)
-        {
-            $extConfigName = "extensions\\$extension\\ExtConfig"; // Build name of extension's ExtConfig
-
-            // Skip if ExtConfig is not defined
-            if(!class_exists($extConfigName))
-                continue;
-
-            // Merge HISTORY_OBJECTS and HISTORY_PERMISSIONS into OBJECTS and TABLE_PERMISSIONS
-            $extConfig = new $extConfigName();
-
-            if(defined("$extConfigName::HISTORY_OBJECTS"))
-                $objects = array_merge($objects, $extConfig::HISTORY_OBJECTS);
-
-            if(defined("$extConfigName::HISTORY_PERMISSIONS"))
-                $tablePermissions = array_merge($tablePermissions, $extConfig::HISTORY_PERMISSIONS);
-        }
+        $objects = self::getMergedHistoryObjects();
+        $tablePermissions = self::getMergedHistoryPermissions();
 
         // Error if table is not defined in the permissions array
         if(!isset($objects[$objectName]))
@@ -127,5 +110,91 @@ class HistoryOperator extends Operator
             }
         }
         return HistoryDatabaseHandler::select($tableName, $index, $action, $username);
+    }
+
+    /**
+     * Return a list of history objects that the current user has permission for
+     * @return array
+     * @throws DatabaseException
+     */
+    public static function getHistoryObjects(): array
+    {
+        $objects = self::getMergedHistoryObjects();
+        $permissions = self::getMergedHistoryPermissions();
+
+        // Objects that the user has permission to view
+        $validObjects = array();
+
+        foreach(array_keys($objects) as $object)
+        {
+            $permission = $permissions[$object]; // Get the permission code associated with the table of this object
+
+            try
+            {
+                CurrentUserController::validatePermission($permission);
+
+                // If above statement passes, add to list
+                $validObjects[] = $object;
+            }
+            catch(SecurityException $se)
+            {
+                // Do nothing...
+            }
+        }
+
+        return $validObjects;
+    }
+
+    /**
+     * Get a merged set of history objects from all extensions
+     * @return array|string[]
+     */
+    private static function getMergedHistoryObjects(): array
+    {
+        $objects = self::OBJECTS;
+
+        foreach(Config::OPTIONS['enabledExtensions'] as $extension)
+        {
+            $extConfigName = "extensions\\$extension\\ExtConfig"; // Build name of extension's ExtConfig
+
+            // Skip if ExtConfig is not defined
+            if(!class_exists($extConfigName))
+                continue;
+
+            // Merge HISTORY_OBJECTS into OBJECTS
+            $extConfig = new $extConfigName();
+
+            if(defined("$extConfigName::HISTORY_OBJECTS"))
+                $objects = array_merge($objects, $extConfig::HISTORY_OBJECTS);
+        }
+
+        return $objects;
+    }
+
+    /**
+     * Get a merged set of permissions for history objects from all extensions
+     * @return array|string[]
+     */
+    private static function getMergedHistoryPermissions(): array
+    {
+        $tablePermissions = self::TABLE_PERMISSIONS;
+
+        // Import objects and permissions from extensions
+        foreach(Config::OPTIONS['enabledExtensions'] as $extension)
+        {
+            $extConfigName = "extensions\\$extension\\ExtConfig"; // Build name of extension's ExtConfig
+
+            // Skip if ExtConfig is not defined
+            if(!class_exists($extConfigName))
+                continue;
+
+            // Merge HISTORY_PERMISSIONS into TABLE_PERMISSIONS
+            $extConfig = new $extConfigName();
+
+            if(defined("$extConfigName::HISTORY_PERMISSIONS"))
+                $tablePermissions = array_merge($tablePermissions, $extConfig::HISTORY_PERMISSIONS);
+        }
+
+        return $tablePermissions;
     }
 }

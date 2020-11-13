@@ -16,7 +16,10 @@ namespace controllers;
 
 
 use business\HistoryOperator;
+use exceptions\DatabaseException;
+use exceptions\EntryNotFoundException;
 use exceptions\RouteException;
+use exceptions\SecurityException;
 use models\HTTPRequest;
 use models\HTTPResponse;
 
@@ -26,24 +29,30 @@ class HistoryController extends Controller
 
     /**
      * @return HTTPResponse|null
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
+     * @throws DatabaseException
+     * @throws SecurityException
      * @throws RouteException
-     * @throws \exceptions\EntryNotFoundException
+     * @throws EntryNotFoundException
      */
     public function getResponse(): ?HTTPResponse
     {
         if($this->request->method() === HTTPRequest::GET)
+        {
+            if($this->request->next() === 'objects')
+                return $this->getHistoryObjects();
+
             return $this->getHistory();
+        }
+
         return NULL;
     }
 
     /**
      * @return HTTPResponse
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\SecurityException
+     * @throws DatabaseException
+     * @throws SecurityException
      * @throws RouteException
-     * @throws \exceptions\EntryNotFoundException
+     * @throws EntryNotFoundException
      */
     private function getHistory(): HTTPResponse
     {
@@ -75,5 +84,15 @@ class HistoryController extends Controller
         }
 
         return new HTTPResponse(HTTPResponse::OK, $data);
+    }
+
+    /**
+     * Return a list of history object types that the current user has access to search
+     * @return HTTPResponse
+     * @throws DatabaseException
+     */
+    private function getHistoryObjects(): HTTPResponse
+    {
+        return new HTTPResponse(HTTPResponse::OK, HistoryOperator::getHistoryObjects());
     }
 }

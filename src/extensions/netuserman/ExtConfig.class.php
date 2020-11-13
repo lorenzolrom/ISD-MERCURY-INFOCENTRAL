@@ -110,4 +110,9 @@ class ExtConfig
         '!NETUSER' => 'netuserman-read',
         '!NETGROUP' => 'netuserman-readgroups',
     );
+
+    public const HISTORY_CUSTOM_OPERATOR = array(
+        '!NETUSER',
+        '!NETGROUP'
+    );
 }

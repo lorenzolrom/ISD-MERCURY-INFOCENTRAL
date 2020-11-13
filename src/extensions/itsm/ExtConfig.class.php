@@ -88,4 +88,11 @@ class ExtConfig
         'ITSM_DiscardOrder' => 'itsm_inventory-discards-r',
         'ITSM_WebServer' => 'itsm_web-servers-r'
     );
+
+    public const HISTORY_CUSTOM_OPERATOR = array(
+        'ITSM_Asset',
+        'ITSM_Application',
+        'ITSM_PurchaseOrder',
+        'ITSM_DiscardOrder'
+    );
 }

@@ -17,17 +17,10 @@ namespace business;
 
 use Config;
 use exceptions\DatabaseException;
-use exceptions\LDAPException;
-use extensions\itsm\business\ApplicationOperator;
-use extensions\itsm\business\AssetOperator;
-use extensions\itsm\business\DiscardOrderOperator;
-use extensions\itsm\business\PurchaseOrderOperator;
 use controllers\CurrentUserController;
 use database\HistoryDatabaseHandler;
 use exceptions\EntryNotFoundException;
 use exceptions\SecurityException;
-use extensions\netuserman\business\NetGroupOperator;
-use extensions\netuserman\business\NetUserOperator;
 use models\History;
 
 class HistoryOperator extends Operator
@@ -75,44 +68,14 @@ class HistoryOperator extends Operator
 
         CurrentUserController::validatePermission($tablePermissions[$tableName]);
 
-        /**
-         * Special scenarios
-         */
-        if($index !== "" AND $index !== "%") // only check if index is set
+        // Check if table requires an ExtHistoryOperator
+        $customScenarios = self::getTablesWithCustomHistoryOperators();
+        if(in_array($tableName, array_keys($customScenarios)))
         {
-            $index = (int)$index;
-            if($tableName == 'ITSM_Asset') // Assets use their asset tags as 'primary' keys
-                $index = (string)AssetOperator::idFromAssetTag($index);
-            else if($tableName == 'ITSM_Application') // Convert Number to ID
-                $index = (string)ApplicationOperator::idFromNumber($index);
-            else if($tableName == 'ITSM_PurchaseOrder') // Convert Number to ID
-                $index = (string)PurchaseOrderOperator::idFromNumber($index);
-            else if($tableName == 'ITSM_DiscardOrder') // Convert Number to ID
-                $index = (string)DiscardOrderOperator::idFromNumber($index);
-            else if($tableName == '!NETUSER') // Convert username to GUID
-            {
-                try
-                {
-                    // Convert only the sam account name to guid
-                    $index = (string)NetUserOperator::getUserDetails($index, ['objectguid'])['objectguid'];
-                }
-                catch(LDAPException $e)
-                {
-                    throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND, $e);
-                }
-            }
-            else if($tableName == '!NETGROUP') // Convert group CN to GUID
-            {
-                try
-                {
-                    $index = (string)NetGroupOperator::getGroupDetails($index, ['objectguid'])['objectguid'];
-                }
-                catch(LDAPException $e)
-                {
-                    throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND, $e);
-                }
-            }
+            // Get the result of the extension's custom ExtHistoryOperator
+            return $customScenarios[$tableName]::getHistory($tableName, $index, $action, $username);
         }
+
         return HistoryDatabaseHandler::select($tableName, $index, $action, $username);
     }
 
@@ -198,5 +161,40 @@ class HistoryOperator extends Operator
         }
 
         return $tablePermissions;
+    }
+
+    /**
+     * Get an array of table names that require an extensions custom ExtHistoryOperator
+     * @return array with table names as the keys, and instances of the appropriate ExtHistoryOperators as values
+     */
+    private static function getTablesWithCustomHistoryOperators(): array
+    {
+        $customOperators = array();
+
+        foreach(Config::OPTIONS['enabledExtensions'] as $extension)
+        {
+            $extConfigName = "extensions\\$extension\\ExtConfig"; // Build name of extension's ExtConfig
+
+            // Skip if ExtConfig is not defined
+            if(!class_exists($extConfigName))
+                continue;
+
+            $extConfig = new $extConfigName();
+
+            if(defined("$extConfigName::HISTORY_CUSTOM_OPERATOR") AND is_array($extConfig::HISTORY_CUSTOM_OPERATOR))
+            {
+                $extHistoryOperatorName = "extensions\\$extension\utilities\ExtHistoryOperator";
+                if(class_exists($extHistoryOperatorName))
+                {
+                    $extHistoryOperator = new $extHistoryOperatorName;
+                    foreach($extConfig::HISTORY_CUSTOM_OPERATOR as $tableName)
+                    {
+                        $customOperators[$tableName] = $extHistoryOperator;
+                    }
+                }
+            }
+        }
+
+        return $customOperators;
     }
 }

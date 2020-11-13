@@ -16,6 +16,10 @@ namespace business;
 
 
 use database\RoleDatabaseHandler;
+use exceptions\DatabaseException;
+use exceptions\EntryNotFoundException;
+use exceptions\SecurityException;
+use exceptions\ValidationError;
 use models\Role;
 use models\User;
 use utilities\HistoryRecorder;
@@ -25,8 +29,8 @@ class RoleOperator extends Operator
     /**
      * @param int $id
      * @return Role
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
      */
     public static function getRole(int $id): Role
     {
@@ -36,7 +40,7 @@ class RoleOperator extends Operator
     /**
      * @param User $user
      * @return Role[]
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function getUserRoles(User $user): array
     {
@@ -46,7 +50,7 @@ class RoleOperator extends Operator
     /**
      * @param string $name
      * @return Role[]
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
      */
     public static function search(string $name = "%"): array
     {
@@ -56,10 +60,10 @@ class RoleOperator extends Operator
     /**
      * @param array $vals
      * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     * @throws \exceptions\ValidationError
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws ValidationError
      */
     public static function createRole(array $vals): array
     {
@@ -81,10 +85,10 @@ class RoleOperator extends Operator
      * @param Role $role
      * @param array $vals
      * @return array
-     * @throws \exceptions\DatabaseException
-     * @throws \exceptions\EntryNotFoundException
-     * @throws \exceptions\SecurityException
-     * @throws \exceptions\ValidationError
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     * @throws SecurityException
+     * @throws ValidationError
      */
     public static function updateRole(Role $role, array $vals): array
     {
@@ -106,10 +110,13 @@ class RoleOperator extends Operator
     /**
      * @param Role $role
      * @return bool
-     * @throws \exceptions\DatabaseException
+     * @throws DatabaseException
+     * @throws EntryNotFoundException
+     * @throws SecurityException
      */
     public static function deleteRole(Role $role): bool
     {
+        HistoryRecorder::writeHistory('Role', HistoryRecorder::DELETE, $role->getId(), $role);
         return RoleDatabaseHandler::delete($role->getId());
     }
 
@@ -120,7 +127,7 @@ class RoleOperator extends Operator
      * Need to override parent validate because of unique name constraint
      *
      * @return bool
-     * @throws \exceptions\ValidationError
+     * @throws ValidationError
      */
     protected static function validateRole(array $vals, ?Role $role = NULL): bool
     {

@@ -59,7 +59,7 @@ class HistoryOperator extends Operator
      * @throws DatabaseException
      * @throws EntryNotFoundException
      */
-    public static function getHistory(string $objectName, string $index, string $action = '%', string $username = '%'): array
+    public static function getHistory(string $objectName, string $index = "%", string $action = '%', string $username = '%'): array
     {
         $objects = self::getMergedHistoryObjects();
         $tablePermissions = self::getMergedHistoryPermissions();
@@ -78,35 +78,39 @@ class HistoryOperator extends Operator
         /**
          * Special scenarios
          */
-        if($tableName == 'ITSM_Asset') // Assets use their asset tags as 'primary' keys
-            $index = (string)AssetOperator::idFromAssetTag($index);
-        else if($tableName == 'ITSM_Application') // Convert Number to ID
-            $index = (string)ApplicationOperator::idFromNumber($index);
-        else if($tableName == 'ITSM_PurchaseOrder') // Convert Number to ID
-            $index = (string)PurchaseOrderOperator::idFromNumber($index);
-        else if($tableName == 'ITSM_DiscardOrder') // Convert Number to ID
-            $index = (string)DiscardOrderOperator::idFromNumber($index);
-        else if($tableName == '!NETUSER') // Convert username to GUID
+        if($index !== "" AND $index !== "%") // only check if index is set
         {
-            try
+            $index = (int)$index;
+            if($tableName == 'ITSM_Asset') // Assets use their asset tags as 'primary' keys
+                $index = (string)AssetOperator::idFromAssetTag($index);
+            else if($tableName == 'ITSM_Application') // Convert Number to ID
+                $index = (string)ApplicationOperator::idFromNumber($index);
+            else if($tableName == 'ITSM_PurchaseOrder') // Convert Number to ID
+                $index = (string)PurchaseOrderOperator::idFromNumber($index);
+            else if($tableName == 'ITSM_DiscardOrder') // Convert Number to ID
+                $index = (string)DiscardOrderOperator::idFromNumber($index);
+            else if($tableName == '!NETUSER') // Convert username to GUID
             {
-                // Convert only the sam account name to guid
-                $index = (string)NetUserOperator::getUserDetails($index, ['objectguid'])['objectguid'];
+                try
+                {
+                    // Convert only the sam account name to guid
+                    $index = (string)NetUserOperator::getUserDetails($index, ['objectguid'])['objectguid'];
+                }
+                catch(LDAPException $e)
+                {
+                    throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND, $e);
+                }
             }
-            catch(LDAPException $e)
+            else if($tableName == '!NETGROUP') // Convert group CN to GUID
             {
-                throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND, $e);
-            }
-        }
-        else if($tableName == '!NETGROUP') // Convert group CN to GUID
-        {
-            try
-            {
-                $index = (string)NetGroupOperator::getGroupDetails($index, ['objectguid'])['objectguid'];
-            }
-            catch(LDAPException $e)
-            {
-                throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND, $e);
+                try
+                {
+                    $index = (string)NetGroupOperator::getGroupDetails($index, ['objectguid'])['objectguid'];
+                }
+                catch(LDAPException $e)
+                {
+                    throw new EntryNotFoundException(EntryNotFoundException::MESSAGES[EntryNotFoundException::UNIQUE_KEY_NOT_FOUND], EntryNotFoundException::UNIQUE_KEY_NOT_FOUND, $e);
+                }
             }
         }
         return HistoryDatabaseHandler::select($tableName, $index, $action, $username);

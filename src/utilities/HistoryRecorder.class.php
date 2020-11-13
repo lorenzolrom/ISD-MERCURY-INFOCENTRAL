@@ -59,7 +59,7 @@ abstract class HistoryRecorder
             $oldValues[$shortVarName] = $rawOldValues[$varName];
         }
 
-        // assign username to NULL if this operation is not being done on behalf of a users
+        // assign username to NULL if this operation is not being done on behalf of a user
         if($noUser)
         {
             $username = NULL;

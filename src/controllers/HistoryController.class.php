@@ -65,6 +65,8 @@ class HistoryController extends Controller
             $args['action'] = '%';
         if($args['username'] === NULL)
             $args['username'] = '%';
+        if($args['index'] === NULL)
+            $args['index'] = '%';
 
         $data = array();
 

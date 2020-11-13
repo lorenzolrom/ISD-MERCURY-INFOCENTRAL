@@ -62,9 +62,9 @@ class HistoryController extends Controller
         if($args['object'] === NULL OR $args['index'] === NULL)
             throw new RouteException(RouteException::MESSAGES[RouteException::REQUIRED_PARAMETER_IS_INVALID], RouteException::REQUIRED_PARAMETER_IS_INVALID);
 
-        if($args['action'] === NULL)
+        if($args['action'] === NULL OR $args['action'] === "")
             $args['action'] = '%';
-        if($args['username'] === NULL)
+        if($args['username'] === NULL OR $args['username'] === "")
             $args['username'] = '%';
         if($args['index'] === NULL OR $args['index'] === "")
             $args['index'] = '%';

@@ -59,7 +59,7 @@ abstract class HistoryRecorder
             $oldValues[$shortVarName] = $rawOldValues[$varName];
         }
 
-        // Create record for entry
+        // assign username to NULL if this operation is not being done on behalf of a users
         if($noUser)
         {
             $username = NULL;
@@ -69,11 +69,13 @@ abstract class HistoryRecorder
             $username = CurrentUserController::currentUser()->getUsername();
         }
 
+        // Create the records
         $record = HistoryDatabaseHandler::insert($tableName, $action, $index, $username, date('Y-m-d H:i:s'));
 
+        // Parse each variable provided and compare to new values
         foreach(array_keys($oldValues) as $varName)
         {
-            if($varName === 'password') // do not write password to history
+            if($varName === 'password') // do not write any field called 'password' into history
                 continue;
 
             if(!isset($newValues[$varName]) AND !in_array($varName, $nullVars))
@@ -87,6 +89,7 @@ abstract class HistoryRecorder
     }
 
     /**
+     * Used to append additional information to a history record
      * @param int $history
      * @param array $vals
      * @throws \exceptions\DatabaseException

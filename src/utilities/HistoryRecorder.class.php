@@ -19,7 +19,7 @@ use controllers\CurrentUserController;
 use database\HistoryDatabaseHandler;
 use models\Model;
 
-class HistoryRecorder
+abstract class HistoryRecorder
 {
     public const CREATE = 'CREATE';
     public const MODIFY = 'MODIFY';

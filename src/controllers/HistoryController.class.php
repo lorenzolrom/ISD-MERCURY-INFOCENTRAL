@@ -61,6 +61,10 @@ class HistoryController extends Controller
 
         foreach(HistoryOperator::getHistory($args['object'], $args['index'], $args['action'], $args['username']) as $history)
         {
+            // Skip returning this record if it does not contain any changes
+            if(empty($history->getItems()))
+                continue;
+
             $data[] = array(
                 'id' => $history->getId(),
                 'username' => $history->getUsername(),

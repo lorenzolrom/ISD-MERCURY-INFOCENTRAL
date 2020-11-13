@@ -113,6 +113,7 @@ class HistoryOperator extends Operator
     }
 
     /**
+     * Search enabled extension's configurations for history-related options
      * @param bool $includeObjects Include [operators]?
      * @param bool $includePermissions Include [permissions]?
      * @param bool $includeCustomOperators Include [customOperators]?

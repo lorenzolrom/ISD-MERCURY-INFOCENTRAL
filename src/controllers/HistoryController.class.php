@@ -65,7 +65,7 @@ class HistoryController extends Controller
             $args['action'] = '%';
         if($args['username'] === NULL)
             $args['username'] = '%';
-        if($args['index'] === NULL)
+        if($args['index'] === NULL OR $args['index'] === "")
             $args['index'] = '%';
 
         $data = array();
@@ -78,6 +78,7 @@ class HistoryController extends Controller
 
             $data[] = array(
                 'id' => $history->getId(),
+                'index' => $history->getIndex(),
                 'username' => $history->getUsername(),
                 'time' => $history->getTime(),
                 'action' => $history->getAction(),

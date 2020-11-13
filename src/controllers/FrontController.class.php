@@ -32,7 +32,7 @@ use models\HTTPRequest;
 use models\HTTPResponse;
 use models\Secret;
 
-class FrontController
+abstract class FrontController
 {
     /**
      * @return Secret

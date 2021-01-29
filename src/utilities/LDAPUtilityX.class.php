@@ -13,6 +13,7 @@
 
 namespace utilities;
 
+use Config;
 use exceptions\LDAPException;
 
 /**
@@ -74,8 +75,8 @@ class LDAPUtilityX
      */
     public static function getUserByUsername(LDAPConnection $c, string $username, array $attributes): array
     {
-        $filter = "(|(userprincipalname=" . $username . \Config::OPTIONS['ldapPrincipalSuffix'] . "))";
-        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
+        $filter = "(|(userprincipalname=" . $username . Config::OPTIONS['ldapPrincipalSuffix'] . "))";
+        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
 
         $results = ldap_get_entries($c->getConnection(), $search);
 
@@ -96,9 +97,9 @@ class LDAPUtilityX
         if(strlen($username) < 1)
             return array('count' => 0);
 
-        $filter = str_replace('${user}', $username . \Config::OPTIONS['ldapPrincipalSuffix'], $filter);
+        $filter = str_replace('${user}', $username . Config::OPTIONS['ldapPrincipalSuffix'], $filter);
 
-        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $getAttrs);
+        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], $filter, $getAttrs);
         return ldap_get_entries($c->getConnection(), $search);
     }
 
@@ -106,14 +107,14 @@ class LDAPUtilityX
      * Get an object by objectGUID
      *
      * @param LDAPConnection $c
-     * @param string $cn
+     * @param string $objectGUID
      * @param $attributes
      * @return array
      */
     public static function getObject(LDAPConnection $c, string $objectGUID, $attributes): array
     {
         $filter = "(|(objectguid=" . self::formatGUIDForLDAPQuery($objectGUID) . "))";
-        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
+        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
 
         $results = ldap_get_entries($c->getConnection(), $search);
         return self::findConvertObjectGUIDToHex($results);
@@ -157,7 +158,7 @@ class LDAPUtilityX
 
         $filter = str_replace('**', '*', $filter); // Double ** is a bad filter
 
-        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $returnAttrs);
+        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], $filter, $returnAttrs);
 
         $results = ldap_get_entries($c->getConnection(), $search);
 
@@ -201,7 +202,7 @@ class LDAPUtilityX
      */
     public static function setUserPassword(LDAPConnection $c, $objectGUID, $password): bool
     {
-        $c->bind(\Config::OPTIONS['ldapUsername'], \Config::OPTIONS['ldapPassword']);
+        $c->bind(Config::OPTIONS['ldapUsername'], Config::OPTIONS['ldapPassword']);
 
         $dn = self::getDistinguishedNameFromObjectGUID($c, $objectGUID);
 

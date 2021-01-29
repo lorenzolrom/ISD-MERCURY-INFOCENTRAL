@@ -578,7 +578,7 @@ class NetUserOperator extends Operator
             unset($histAttrs['unicodePwd']); // Remove unicodePwd
             HistoryRecorder::writeAssocHistory($hist, $histAttrs);
 
-            return array('cn' => $cn);
+            return array('objectguid' => $userGUID);
         }
 
         $c->close();

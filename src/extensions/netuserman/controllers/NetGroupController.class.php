@@ -22,6 +22,8 @@ use extensions\netuserman\business\NetGroupOperator;
 use extensions\netuserman\ExtConfig;
 use models\HTTPRequest;
 use models\HTTPResponse;
+use utilities\LDAPConnection;
+use utilities\LDAPUtility;
 
 class NetGroupController extends Controller
 {
@@ -85,41 +87,44 @@ class NetGroupController extends Controller
     }
 
     /**
-     * @param string $cn
+     * @param string $guid
      * @return HTTPResponse
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\LDAPException
      */
-    private function getGroup(string $cn): HTTPResponse
+    private function getGroup(string $guid): HTTPResponse
     {
-        return new HTTPResponse(HTTPResponse::OK, NetGroupOperator::getGroupDetails(urldecode($cn)));
+        $cn = LDAPUtility::guidToCN($guid);
+        return new HTTPResponse(HTTPResponse::OK, NetGroupOperator::getGroupDetails($cn));
     }
 
     /**
-     * @param string $cn
+     * @param string $guid
      * @return HTTPResponse
      * @throws LDAPException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function updateGroup(string $cn): HTTPResponse
+    private function updateGroup(string $guid): HTTPResponse
     {
-        NetGroupOperator::updateGroup(urldecode($cn), self::getFormattedBody(ExtConfig::OPTIONS['groupEditableAttributes']));
+        $cn = LDAPUtility::guidToCN($guid);
+        NetGroupOperator::updateGroup($cn, self::getFormattedBody(ExtConfig::OPTIONS['groupEditableAttributes']));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
-     * @param string $cn
+     * @param string $guid
      * @return HTTPResponse
      * @throws LDAPException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function deleteGroup(string $cn): HTTPResponse
+    private function deleteGroup(string $guid): HTTPResponse
     {
-        NetGroupOperator::deleteGroup(urldecode($cn));
+        $cn = LDAPUtility::guidToCN($guid);
+        NetGroupOperator::deleteGroup($cn);
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 

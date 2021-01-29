@@ -266,7 +266,7 @@ class NetGroupOperator extends Operator
             HistoryRecorder::writeAssocHistory($hist, $histAttrs);
 
             $c->close();
-            return array('cn' => $cn);
+            return array('objectguid' => $groupGUID);
         }
 
         $c->close();

@@ -15,6 +15,7 @@
 namespace utilities;
 
 
+use exceptions\EntryNotFoundException;
 use exceptions\LDAPException;
 
 /**
@@ -331,5 +332,44 @@ class LDAPUtility
             throw new LDAPException(ldap_error($c->getConnection()), LDAPException::OPERATION_FAILED);
 
         return TRUE;
+    }
+
+    /**
+     * @param LDAPConnection $c
+     * @param string $guid
+     * @return string
+     */
+    public static function guidToCN(string $guid): string
+    {
+        $c = new LDAPConnection(TRUE, TRUE);
+
+        $queryGUID = self::formatGUIDForQuery($guid);
+        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], "(|(objectguid=$queryGUID))", ['cn']);
+        $results = ldap_get_entries($c->getConnection(), $search);
+
+        $c->close();
+
+        if(!isset($results[0]))
+            return "";
+
+        return $results[0]['cn'][0];
+    }
+
+    /**
+     * @param $hexGUID
+     * @return string
+     */
+    private static function formatGUIDForQuery($hexGUID): string
+    {
+        $output = "";
+
+        $hexGUID = str_replace("-", "", $hexGUID);
+
+        for ($i = 0; $i <= strlen($hexGUID)-2; $i = $i+2){
+
+            $output .=  "\\".substr($hexGUID, $i, 2);
+        }
+
+        return $output;
     }
 }

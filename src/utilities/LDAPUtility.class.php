@@ -15,7 +15,7 @@
 namespace utilities;
 
 
-use Config;
+use exceptions\EntryNotFoundException;
 use exceptions\LDAPException;
 
 /**
@@ -83,8 +83,8 @@ class LDAPUtility
      */
     public static function getUserByUsername(LDAPConnection $c, string $username, array $attributes): array
     {
-        $filter = "(|(userprincipalname=" . $username . Config::OPTIONS['ldapPrincipalSuffix'] . "))";
-        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
+        $filter = "(|(userprincipalname=" . $username . \Config::OPTIONS['ldapPrincipalSuffix'] . "))";
+        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
 
         $results = ldap_get_entries($c->getConnection(), $search);
 
@@ -114,9 +114,9 @@ class LDAPUtility
         if(strlen($username) < 1)
             return array('count' => 0);
 
-        $filter = str_replace('${user}', $username . Config::OPTIONS['ldapPrincipalSuffix'], $filter);
+        $filter = str_replace('${user}', $username . \Config::OPTIONS['ldapPrincipalSuffix'], $filter);
 
-        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], $filter, $getAttrs);
+        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $getAttrs);
         return ldap_get_entries($c->getConnection(), $search);
     }
 
@@ -131,7 +131,7 @@ class LDAPUtility
     public static function getObject(LDAPConnection $c, string $cn, $attributes): array
     {
         $filter = "(|(cn=" . $cn . "))";
-        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
+        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $attributes);
 
         $results = ldap_get_entries($c->getConnection(), $search);
 
@@ -184,7 +184,7 @@ class LDAPUtility
 
         $filter = str_replace('**', '*', $filter); // Double ** is a bad filter
 
-        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], $filter, $returnAttrs);
+        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], $filter, $returnAttrs);
 
         $results = ldap_get_entries($c->getConnection(), $search);
 
@@ -237,7 +237,7 @@ class LDAPUtility
      */
     public static function setUserPassword(LDAPConnection $c, $cn, $password): bool
     {
-        $c->bind(Config::OPTIONS['ldapUsername'], Config::OPTIONS['ldapPassword']);
+        $c->bind(\Config::OPTIONS['ldapUsername'], \Config::OPTIONS['ldapPassword']);
 
         $user = self::getObject($c, $cn, array('dn'));
 
@@ -339,11 +339,15 @@ class LDAPUtility
      * @param string $guid
      * @return string
      */
-    public static function guidToCN(LDAPConnection $c, string $guid): string
+    public static function guidToCN(string $guid): string
     {
+        $c = new LDAPConnection(TRUE, TRUE);
+
         $queryGUID = self::formatGUIDForQuery($guid);
-        $search = ldap_search($c->getConnection(), Config::OPTIONS['ldapDomainDn'], "(|(objectguid=$queryGUID))", ['cn']);
+        $search = ldap_search($c->getConnection(), \Config::OPTIONS['ldapDomainDn'], "(|(objectguid=$queryGUID))", ['cn']);
         $results = ldap_get_entries($c->getConnection(), $search);
+
+        $c->close();
 
         if(!isset($results[0]))
             return "";

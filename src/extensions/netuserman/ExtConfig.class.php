@@ -27,14 +27,12 @@ class ExtConfig
     public const OPTIONS = array( // Attributes allowed to be used in search filter
 
         'groupReturnedSearchAttributes' => array( // Attributes returned when searching for groups
-            'objectguid',
             'cn',
             'description',
             'distinguishedname'
         ),
 
         'groupReturnedAttributes' => array( // Attributes returned when getting a single group
-            'objectguid',
             'description',
             'distinguishedname',
             'member',
@@ -58,10 +56,10 @@ class ExtConfig
         ),
 
         'userReturnedSearchAttributes' => array( // Attributes returned when searching for users
-            'objectguid',
             'cn',
             'userprincipalname',
             'useraccountcontrol',
+            'displayname',
             'title',
             'description'
         ),

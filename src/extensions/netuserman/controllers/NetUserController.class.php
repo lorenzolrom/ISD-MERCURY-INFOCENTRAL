@@ -23,8 +23,6 @@ use extensions\netuserman\business\NetUserOperator;
 use extensions\netuserman\ExtConfig;
 use models\HTTPRequest;
 use models\HTTPResponse;
-use utilities\LDAPConnection;
-use utilities\LDAPUtility;
 
 class NetUserController extends Controller
 {
@@ -91,27 +89,25 @@ class NetUserController extends Controller
     }
 
     /**
-     * @param string $guid
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws \exceptions\EntryNotFoundException
      */
-    private function getUser(string $guid): HTTPResponse
+    private function getUser(string $cn): HTTPResponse
     {
-        $cn = LDAPUtility::guidToCN($guid);
-        return new HTTPResponse(HTTPResponse::OK, NetUserOperator::getUserDetails($cn));
+        return new HTTPResponse(HTTPResponse::OK, NetUserOperator::getUserDetails(urldecode($cn)));
     }
 
     /**
-     * @param string $guid
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws \exceptions\EntryNotFoundException
      */
-    private function getUserImage(string $guid): HTTPResponse
+    private function getUserImage(string $cn): HTTPResponse
     {
-        $cn = LDAPUtility::guidToCN($guid);
-        $photo = NetUserOperator::getUserDetails($cn, array('thumbnailPhoto'));
+        $photo = NetUserOperator::getUserDetails(urldecode($cn), array('thumbnailPhoto'));
 
         if(!isset($photo['thumbnailphoto']) OR strlen($photo['thumbnailphoto']) === 0)
             $photo['thumbnailphoto'] = file_get_contents(dirname(__FILE__) . '/../media/no-photo-available.jpg');
@@ -122,7 +118,7 @@ class NetUserController extends Controller
     }
 
     /**
-     * @param string $guid
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws ValidationError
@@ -130,18 +126,18 @@ class NetUserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function updateUserImage(string $guid):HTTPResponse
+    private function updateUserImage(string $cn):HTTPResponse
     {
-        $cn = LDAPUtility::guidToCN($guid);
+        
         if(empty($_FILES['thumbnailphoto']))
             throw new ValidationError(array('Photo required'));
 
-        NetUserOperator::updateUserImage($cn, file_get_contents($_FILES['thumbnailphoto']['tmp_name']));
+        NetUserOperator::updateUserImage(urldecode($cn), file_get_contents($_FILES['thumbnailphoto']['tmp_name']));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
-     * @param string $guid
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws ValidationError
@@ -149,12 +145,11 @@ class NetUserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function updateUser(string $guid): HTTPResponse
+    private function updateUser(string $cn): HTTPResponse
     {
-        $cn = LDAPUtility::guidToCN($guid);
         $details = $this->request->body();
 
-        NetUserOperator::updateUser($cn, $details);
+        NetUserOperator::updateUser(urldecode($cn), $details);
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
@@ -170,7 +165,7 @@ class NetUserController extends Controller
     }
 
     /**
-     * @param string $guid
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws ValidationError
@@ -178,40 +173,37 @@ class NetUserController extends Controller
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function resetPassword(string $guid): HTTPResponse
+    private function resetPassword(string $cn): HTTPResponse
     {
-        $cn = LDAPUtility::guidToCN($guid);
-        NetUserOperator::resetPassword($cn, self::getFormattedBody(array('password', 'confirm'), TRUE));
+        NetUserOperator::resetPassword(urldecode($cn), self::getFormattedBody(array('password', 'confirm'), TRUE));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
-     * @param string $guid
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function modifyGroups(string $guid): HTTPResponse
+    private function modifyGroups(string $cn): HTTPResponse
     {
-        $cn = LDAPUtility::guidToCN($guid);
-        NetUserOperator::modifyGroups($cn, self::getFormattedBody(array('addGroups', 'removeGroups'), TRUE));
+        NetUserOperator::modifyGroups(urldecode($cn), self::getFormattedBody(array('addGroups', 'removeGroups'), TRUE));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 
     /**
-     * @param string $guid
+     * @param string $cn
      * @return HTTPResponse
      * @throws LDAPException
      * @throws \exceptions\DatabaseException
      * @throws \exceptions\EntryNotFoundException
      * @throws \exceptions\SecurityException
      */
-    private function deleteUser(string $guid): HTTPResponse
+    private function deleteUser(string $cn): HTTPResponse
     {
-        $cn = LDAPUtility::guidToCN($guid);
-        NetUserOperator::deleteUser($cn);
+        NetUserOperator::deleteUser(urldecode($cn));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 

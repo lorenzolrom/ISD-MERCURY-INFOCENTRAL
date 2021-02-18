@@ -357,6 +357,7 @@ class NetUserOperator extends Operator
     {
         $password = (string)$args['password'];
         $confirm = (string)$args['confirm'];
+        $mustChange = (bool)$args['mustChange'];
 
         if($password != $confirm)
             throw new ValidationError(array('Passwords do not match'));
@@ -368,7 +369,7 @@ class NetUserOperator extends Operator
         $hist = HistoryRecorder::writeHistory('!NETUSER', HistoryRecorder::MODIFY, $userGUID, new NetModel());
         HistoryRecorder::writeAssocHistory($hist, array('unicodePwd' => ['User Password Reset']));
 
-        $res = LDAPUtility::setUserPassword($c, $cn, $password);
+        $res = LDAPUtility::setUserPassword($c, $cn, $password, $mustChange);
 
         $c->close();
         return $res;

@@ -175,7 +175,7 @@ class NetUserController extends Controller
      */
     private function resetPassword(string $cn): HTTPResponse
     {
-        NetUserOperator::resetPassword(urldecode($cn), self::getFormattedBody(array('password', 'confirm'), TRUE));
+        NetUserOperator::resetPassword(urldecode($cn), self::getFormattedBody(array('password', 'confirm', 'mustChange'), TRUE));
         return new HTTPResponse(HTTPResponse::NO_CONTENT);
     }
 

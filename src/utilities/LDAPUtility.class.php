@@ -231,10 +231,11 @@ class LDAPUtility
      * @param LDAPConnection $c
      * @param $cn
      * @param $password
+     * @param bool $mustChange
      * @return bool
      * @throws LDAPException
      */
-    public static function setUserPassword(LDAPConnection $c, $cn, $password): bool
+    public static function setUserPassword(LDAPConnection $c, $cn, $password, $mustChange = false): bool
     {
         $c->bind(\Config::OPTIONS['ldapUsername'], \Config::OPTIONS['ldapPassword']);
 
@@ -246,6 +247,9 @@ class LDAPUtility
         $dn = $user[0]['dn'];
 
         $newEntry = array('unicodePwd' => self::getLDAPFormattedPassword($password));
+
+        if($mustChange)
+            $newEntry['pwdlastset'] = array(0);
 
         if(ldap_mod_replace($c->getConnection(), $dn, $newEntry))
             return TRUE;
